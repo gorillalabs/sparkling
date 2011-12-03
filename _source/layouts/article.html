@@ -1,0 +1,72 @@
+!!!
+%html<>
+  %head
+    %meta{ "http-equiv" => "Content-Type", :content => "text/html; charset=utf-8" }
+    %title
+      Ruby amqp gem:
+      = @item[:title]
+    %link{ :href => "/assets/stylesheets/sass/styles.css", :rel => "stylesheet", :type => "text/css", :media => "screen" }
+
+  %script{ :src => "/assets/javascripts/jquery-1.7.min.js", :type => "text/javascript" }
+  %script{ :src => "/assets/javascripts/codemirror.js"}
+  %script{ :src => "/assets/javascripts/toc.js"}
+  %script{ :src => "/assets/javascripts/code_highlight.js"}
+  %link{ :rel => "stylesheet", :href => "/assets/stylesheets/codemirror.css" }
+  %script{ :src => "/assets/javascripts/mode/ruby.js" }
+  %link{ :rel => "stylesheet", :href => "/assets/stylesheets/theme/default.css" }
+  :javascript
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-12314275-7']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+  %body<>
+    .topbar
+      .topbar-inner
+        .container
+          %ul.nav
+            %li
+              %a{ :href => "/"}
+                home
+    %section.content<>
+      %article<>
+
+        .toc
+
+        %h1=@item[:title]
+
+        = yield
+
+        %h2 Tell me what you think!
+
+        Usually I'm open to a conversation. I don't like online flame, and discovered that people tend to respond to emails more thoughtfully than when discussion is public. If you have something to tell me, use
+
+        %a{ :href => "mailto:oleksandr.petrov@gmail.com" }
+          email
+
+        if it's less than 140 symbols, you can also use
+
+        %a{ :href => "http://twitter.com/ifesdjeen" }
+          twitter
+
+        - if @item[:disqus_identifier] && @item[:disqus_url]
+          #disqus_thread
+          :javascript
+            /* * * CONFIGURATION VARIABLES * * */
+            var disqus_shortname = 'rubyamqpdocs'; // required: replace example with your forum shortname
+
+            var disqus_developer = 0; // set to 1 on local machine for testing comments
+            = "var disqus_identifier = '#{@item[:disqus_identifier]}';"
+            = "var disqus_url = '#{@item[:disqus_url]}';
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
