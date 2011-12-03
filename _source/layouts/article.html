@@ -32,31 +32,4 @@
 
         = yield
 
-        %h2 Tell me what you think!
-
-        Usually I'm open to a conversation. I don't like online flame, and discovered that people tend to respond to emails more thoughtfully than when discussion is public. If you have something to tell me, use
-
-        %a{ :href => "mailto:oleksandr.petrov@gmail.com" }
-          email
-
-        if it's less than 140 symbols, you can also use
-
-        %a{ :href => "http://twitter.com/ifesdjeen" }
-          twitter
-
-        - if @item[:disqus_identifier] && @item[:disqus_url]
-          #disqus_thread
-          :javascript
-            /* * * CONFIGURATION VARIABLES * * */
-            var disqus_shortname = 'rubyamqpdocs'; // required: replace example with your forum shortname
-
-            var disqus_developer = 0; // set to 1 on local machine for testing comments
-            = "var disqus_identifier = '#{@item[:disqus_identifier]}';"
-            = "var disqus_url = '#{@item[:disqus_url]}';
-
-            /* * * DON'T EDIT BELOW THIS LINE * * */
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
+        %h2 Tell us what you think!
