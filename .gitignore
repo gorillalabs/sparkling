@@ -9,3 +9,4 @@ output/*
 .\#*
 _source/tmp/*
 _source/output/*
+_source/.sass-cache/*
