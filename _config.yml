@@ -1,0 +1,7 @@
+source:      .
+destination: ./_site
+plugins:     ./_plugins
+auto: true
+exclude: [bin, CNAME, Gemfile, Gemfile.lock, README.md]
+markdown: rdiscount
+permalink: /:title
