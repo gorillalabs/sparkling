@@ -1,4 +1,4 @@
-# Quartzite  Documentation
+# Project Name Documentation
 
 This is a documentation site for [Project Name]. Copy or clone me and adapt for your project
 that needs documentation guides similar to [rubyamqp.info](http://rubyamqp.info), [clojuremongodb.info](http://clojuremongodb.info) and so on.
