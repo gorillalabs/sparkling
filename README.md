@@ -17,9 +17,9 @@ In order to recompile assets for publishing, run
 
 ## Supported liquid helpers:
 
-In order to add example to your docs, use example helper. Pass relative path to file (it should be located at ./source/content/examples folder) and Gist ID.
+In order to add gist to your docs, use gist helper. Pass the Gist ID to it.
 
-  {% example working_with_queues/01b_declaring_a_queue_using_queue_constructor.rb, 998727 %}
+  {% gist 998727 %}
 
 In order to add link to YARD docs (relevant for Ruby projects), use yard_link helper, and YARD notation for object/method, for example:
 
@@ -27,6 +27,6 @@ In order to add link to YARD docs (relevant for Ruby projects), use yard_link he
 
 ## License & Copyright
 
-Copyright (C) 2011 Alexander Petrov, Michael S. Klishin.
+Copyright (C) 2011-2012 Alex P, Michael S. Klishin.
 
 Distributed under the Eclipse Public License, the same as Clojure.
