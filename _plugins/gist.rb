@@ -25,7 +25,7 @@ module Jekyll
     end
 
     def render(context)
-      %{<script src="http://gist.github.com/#{@gist_id}.js"></script><span class="help-block">(if the example above isn't displayed, see this <a href='https://gist.github.com/#{@gist_id}' target='_blank'>gist</a>)</span>}
+      %{<script src="http://gist.github.com/#{@gist_id}.js"></script>}
     end
   end
 
