@@ -16,7 +16,7 @@ To subscribe for announcements of releases, important changes and so on, please 
 ## What is ClojureWerkz?
 
 Project Name is part of the group of libraries known as ClojureWerkz, together with
-[Neocons](https://github.com/michaelklishin/neocons), [Langohr](https://github.com/michaelklishin/langohr), [Monger](https://github.com/michaelklishin/monger), [Welle](https://github.com/michaelklishin/welle), [Elastisch](https://github.com/clojurewerkz/elastisch), [Quartzite](https://github.com/michaelklishin/quartzite) and several others.
+[Monger](http://clojuremongodb.info), [Welle](http://clojureriak.info), [Quartzite](http://clojurequartz.info), [Neocons](https://github.com/michaelklishin/neocons), [Langohr](https://github.com/michaelklishin/langohr), [Elastisch](https://github.com/clojurewerkz/elastisch) and several others.
 
 
 ## Reporting Issues
