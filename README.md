@@ -13,18 +13,15 @@ With Bundler:
 
 ## How to run a development server
 
-    ./bin/jekyll --server
+    ./bin/jekyll --auto --server
 
 
 ## How to regenerate the site
 
 In order to modify contents and launch dev environment, run:
 
-      ./bin/jekyll
+    ./bin/jekyll
 
-In order to recompile haml and sass files for publishing, run
-
-      ./recompile_haml.sh
 
 ## License & Copyright
 
