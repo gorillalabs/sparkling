@@ -9,24 +9,27 @@ jQuery.fn.toc = function () {
 
   var level = 2;
   $(document).ready(function() {
-    $(":header").each(function(index, el) {
-
-      if(parseInt(el.tagName[1]) === 1)
-        return;
+    $(":header").filter(function(idx, el) {
+      // filter out H1
+      return !(parseInt(el.tagName[1]) === 1);
+    }).
+    each(function(index, el) {
+      var currentLevel = parseInt(el.tagName[1]);
 
       var text = $(el).text();
-
       var anchor = text.replace(/[^a-zA-Z 0-9]+/g,'').replace(/\s/g, "_").toLowerCase();
-      $(el).attr('id', anchor);
 
-      var currentLevel = parseInt(el.tagName[1]);
+      $(el).attr('id', anchor);
 
       if(currentLevel > level) {
         var nextLevelList = $("<ul class='nav nav-list'/>");
         nextLevelList.appendTo(listStack.last().children("li").last());
         listStack.push(nextLevelList);
       } else if(currentLevel < level) {
-        listStack.pop();
+	var delta = level - currentLevel;
+        for(var i = 0; i < delta; i ++) {
+	  listStack.pop();
+	}
       }
 
       level = currentLevel;
@@ -36,13 +39,6 @@ jQuery.fn.toc = function () {
       li.appendTo(listStack.last());
     });
   });
-};
-// $($(".highlight")[2]).text().match(/(.*)\.(.*)/)
-// "AMQP::Channel.direct".match(/(.*)\.(.*)/)
-// "AMQP::Channel#direct".match(/(.*)#(.*)/)
-jQuery.fn.yardLink = function () {
-  var class_method = /(.*)\.(.*)/;
-  var instance_method = /(.*)#(.*)/;
 };
 
 $(document).ready(function() {
