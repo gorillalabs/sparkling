@@ -1,6 +1,5 @@
 source :rubygems
 
 gem "jekyll"
-gem "rdiscount"
-gem "haml"
-gem "RedCloth"
+# gem "rdiscount"
+gem "redcarpet"
