@@ -10,3 +10,4 @@ _site/*
 *\#*
 ~*
 _source/*
+_cache
