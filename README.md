@@ -10,6 +10,8 @@ With Bundler:
 
     bundle install --binstubs
 
+Next, [install Pygments](http://pygments.org/docs/installation/) for code
+snippet highlighting.
 
 ## How to run a development server
 
