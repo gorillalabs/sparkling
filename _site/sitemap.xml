@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
+    <url>
+        <loc>http://PROJECT.clojurewerkz.org/articles/articles/community.html</loc>
+        <lastmod>2013-06-28T18:49:16+02:00</lastmod>
+    </url>
+    <url>
+        <loc>http://PROJECT.clojurewerkz.org/articles/articles/getting_started.html</loc>
+        <lastmod>2013-06-28T18:49:16+02:00</lastmod>
+    </url>
+    <url>
+        <loc>http://PROJECT.clojurewerkz.org/articles/articles/guides.html</loc>
+        <lastmod>2013-06-28T18:49:16+02:00</lastmod>
+    </url>
+    <url>
+        <loc>http://PROJECT.clojurewerkz.org/</loc>
+        <lastmod>2013-06-28T18:49:53+02:00</lastmod>
+    </url>
+</urlset>
