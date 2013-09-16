@@ -1,4 +1,3 @@
-
 $(document).ready(function() {
   var $toc = $('#toc');
 
@@ -11,7 +10,7 @@ $(document).ready(function() {
   // return;
 
   if($toc.length) {
-    var $h3s = $('.span9 :header');
+    var $h3s = $('.container .col-md-9 :header');
     var titles = $h3s.map(function () {
       return format(this);
     }).get().join('');
