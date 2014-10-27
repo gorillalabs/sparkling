@@ -1,6 +1,9 @@
 ---
-title: "Getting Started"
+title: "Getting Started with Project"
 layout: article
 ---
 
-## This is a getting started guide
+
+## Getting Started
+
+### Introduction to Project
