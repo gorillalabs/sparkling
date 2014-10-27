@@ -12,31 +12,13 @@ With Bundler:
 
 ### How to run a development server
 
-    ./bin/jekyll serve --watch
+    ./bin/jekyll serve
 
 then navigate to [localhost:4000](http://localhost:4000)
 
 ### How to regenerate the site
 
     ./bin/jekyll build
-
-## With Docker
-
-If you don't have ruby toolsets available on your machine, you can run this with Docker.
-
-### Running a local development server
-
-```
-fig up
-```
-
-Then navigate to [localdocker:4000](http://localdocker:4000).
-
-### Regenerating the site
-
-```
-fig run web jekyll build
-```
 
 ## License & Copyright
 
