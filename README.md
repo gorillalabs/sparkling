@@ -10,16 +10,15 @@ With Bundler:
 
     bundle install --binstubs
 
-## How to run a development server
+### How to run a development server
 
-    ./bin/jekyll serve --watch
+    ./bin/jekyll serve
 
 then navigate to [localhost:4000](http://localhost:4000)
 
-## How to regenerate the site
+### How to regenerate the site
 
     ./bin/jekyll build
-
 
 ## License & Copyright
 
