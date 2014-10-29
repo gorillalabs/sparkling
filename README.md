@@ -37,6 +37,7 @@ Flambo is a Clojure DSL for Spark. It allows you to create and manipulate Spark 
 flambo 0.4.0-SNAPSHOT targets >= Spark 1.1.0
 
 flambo 0.3.3 targets >= Spark 1.0.0
+... Adding your own Registrator might not work due to [SPARK-2878: Inconsistent Kryo serialisation with custom Kryo Registrator](https://issues.apache.org/jira/browse/SPARK-2878)
 
 flambo 0.2.0 targets Spark 0.9.1
 
