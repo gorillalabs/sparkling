@@ -142,7 +142,7 @@
             (f/sample false 0.1 2)
             f/collect
             vec
-            count) => 1)
+            count) => #(<= 1 %1 2))
 
       (fact
         "combine-by-key returns an RDD by combining the elements for each key using a custom
