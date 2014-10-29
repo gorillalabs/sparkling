@@ -2,6 +2,9 @@
 
 # Flambo
 
+[![Build Status](https://secure.travis-ci.org/chrisbetz/flambo.png)](http://travis-ci.org/chrisbetz/flambo)
+
+
 Flambo is a Clojure DSL for [Apache Spark](http://spark.apache.org/docs/latest/)
 
 **Contents**
