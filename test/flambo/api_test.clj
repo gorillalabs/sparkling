@@ -304,4 +304,25 @@
                         (f/cache))]
           (-> cache
               f/collect) => [1 2 3 4 5]))
+
+      (fact
+        "comp is the same as clojure.core/comp but returns a serializable fn"
+        ((f/comp (partial * 2) inc) 1) => 4
+        )
+
+      (fact
+        "partitions returns a vec of partitions for a given RDD"
+        (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 2)
+            f/partitions
+            count) => 2)
+
+      (fact
+        "partition-by partitions a given RDD according to the partitioning-fn using a hash partitioner."
+        (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
+            (f/map (f/fn [x] [x x]))
+            (f/partition-by (f/hash-partitioner-fn 2))
+            f/glom
+            f/collect
+            vec) => (just [[1 3 5 7 9] [2 4 6 8 10]] :in-any-order))
+
       )))
