@@ -323,6 +323,7 @@
             (f/partition-by (f/hash-partitioner-fn 2))
             f/glom
             f/collect
-            vec) => (just [[1 3 5 7 9] [2 4 6 8 10]] :in-any-order))
+            vec) => (just [[[2 2] [4 4] [6 6] [8 8] [10 10]]
+                           [[1 1] [3 3] [5 5] [7 7] [9 9]]] :in-any-order))
 
       )))
