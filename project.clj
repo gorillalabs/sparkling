@@ -13,6 +13,7 @@
                   :exclusions [org.scala-lang/scala-library]]]
   :profiles {:dev
              {:dependencies [[midje "1.6.3"]
+                             [midje-junit-formatter "0.1.0-SNAPSHOT"]
                              [criterium "0.4.3"]]
               :plugins [[lein-midje "3.1.3"]
                         [lein-marginalia "0.8.0"]
