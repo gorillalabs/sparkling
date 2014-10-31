@@ -2,6 +2,9 @@
 
 # Flambo
 
+[![Build Status](https://secure.travis-ci.org/chrisbetz/flambo.png)](http://travis-ci.org/chrisbetz/flambo)
+
+
 Flambo is a Clojure DSL for [Apache Spark](http://spark.apache.org/docs/latest/)
 
 **Contents**
@@ -31,9 +34,9 @@ Flambo is a Clojure DSL for Spark. It allows you to create and manipulate Spark 
 <a name="versions">
 ## Supported Spark Versions
 
-flambo 0.3.3 targets >= Spark 1.0.0
-
-flambo 0.2.0 targets Spark 0.9.1
+|  flambo version         | targeting Spark version|
+|---------------------|-----------------------------------------------------------------------------------------------------------|
+| flambo 0.4.0 | Spark >= 1.1.0 |
 
 <a name="installation">
 ## Installation
@@ -42,16 +45,19 @@ Flambo is available from clojars. Depending on the version of Spark you're using
 
 ### With Leiningen
 
-`[yieldbot/flambo "0.3.3"]` for Spark 1.0.0 or greater
+Current version: [![Clojars Project](http://clojars.org/chrisbetz/flambo/latest-version.svg)](http://clojars.org/chrisbetz/flambo)
 
-`[yieldbot/flambo "0.2.0"]` for Spark 0.9.1
+|  flambo version         | targeting Spark version|
+|---------------------|-----------------------------------------------------------------------------------------------------------|
+| `[chrisbetz/flambo "0.4.0"]` | Spark >= 1.1.0 |
+
 
 Don't forget to add spark (and possibly your hadoop distribution's hadoop-client library) to the `:provided` profile in your `project.clj` file:
 
 ```clojure
 {:profiles {:provided
              {:dependencies
-              [[org.apache.spark/spark-core_2.10 "1.0.2"]]}}}
+              [[org.apache.spark/spark-core_2.10 "1.1.0"]]}}}
 ```
 
 <a name="aot">
