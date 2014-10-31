@@ -1,6 +1,6 @@
 (defproject chrisbetz/flambo "0.4.0-SNAPSHOT"
   :description "A Clojure DSL for Apache Spark"
-  :url "https://github.com/yieldbot/flambo"
+  :url "https://github.com/chrisbetz/flambo"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
