@@ -41,7 +41,7 @@
 (defn mangle
   "Perform name-mangling. We want to read from avro files to and avro does not support dashes as field names.
   So it converts them back and forth to underscores. Thus, while reading, it converts everything to dashes.
-  So, in order to get the same result, we would have to rename all entries or we should have a name mangling function for the mysql-items to return everything 'dashified'."
+  So, in order to get the same result, we would have to rename all entries or we should have a name mangling function for the jdbc-items to return everything 'dashified'."
   [^String n] (.replace n \_ \-))
 
 (def clojurify (comp keyword mangle))
@@ -57,7 +57,7 @@
                 (zipmap (get-columns meta)
                         (seq-from-countable (.getColumnCount meta) (fn [^long idx] (.getObject result-set idx))))))
 
-(defn load-mysql [^JavaSparkContext sc get-connection query min max partitions] ;; TODO: Think about pushing name mangling to the interface of this function!
+(defn load-jdbc [^JavaSparkContext sc get-connection query min max partitions] ;; TODO: Think about pushing name mangling to the interface of this function!
   (info "Defining a jdbc-rdd:" query min max partitions)
   (JavaRDD/fromRDD
     (JdbcRDD. (.sc sc)

@@ -12,10 +12,13 @@
                  [com.twitter/chill_2.10 "0.5.0"
                   :exclusions [org.scala-lang/scala-library]]
 
-                 ;; This adds support for reading avro files
+                 ;; [AVRO Feature] This adds support for reading avro files
+                 [com.damballa/parkour "0.6.0"]
                  [org.apache.avro/avro "1.7.5"]
                  [org.apache.avro/avro-mapred "1.7.5"  :exclusions [org.slf4j/slf4j-log4j12 org.mortbay.jetty/servlet-api com.thoughtworks.paranamer/paranamer io.netty/netty commons-lang]]
                  [com.damballa/abracad "0.4.11" :exclusions [org.apache.avro/avro]]
+                 ;; [/AVRO Feature]
+
 
                  ]
   :profiles {:dev
@@ -25,6 +28,7 @@
                         [lein-marginalia "0.8.0"]
                         [lein-ancient "0.5.4"]
                         [codox "0.8.9"]]
+              :resource-paths ["data"]
               ;; so gen-class stuff works in the repl
               :aot [flambo.function
                     flambo.scalaInterop
