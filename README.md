@@ -36,7 +36,7 @@ Flambo is a Clojure DSL for Spark. It allows you to create and manipulate Spark 
 
 |  flambo version         | targeting Spark version|
 |---------------------|-----------------------------------------------------------------------------------------------------------|
-| flambo 0.4.0-SNAPSHOT | Spark >= 1.1.0 |
+| flambo 0.4.0 | Spark >= 1.1.0 |
 
 <a name="installation">
 ## Installation
@@ -49,7 +49,7 @@ Current version: [![Clojars Project](http://clojars.org/chrisbetz/flambo/latest-
 
 |  flambo version         | targeting Spark version|
 |---------------------|-----------------------------------------------------------------------------------------------------------|
-| `[chrisbetz/flambo "0.4.0-SNAPSHOT"]` | Spark >= 1.1.0 |
+| `[chrisbetz/flambo "0.4.0"]` | Spark >= 1.1.0 |
 
 
 Don't forget to add spark (and possibly your hadoop distribution's hadoop-client library) to the `:provided` profile in your `project.clj` file:
