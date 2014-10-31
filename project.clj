@@ -33,7 +33,9 @@
               :aot [flambo.function
                     flambo.scalaInterop
                     flambo.example.tfidf]}
-             :jenkins {:dependencies [[midje-junit-formatter "0.1.0-SNAPSHOT"]] }
+             :jenkins {:dependencies [[midje-junit-formatter "0.1.0-SNAPSHOT"]]
+                       :aliases {"junit" ["midje" ":config" ".midje-jenkins.clj"]}
+                       }
              :provided
              {:dependencies
               [[org.apache.spark/spark-core_2.10 "1.1.0"]
