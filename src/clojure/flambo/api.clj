@@ -184,6 +184,19 @@
   [rdd f]
   (.flatMapToPair rdd (pair-flat-map-function f)))
 
+(defn map-partition
+  "Similar to `map`, but runs separately on each partition (block) of the `rdd`, so function `f`
+  must be of type Iterator<T> => Iterable<U>.
+  https://issues.apache.org/jira/browse/SPARK-3369"
+  [rdd f]
+  (.mapPartitions rdd (flat-map-function f)))
+
+(defn map-partition-with-index
+  "Similar to `map-partition` but function `f` is of type (Int, Iterator<T>) => Iterator<U> where
+  `i` represents the index of partition."
+  [rdd f]
+  (.mapPartitionsWithIndex rdd (function2 f) true))
+
 (defn filter
   "Returns a new RDD containing only the elements of `rdd` that satisfy a predicate `f`."
   [rdd f]
