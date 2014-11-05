@@ -14,8 +14,8 @@
 
                  ;; [AVRO Feature] This adds support for reading avro files
                  [com.damballa/parkour "0.6.0"]
-                 [org.apache.avro/avro "1.7.5"]
-                 [org.apache.avro/avro-mapred "1.7.5"  :exclusions [org.slf4j/slf4j-log4j12 org.mortbay.jetty/servlet-api com.thoughtworks.paranamer/paranamer io.netty/netty commons-lang]]
+                 [org.apache.avro/avro "1.7.6"]
+                 [org.apache.avro/avro-mapred "1.7.6"  :exclusions [org.slf4j/slf4j-log4j12 org.mortbay.jetty/servlet-api com.thoughtworks.paranamer/paranamer io.netty/netty commons-lang]]
                  [com.damballa/abracad "0.4.11" :exclusions [org.apache.avro/avro]]
                  ;; [/AVRO Feature]
 
