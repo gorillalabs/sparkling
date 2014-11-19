@@ -25,9 +25,9 @@
             (binding [sfn/*deserialize* kryo/deserialize]
               (deserialize-fn fn-or-serfn))
             fn-or-serfn)]
-    (log/trace "CLASS" (type this))
-    (log/trace "META" (meta f))
-    (log/trace "XS" xs)
+    #_(log/trace "CLASS" (type this))
+    #_(log/trace "META" (meta f))
+    #_(log/trace "XS" xs)
     (apply f xs)))
 
 ;; ## Functions

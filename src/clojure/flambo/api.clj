@@ -24,7 +24,7 @@
             [flambo.conf :as conf]
             [flambo.utils :as u]
             [flambo.kryo :as k])
-  (:import [scala Tuple2]
+  (:import [scala Tuple2 Tuple3]
            [scala.reflect ClassTag$]
            (java.util Comparator)
            (org.apache.spark.api.java JavaSparkContext StorageLevels)
@@ -32,7 +32,9 @@
            [org.apache.spark HashPartitioner]
            (org.apache.spark.rdd PartitionwiseSampledRDD)
            (flambo.function Function Function2 Function3 VoidFunction FlatMapFunction
-                            PairFunction PairFlatMapFunction)))
+                            PairFunction PairFlatMapFunction)
+           [org.apache.spark.util Utils]
+           [com.esotericsoftware.kryo KryoSerializable]))
 
 ;; flambo makes extensive use of kryo to serialize and deserialize clojure functions
 ;; and data structures. Here we ensure that these properties are set so they are inhereted
@@ -457,9 +459,17 @@
   (into [] (.partitions (.rdd javaRdd))))
 
 
-(defn hash-partitioner-fn [n]
-  (fn [rdd]
-      (HashPartitioner. n)))
+(defn hash-partitioner-fn
+  ([n]
+   (fn [rdd]
+       (HashPartitioner. n)))
+  #_([subkey-fn n]
+   (fn [rdd]
+       (proxy [HashPartitioner ] [n]
+         (getPartition [key]
+           (let [subkey (subkey-fn key)]
+             (mod (hash subkey) n))))))
+  )
 
 (defn partition-by
   [^JavaRDD rdd partitioner-fn]
@@ -495,17 +505,32 @@
   [^JavaRDD rdd1 ^JavaRDD rdd2]                             ;; todo: allow more than two RDDs to be 'union'ed.
   (.union rdd1 rdd2))
 
-(defsparkfn seqify-untuple [^Tuple2 t]
+(defsparkfn seqify-untuple-2 [^Tuple2 t]
               (let [k (._1 t)
                     v ^Tuple2 (._2 t)]
                 [k [(seq (._1 v)) (seq (._2 v))]]))
 
-(defn cogroup [^JavaPairRDD rdd ^JavaPairRDD other]
+(defsparkfn seqify-untuple-3 [^Tuple2 t]
+            (let [k (._1 t)
+                  v ^Tuple3 (._2 t)]
+              [k [(seq (._1 v)) (seq (._2 v)) (seq (._3 v))]]))
+
+
+
+
+(defn cogroup
+  ([^JavaPairRDD rdd ^JavaPairRDD other]
   (-> rdd
       ^JavaPairRDD
       (map-to-pair identity)
       (.cogroup (map-to-pair other identity))
-      (map seqify-untuple)))
+      (map seqify-untuple-2)))
+  ([^JavaPairRDD rdd ^JavaPairRDD other1 ^JavaPairRDD other2]
+   (-> rdd
+       ^JavaPairRDD
+       (map-to-pair identity)
+       (.cogroup (map-to-pair other1 identity) (map-to-pair other2 identity))
+       (map seqify-untuple-3))))
 
 
 (defn checkpoint [^JavaRDD rdd]

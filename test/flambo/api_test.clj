@@ -100,6 +100,60 @@
                           f/collect
                           vec) => [2 4 6])
 
+
+                    (fact
+                      "cogroup returns an RDD of (K, (V, W)) pairs with all pairs of elements of each key when called on RDDs of type (K, V) and (K, W)"
+                      (let [rdd (f/parallelize c [["key1" 1]
+                                                    ["key2" 2]
+                                                    ["key3" 3]
+                                                    ["key4" 4]
+                                                    ["key5" 5]])
+                            other1 (f/parallelize c [["key1" 11]
+                                                    ["key3" 33]
+                                                    ["key4" 44]
+                                                    ["key6" 66]
+                                                    ["key6" 666]])
+                            ]
+                        (-> (f/cogroup rdd other1)
+                            f/collect
+                            vec)) => (just [["key1" [[1] [11]]]
+                                            ["key2" [[2] nil]]
+                                            ["key3" [[3] [33]]]
+                                            ["key4" [[4] [44]]]
+                                            ["key5" [[5] nil]]
+                                            (just ["key6" (just [nil (just [66 666] :in-any-order)])])
+                                            ] :in-any-order))
+
+
+
+                    (fact
+                      "cogroup returns an RDD of (K, (V, W, X)) pairs with all pairs of elements of each key when called on RDDs of type (K, V), (K, W) and (K,X)"
+                      (let [rdd (f/parallelize c [["key1" 1]
+                                                  ["key2" 2]
+                                                  ["key3" 3]
+                                                  ["key4" 4]
+                                                  ["key5" 5]])
+                            other1 (f/parallelize c [["key1" 11]
+                                                     ["key3" 33]
+                                                     ["key4" 44]
+                                                     ["key6" 66]
+                                                     ["key6" 666]])
+                            other2 (f/parallelize c [["key1" 111]
+                                                     ["key3" 333]
+                                                     ["key5" 555]
+                                                     ])
+                            ]
+                        (-> (f/cogroup rdd other1 other2)
+                            f/collect
+                            vec)) => (just [["key1" [[1] [11] [111]]]
+                                            ["key2" [[2] nil nil]]
+                                            ["key3" [[3] [33] [333]]]
+                                            ["key4" [[4] [44] nil]]
+                                            ["key5" [[5] nil [555]]]
+                                            (just ["key6" (just [nil (just [66 666] :in-any-order) nil])])
+                                            ] :in-any-order))
+
+
                     (fact
                       "join returns an RDD of (K, (V, W)) pairs with all pairs of elements of each key when called on RDDs of type (K, V) and (K, W)"
                       (let [LDATA (f/parallelize c [["key1" [2]]
@@ -361,5 +415,21 @@
                           f/collect
                           vec) => (just [[[2 2] [4 4] [6 6] [8 8] [10 10]]
                                          [[1 1] [3 3] [5 5] [7 7] [9 9]]] :in-any-order))
+
+                    #_(fact
+                      "partition-by partitions a given RDD according to the partitioning-fn using a hash partitioner."
+                      (-> (f/parallelize c [[{:a 1 :b 1} 11]  ;; for me, (mod (hash 1) 2) and (mod (hash 3) 2) return 0 and 1 respectively, resulting in splitting the rdd in two partitions based upon :b
+                                            [{:a 2 :b 1} 11]
+                                            [{:a 3 :b 1} 12]
+                                            [{:a 4 :b 3} 12]
+                                            [{:a 5 :b 3} 13]] 1)
+                          (f/partition-by (f/hash-partitioner-fn (f/fn [key] (:b key)) 2))
+                          f/glom
+                          f/collect
+                          vec) => (just [[[{:a 1 :b 1} 11]
+                                          [{:a 2 :b 1} 11]
+                                          [{:a 3 :b 1} 12]]
+                                         [[{:a 4 :b 3} 12]
+                                          [{:a 5 :b 3} 13]]] :in-any-order))
 
                     )))

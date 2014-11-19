@@ -14,20 +14,18 @@
 
                  ;; [AVRO Feature] This adds support for reading avro files
                  [com.damballa/parkour "0.6.0"]
-                 [org.apache.avro/avro "1.7.6"]
-                 [org.apache.avro/avro-mapred "1.7.6"  :exclusions [org.slf4j/slf4j-log4j12 org.mortbay.jetty/servlet-api com.thoughtworks.paranamer/paranamer io.netty/netty commons-lang]]
                  [com.damballa/abracad "0.4.11" :exclusions [org.apache.avro/avro]]
                  ;; [/AVRO Feature]
-
-
                  ]
+
   :profiles {:dev
              {:dependencies [[midje "1.6.3"]
                              [criterium "0.4.3"]]
               :plugins [[lein-midje "3.1.3"]
                         [lein-marginalia "0.8.0"]
                         [lein-ancient "0.5.4"]
-                        [codox "0.8.9"]]
+                        [codox "0.8.9"]
+                        ]
               :resource-paths ["data"]
               ;; so gen-class stuff works in the repl
               :aot [flambo.function
@@ -38,10 +36,17 @@
                        }
              :provided
              {:dependencies
-              [[org.apache.spark/spark-core_2.10 "1.1.0"]
-               [org.apache.spark/spark-streaming_2.10 "1.1.0"]
-               [org.apache.spark/spark-streaming-kafka_2.10 "1.1.0"]
-               [org.apache.spark/spark-sql_2.10 "1.1.0"]]}
+              [[org.apache.spark/spark-core_2.10 "1.1.0" :exclusions [com.thoughtworks.paranamer/paranamer]]
+               [org.apache.spark/spark-streaming_2.10 "1.1.0" :exclusions [com.thoughtworks.paranamer/paranamer com.fasterxml.jackson.core/jackson-databind]]
+               [org.apache.spark/spark-streaming-kafka_2.10 "1.1.0" :exclusions [com.thoughtworks.paranamer/paranamer com.fasterxml.jackson.core/jackson-databind]]
+               [org.apache.spark/spark-sql_2.10 "1.1.0" :exclusions [com.thoughtworks.paranamer/paranamer org.scala-lang/scala-compiler com.fasterxml.jackson.core/jackson-databind]]
+
+               ;; [AVRO Feature] This adds support for reading avro files
+               [org.apache.avro/avro "1.7.6"]
+               [org.apache.avro/avro-mapred "1.7.6"  :exclusions [org.slf4j/slf4j-log4j12 org.mortbay.jetty/servlet-api com.thoughtworks.paranamer/paranamer io.netty/netty commons-lang]]
+               ;; [/AVRO Feature]
+
+               ]}
              :uberjar
              {:aot :all}}
   :source-paths ["src/clojure"]
