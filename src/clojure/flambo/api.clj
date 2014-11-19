@@ -26,7 +26,7 @@
             [flambo.kryo :as k])
   (:import [scala Tuple2 Tuple3]
            [scala.reflect ClassTag$]
-           [java.util Comparator]
+           [java.util Comparator ArrayList]
            [org.apache.spark.api.java JavaSparkContext StorageLevels
                                       JavaRDD JavaPairRDD JavaDoubleRDD]
            [org.apache.spark HashPartitioner]
@@ -137,8 +137,10 @@
 
 (defn union
   "Build the union of two or more RDDs"
-  [context rdd & rdds]
-  (.union context rdd (java.util.ArrayList. rdds)))
+  ([^JavaRDD rdd1 ^JavaRDD rdd2]
+    (.union rdd1 rdd2))
+  ([^JavaRDD rdd1 ^JavaRDD rdd2 & rdds]
+    (.union (JavaSparkContext/fromSparkContext (.context rdd1)) rdd1 (ArrayList. (conj rdds rdd2) ))))
 
 (defn partitionwise-sampled-rdd [rdd sampler preserve-partitioning? seed]
   "Creates a PartitionwiseSampledRRD from existing RDD and a sampler object"
@@ -511,10 +513,6 @@
       (map-to-pair identity)
       .keys))
 
-(defn union
-  "Return the union of two RDDs."
-  [^JavaRDD rdd1 ^JavaRDD rdd2]                             ;; todo: allow more than two RDDs to be 'union'ed.
-  (.union rdd1 rdd2))
 
 (defsparkfn seqify-untuple-2 [^Tuple2 t]
               (let [k (._1 t)
