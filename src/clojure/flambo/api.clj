@@ -26,13 +26,13 @@
             [flambo.kryo :as k])
   (:import [scala Tuple2 Tuple3]
            [scala.reflect ClassTag$]
-           (java.util Comparator)
-           (org.apache.spark.api.java JavaSparkContext StorageLevels)
-           [org.apache.spark.api.java JavaRDD JavaPairRDD]
+           [java.util Comparator]
+           [org.apache.spark.api.java JavaSparkContext StorageLevels
+                                      JavaRDD JavaPairRDD JavaDoubleRDD]
            [org.apache.spark HashPartitioner]
-           (org.apache.spark.rdd PartitionwiseSampledRDD)
-           (flambo.function Function Function2 Function3 VoidFunction FlatMapFunction
-                            PairFunction PairFlatMapFunction)
+           [org.apache.spark.rdd PartitionwiseSampledRDD]
+           [flambo.function Function Function2 Function3 VoidFunction FlatMapFunction
+                            PairFunction PairFlatMapFunction]
            [org.apache.spark.util Utils]
            [com.esotericsoftware.kryo KryoSerializable]))
 
@@ -135,6 +135,11 @@
   ([spark-context lst] (.parallelize spark-context lst))
   ([spark-context lst num-slices] (.parallelize spark-context lst num-slices)))
 
+(defn union
+  "Build the union of two or more RDDs"
+  [context rdd & rdds]
+  (.union context rdd (java.util.ArrayList. rdds)))
+
 (defn partitionwise-sampled-rdd [rdd sampler preserve-partitioning? seed]
   "Creates a PartitionwiseSampledRRD from existing RDD and a sampler object"
   (-> (PartitionwiseSampledRDD.
@@ -229,6 +234,12 @@
       (map-to-pair identity)
       (.reduceByKey (function2 f))
       (.map (function untuple))))
+
+(defn cartesian
+  "Creates the cartesian product of two RDDs returning an RDD of pairs"
+  [rdd1 rdd2]
+  (-> (.cartesian rdd1 rdd2)
+    (.map (function untuple))))
 
 (defn group-by
   "Returns an RDD of items grouped by the return value of function `f`."
@@ -542,3 +553,18 @@
    (.setName rdd name))
   ([^JavaRDD rdd]
    (.name rdd)))
+
+
+(defmulti histogram "compute histogram of an RDD of doubles"
+  (fn [_ bucket-arg] (sequential? bucket-arg)))
+
+(defmethod histogram true [rdd buckets]
+  (let [counts (-> (JavaDoubleRDD/fromRDD (.rdd rdd))
+                   (.histogram (double-array buckets)))]
+       (into [] counts)))
+
+(defmethod histogram false [rdd bucket-count]
+  (let [[buckets counts] (-> (JavaDoubleRDD/fromRDD (.rdd rdd))
+                             (.histogram bucket-count)
+                             untuple)]
+    [(into [] buckets) (into [] counts)]))
