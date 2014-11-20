@@ -458,13 +458,13 @@
      ([x y] (f (g (h x y))))
      ([x y z] (f (g (h x y z))))
      ([x y z & args] (f (g (apply h x y z args))))))
-  ([f1 f2 f3 & fs]
-   (let [fs (reverse (list* f1 f2 f3 fs))]
-     (fn [& args]
-           (loop [ret (apply (first fs) args) fs (next fs)]
-             (if fs
-               (recur ((first fs) ret) (next fs))
-               ret))))))
+  ([f g h i]
+   (fn
+     ([] (f (g (h (i)))))
+     ([x] (f (g (h (i x)))))
+     ([x y] (f (g (h (i x y)))))
+     ([x y z] (f (g (h (i x y z)))))
+     ([x y z & args] (f (g (h (apply i x y z args))))))))
 
 (defn partitions
   "Returns a vector of partitions for a given JavaRDD"
