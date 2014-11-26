@@ -532,13 +532,16 @@
   (-> rdd
       ^JavaPairRDD
       (map-to-pair identity)
-      (.cogroup (map-to-pair other identity))
+      (.cogroup
+        (map-to-pair other identity))
       (map seqify-untuple-2)))
   ([^JavaPairRDD rdd ^JavaPairRDD other1 ^JavaPairRDD other2]
    (-> rdd
        ^JavaPairRDD
        (map-to-pair identity)
-       (.cogroup (map-to-pair other1 identity) (map-to-pair other2 identity))
+       (.cogroup
+         (map-to-pair other1 identity)
+         (map-to-pair other2 identity))
        (map seqify-untuple-3))))
 
 
