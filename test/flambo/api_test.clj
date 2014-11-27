@@ -108,7 +108,7 @@
                       "map-to-pair returns an RDD of (K, V) pairs formed by passing each element of the source
                       RDD through a pair function"
                       (-> (f/parallelize c ["a" "b" "c" "d"])
-                          (f/map-to-pair (f/fn [x] [x 1]))
+                          (f/map-to-pair (f/fn [x] (f/tuple x 1)))
                           (f/map (fd/tuple-fn identity-vec))
                           f/collect
                           vec) => [["a" 1] ["b" 1] ["c" 1] ["d" 1]])
@@ -327,7 +327,7 @@
                       "flat-map-to-pair"
                       (-> (f/parallelize c [["Four score and seven"]
                                             ["years ago"]])
-                          (f/flat-map-to-pair (f/fn [x] (map (fn [y] [y 1])
+                          (f/flat-map-to-pair (f/fn [x] (map (fn [y] (f/tuple y 1))
                                                              (clojure.string/split (first x) #" "))))
                           (f/map f/untuple)
                           f/collect
@@ -520,7 +520,7 @@
                     (fact
                       "partition-by partitions a given RDD according to the partitioning-fn using a hash partitioner."
                       (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
-                          (f/map-to-pair (f/fn [x] [x x]))
+                          (f/map-to-pair (f/fn [x] (f/tuple x x)))
                           (f/partition-by (f/hash-partitioner-fn 2))
                           f/glom
                           f/collect
@@ -531,7 +531,7 @@
                     (fact
                       "partition-by returns an RDD with a hash partitioner."
                       (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
-                          (f/map-to-pair (f/fn [x] [x x]))
+                          (f/map-to-pair (f/fn [x] (f/tuple x x)))
                           (f/partition-by (f/hash-partitioner-fn 2))
                           (.rdd)
                           (.partitioner)

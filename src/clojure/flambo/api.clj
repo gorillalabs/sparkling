@@ -94,6 +94,10 @@
   (let [clazz (Class/forName (clojure.string/replace (str ns) #"-" "_"))]
     (JavaSparkContext/jarOfClass clazz)))
 
+(defsparkfn tuple [k v]
+            (Tuple2. k v))
+
+
 (defsparkfn untuple [^Tuple2 t]
             (let [v (transient [])]
               (conj! v (._1 t))
@@ -488,7 +492,7 @@
 (defn key-by
   "Creates tuples of the elements in this RDD by applying `f`."
   [^JavaRDD rdd f]
-  (map-to-pair rdd (fn [x] [(f x) x])))
+  (map-to-pair rdd (fn [x] (tuple (f x) x))))
 
 (defn keys
   "Return an RDD with the keys of each tuple."
