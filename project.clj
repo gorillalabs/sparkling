@@ -1,4 +1,4 @@
-(defproject chrisbetz/flambo "0.4.1-SNAPSHOT"
+(defproject chrisbetz/flambo "0.5.0-SNAPSHOT"
   :description "A Clojure DSL for Apache Spark"
   :url "https://github.com/chrisbetz/flambo"
   :license {:name "Eclipse Public License"

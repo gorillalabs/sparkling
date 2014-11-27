@@ -28,11 +28,11 @@
            [scala.reflect ClassTag$]
            [java.util Comparator ArrayList]
            [org.apache.spark.api.java JavaSparkContext StorageLevels
-                                      JavaRDD JavaPairRDD JavaDoubleRDD]
+            JavaRDD JavaPairRDD JavaDoubleRDD]
            [org.apache.spark HashPartitioner]
            [org.apache.spark.rdd PartitionwiseSampledRDD]
            [flambo.function Function Function2 Function3 VoidFunction FlatMapFunction
-                            PairFunction PairFlatMapFunction]
+            PairFunction PairFlatMapFunction]
            [org.apache.spark.util Utils]
            [com.esotericsoftware.kryo KryoSerializable]))
 
@@ -45,16 +45,16 @@
 (System/setProperty "spark.serializer" "org.apache.spark.serializer.KryoSerializer")
 (System/setProperty "spark.kryo.registrator" "flambo.kryo.BaseFlamboRegistrator")
 
-(def STORAGE-LEVELS {:memory-only StorageLevels/MEMORY_ONLY
-                     :memory-only-ser StorageLevels/MEMORY_ONLY_SER
-                     :memory-and-disk StorageLevels/MEMORY_AND_DISK
-                     :memory-and-disk-ser StorageLevels/MEMORY_AND_DISK_SER
-                     :disk-only StorageLevels/DISK_ONLY
-                     :memory-only-2 StorageLevels/MEMORY_ONLY_2
-                     :memory-only-ser-2 StorageLevels/MEMORY_ONLY_SER_2
-                     :memory-and-disk-2 StorageLevels/MEMORY_AND_DISK_2
+(def STORAGE-LEVELS {:memory-only           StorageLevels/MEMORY_ONLY
+                     :memory-only-ser       StorageLevels/MEMORY_ONLY_SER
+                     :memory-and-disk       StorageLevels/MEMORY_AND_DISK
+                     :memory-and-disk-ser   StorageLevels/MEMORY_AND_DISK_SER
+                     :disk-only             StorageLevels/DISK_ONLY
+                     :memory-only-2         StorageLevels/MEMORY_ONLY_2
+                     :memory-only-ser-2     StorageLevels/MEMORY_ONLY_SER_2
+                     :memory-and-disk-2     StorageLevels/MEMORY_AND_DISK_2
                      :memory-and-disk-ser-2 StorageLevels/MEMORY_AND_DISK_SER_2
-                     :disk-only-2 StorageLevels/DISK_ONLY_2})
+                     :disk-only-2           StorageLevels/DISK_ONLY_2})
 
 (defmacro fn
   [& body]
@@ -69,11 +69,11 @@
   "Creates a spark context that loads settings from given configuration object
    or system properties"
   ([conf]
-     (log/debug "JavaSparkContext" (conf/to-string conf))
-     (JavaSparkContext. conf))
+   (log/debug "JavaSparkContext" (conf/to-string conf))
+   (JavaSparkContext. conf))
   ([master app-name]
-     (log/debug "JavaSparkContext" master app-name)
-     (JavaSparkContext. master app-name)))
+   (log/debug "JavaSparkContext" master app-name)
+   (JavaSparkContext. master app-name)))
 
 (defn local-spark-context
   [app-name]
@@ -95,27 +95,42 @@
     (JavaSparkContext/jarOfClass clazz)))
 
 (defsparkfn untuple [^Tuple2 t]
-  (let [v (transient [])]
-    (conj! v (._1 t))
-    (conj! v (._2 t))
-    (persistent! v)))
+            (let [v (transient [])]
+              (conj! v (._1 t))
+              (conj! v (._2 t))
+              (persistent! v)))
 
 (defsparkfn double-untuple [^Tuple2 t]
-  (let [[x ^Tuple2 t2] (untuple t)
-        v (transient [])]
-    (conj! v x)
-    (conj! v (untuple t2))
-    (persistent! v)))
+            (let [[x ^Tuple2 t2] (untuple t)
+                  v (transient [])]
+              (conj! v x)
+              (conj! v (untuple t2))
+              (persistent! v)))
 
 (defsparkfn group-untuple [^Tuple2 t]
-  (let [v (transient [])]
-    (conj! v (._1 t))
-    (conj! v (into [] (._2 t)))
-    (persistent! v)))
+            (let [v (transient [])]
+              (conj! v (._1 t))
+              (conj! v (into [] (._2 t)))
+              (persistent! v)))
 
 (defn- ftruthy?
   [f]
   (fn [x] (u/truthy? (f x))))
+
+(defn seq-value [[k v]]
+  [k (seq v)])
+
+(defn untuple-value [[k v]]
+  [k (untuple v)])
+
+(defn optional-second-value [[k [v1 v2]]]
+  [k [v1 (.orNull v2)]])
+
+
+
+;; TODO: Use memfn more often to simplyfy code (and support more signature/usage patterns)
+
+
 
 ;; TODO: accumulators
 ;; http://spark.apache.org/docs/latest/programming-guide.html#accumulators
@@ -135,22 +150,27 @@
   ([spark-context lst] (.parallelize spark-context lst))
   ([spark-context lst num-slices] (.parallelize spark-context lst num-slices)))
 
+(defn parallelize-pairs
+  "Distributes a local collection to form/return an RDD"
+  ([spark-context lst] (.parallelizePairs spark-context lst))
+  ([spark-context lst num-slices] (.parallelizeParis spark-context lst num-slices)))
+
 (defn union
   "Build the union of two or more RDDs"
   ([^JavaRDD rdd1 ^JavaRDD rdd2]
-    (.union rdd1 rdd2))
+   (.union rdd1 rdd2))
   ([^JavaRDD rdd1 ^JavaRDD rdd2 & rdds]
-    (.union (JavaSparkContext/fromSparkContext (.context rdd1)) rdd1 (ArrayList. (conj rdds rdd2) ))))
+   (.union (JavaSparkContext/fromSparkContext (.context rdd1)) rdd1 (ArrayList. (conj rdds rdd2)))))
 
 (defn partitionwise-sampled-rdd [rdd sampler preserve-partitioning? seed]
   "Creates a PartitionwiseSampledRRD from existing RDD and a sampler object"
   (-> (PartitionwiseSampledRDD.
-       (.rdd rdd)
-       sampler
-       preserve-partitioning?
-       seed
-       k/OBJECT-CLASS-TAG
-       k/OBJECT-CLASS-TAG)
+        (.rdd rdd)
+        sampler
+        preserve-partitioning?
+        seed
+        k/OBJECT-CLASS-TAG
+        k/OBJECT-CLASS-TAG)
       (JavaRDD/fromRDD k/OBJECT-CLASS-TAG)))
 
 ;; ## Transformations
@@ -177,9 +197,7 @@
 (defn values
   "Returns the values of a JavaPairRDD"
   [rdd]
-  (-> rdd
-      (map-to-pair identity)
-      .values))
+  (.values rdd))
 
 (defn flat-map
   "Similar to `map`, but each input item can be mapped to 0 or more output items (so the
@@ -228,44 +246,33 @@
   [rdd zero-value f]
   (.fold rdd zero-value (function2 f)))
 
+
 (defn reduce-by-key
   "When called on an `rdd` of (K, V) pairs, returns an RDD of (K, V) pairs
   where the values for each key are aggregated using the given reduce function `f`."
   [rdd f]
   (-> rdd
-      (map-to-pair identity)
       (.reduceByKey (function2 f))
-      (.map (function untuple))))
+      ))
 
 (defn cartesian
   "Creates the cartesian product of two RDDs returning an RDD of pairs"
   [rdd1 rdd2]
-  (-> (.cartesian rdd1 rdd2)
-    (.map (function untuple))))
+  (.cartesian rdd1 rdd2))
 
 (defn group-by
   "Returns an RDD of items grouped by the return value of function `f`."
   ([rdd f]
-     (-> rdd
-         (.groupBy (function f))
-         (.map (function group-untuple))))
+   (.groupBy rdd (function f)))
   ([rdd f n]
-     (-> rdd
-         (.groupBy (function f) n)
-         (.map (function group-untuple)))))
+   (.groupBy rdd (function f) n)))
 
 (defn group-by-key
   "Groups the values for each key in `rdd` into a single sequence."
   ([rdd]
-     (-> rdd
-         (map-to-pair identity)
-         .groupByKey
-         (.map (function group-untuple))))
+   (.groupByKey rdd))
   ([rdd n]
-     (-> rdd
-         (map-to-pair identity)
-         (.groupByKey n)
-         (.map (function group-untuple)))))
+   (.groupByKey rdd n)))
 
 (defn combine-by-key
   "Combines the elements for each key using a custom set of aggregation functions.
@@ -277,65 +284,48 @@
   -- mergeValue, to merge a V into a C (e.g., adds it to the end of a list)
   -- mergeCombiners, to combine two C's into a single one."
   ([rdd create-combiner merge-value merge-combiners]
-     (-> rdd
-         (map-to-pair identity)
-         (.combineByKey (function create-combiner)
-                        (function2 merge-value)
-                        (function2 merge-combiners))
-         (.map (function untuple))))
+   (.combineByKey rdd
+                  (function create-combiner)
+                  (function2 merge-value)
+                  (function2 merge-combiners)))
   ([rdd create-combiner merge-value merge-combiners n]
-     (-> rdd
-         (map-to-pair identity)
-         (.combineByKey (function create-combiner)
-                        (function2 merge-value)
-                        (function2 merge-combiners)
-                        n)
-         (.map (function untuple)))))
+   (.combineByKey rdd
+                  (function create-combiner)
+                  (function2 merge-value)
+                  (function2 merge-combiners)
+                  n)))
 
 (defn sort-by-key
   "When called on `rdd` of (K, V) pairs where K implements ordered, returns a dataset of
    (K, V) pairs sorted by keys in ascending or descending order, as specified by the boolean
    ascending argument."
   ([rdd]
-     (sort-by-key rdd compare true))
+   (sort-by-key rdd compare true))
   ([rdd x]
-     ;; RDD has a .sortByKey signature with just a Boolean arg, but it doesn't
-     ;; seem to work when I try it, bool is ignored.
-     (if (instance? Boolean x)
-       (sort-by-key rdd compare x)
-       (sort-by-key rdd x true)))
+   ;; RDD has a .sortByKey signature with just a Boolean arg, but it doesn't
+   ;; seem to work when I try it, bool is ignored.
+   (if (instance? Boolean x)
+     (sort-by-key rdd compare x)
+     (sort-by-key rdd x true)))
   ([rdd compare-fn asc?]
-     (-> rdd
-         (map-to-pair identity)
-         (.sortByKey
-          (if (instance? Comparator compare-fn)
-            compare-fn
-            (comparator compare-fn))
-          (u/truthy? asc?))
-         (.map (function untuple)))))
+   (.sortByKey rdd
+               (if (instance? Comparator compare-fn)
+                 compare-fn
+                 (comparator compare-fn))
+               (u/truthy? asc?))))
 
 (defn join
   "When called on `rdd` of type (K, V) and (K, W), returns a dataset of
   (K, (V, W)) pairs with all pairs of elements for each key."
   [rdd other]
-  (-> rdd
-      (map-to-pair identity)
-      (.join (map-to-pair other identity))
-      (.map (function double-untuple))))
+  (.join rdd other))
 
 (defn left-outer-join
   "Performs a left outer join of `rdd` and `other`. For each element (K, V)
    in the RDD, the resulting RDD will either contain all pairs (K, (V, W)) for W in other,
    or the pair (K, (V, nil)) if no elements in other have key K."
   [rdd other]
-  (-> rdd
-      (map-to-pair identity)
-      (.leftOuterJoin (map-to-pair other identity))
-      (.map (function
-             (fn [t]
-                      (let [[x t2] (untuple t)
-                            [a b] (untuple t2)]
-                        (vector x [a (.orNull b)])))))))
+  (.leftOuterJoin rdd other))
 
 (defn sample
   "Returns a `fraction` sample of `rdd`, with or without replacement,
@@ -347,9 +337,9 @@
   "Decrease the number of partitions in `rdd` to `n`.
   Useful for running operations more efficiently after filtering down a large dataset."
   ([rdd n]
-     (.coalesce rdd n))
+   (.coalesce rdd n))
   ([rdd n shuffle?]
-     (.coalesce rdd n shuffle?)))
+   (.coalesce rdd n shuffle?)))
 
 (defn repartition
   "Returns a new `rdd` with exactly `n` partitions."
@@ -365,9 +355,7 @@
   Returns a map of (K, Int) pairs with the count of each key."
   [rdd]
   (into {}
-        (-> rdd
-            (map-to-pair identity)
-            .countByKey)))
+        (.countByKey rdd)))
 
 (defn count-by-value
   "Return the count of each unique value in `rdd` as a map of (value, count)
@@ -421,9 +409,9 @@
 (defn distinct
   "Return a new RDD that contains the distinct elements of the source `rdd`."
   ([rdd]
-     (.distinct rdd))
+   (.distinct rdd))
   ([rdd n]
-     (.distinct rdd n)))
+   (.distinct rdd n)))
 
 (defn take
   "Return an array with the first n elements of `rdd`.
@@ -485,11 +473,8 @@
   )
 
 (defn partition-by
-  [^JavaRDD rdd partitioner-fn]
-  (-> rdd
-      (map-to-pair identity)
-      ^JavaPairRDD ((fn [^JavaPairRDD rdd] (.partitionBy rdd (partitioner-fn rdd))))
-      (.map (function untuple))))
+  [^JavaPairRDD rdd partitioner-fn]
+  (.partitionBy rdd (partitioner-fn rdd)))
 
 
 (defn foreach-partition
@@ -503,46 +488,23 @@
 (defn key-by
   "Creates tuples of the elements in this RDD by applying `f`."
   [^JavaRDD rdd f]
-  (map rdd (fn [x] [(f x) x])))
+  (map-to-pair rdd (fn [x] [(f x) x])))
 
 (defn keys
   "Return an RDD with the keys of each tuple."
-  [^JavaRDD rdd]
-  (-> rdd
-      ^JavaPairRDD
-      (map-to-pair identity)
-      .keys))
-
-
-(defsparkfn seqify-untuple-2 [^Tuple2 t]
-              (let [k (._1 t)
-                    v ^Tuple2 (._2 t)]
-                [k [(seq (._1 v)) (seq (._2 v))]]))
-
-(defsparkfn seqify-untuple-3 [^Tuple2 t]
-            (let [k (._1 t)
-                  v ^Tuple3 (._2 t)]
-              [k [(seq (._1 v)) (seq (._2 v)) (seq (._3 v))]]))
+  [^JavaPairRDD rdd]
+  (.keys rdd))
 
 
 
 
 (defn cogroup
   ([^JavaPairRDD rdd ^JavaPairRDD other]
-  (-> rdd
-      ^JavaPairRDD
-      (map-to-pair identity)
-      (.cogroup
-        (map-to-pair other identity))
-      (map seqify-untuple-2)))
+   (.cogroup rdd other))
   ([^JavaPairRDD rdd ^JavaPairRDD other1 ^JavaPairRDD other2]
-   (-> rdd
-       ^JavaPairRDD
-       (map-to-pair identity)
-       (.cogroup
-         (map-to-pair other1 identity)
-         (map-to-pair other2 identity))
-       (map seqify-untuple-3))))
+   (.cogroup rdd
+             other1
+             other2)))
 
 
 (defn checkpoint [^JavaRDD rdd]
@@ -557,12 +519,12 @@
 
 
 (defmulti histogram "compute histogram of an RDD of doubles"
-  (fn [_ bucket-arg] (sequential? bucket-arg)))
+          (fn [_ bucket-arg] (sequential? bucket-arg)))
 
 (defmethod histogram true [rdd buckets]
   (let [counts (-> (JavaDoubleRDD/fromRDD (.rdd rdd))
                    (.histogram (double-array buckets)))]
-       (into [] counts)))
+    (into [] counts)))
 
 (defmethod histogram false [rdd bucket-count]
   (let [[buckets counts] (-> (JavaDoubleRDD/fromRDD (.rdd rdd))
