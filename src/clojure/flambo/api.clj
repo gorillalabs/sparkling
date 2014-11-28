@@ -460,7 +460,7 @@
 
 (defn partitions
   "Returns a vector of partitions for a given JavaRDD"
-  [^JavaRDD javaRdd]
+  [javaRdd]
   (into [] (.partitions (.rdd javaRdd))))
 
 
@@ -483,7 +483,7 @@
 
 (defn foreach-partition
   "Applies the function `f` to all elements of `rdd`."
-  [^JavaRDD rdd f]
+  [rdd f]
   (.foreachPartition rdd (void-function (comp f iterator-seq))))
 
 
@@ -516,9 +516,9 @@
 
 
 (defn rdd-name
-  ([^JavaRDD rdd name]
+  ([rdd name]
    (.setName rdd name))
-  ([^JavaRDD rdd]
+  ([rdd]
    (.name rdd)))
 
 
