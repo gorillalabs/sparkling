@@ -29,6 +29,21 @@ Apache Spark is a fast and general-purpose cluster computing system. It provides
 
 Flambo is a Clojure DSL for Spark. It allows you to create and manipulate Spark data structures using idiomatic Clojure.
 
+chrisbetz/flambo is a fork of yieldbot/flambo with some additions:
+
+* JdbcRDD: Reading Data from your JDBC source.
+* Hadoop-Avro-Reader: Reading AVRO Files from HDFS
+* Get rid of mapping/remapping inside the api functions, which bloated the execution plan (mine shrinked to a third) and (more importantly) allowed me to keep partitioner information.
+
+
+
+**THIS README NEEDS TO BE FIXED, BUT THE ORIGINAL VERSION OF FLAMBO DID THROW AWAY ALL PARTITIONER-INFORMATION BY CLUTTERING THE RDDs WITH MAPPING BACK AND FORTH. THIS IS A PERFORMANCE KILLER, AS SPARK HEAVILY RELIES ON PARTITIONING**
+
+**UNIT TESTS AND EXAMPLE ARE UPDATED, BUT README IS NOT YET**
+
+
+
+
 "So that's where I came from." --Flambo
 
 <a name="versions">
