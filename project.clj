@@ -1,12 +1,10 @@
-(defproject chrisbetz/flambo "0.5.0"
+(defproject chrisbetz/flambo "0.6.0-SNAPSHOT"
             :description "A Clojure DSL for Apache Spark"
             :url "https://github.com/chrisbetz/flambo"
             :license {:name "Eclipse Public License"
                       :url  "http://www.eclipse.org/legal/epl-v10.html"}
             :dependencies [[org.clojure/clojure "1.6.0"]
                            [org.clojure/tools.logging "0.3.1"]
-                           [yieldbot/serializable-fn "0.0.6"
-                            :exclusions [com.twitter/chill-java]]
                            [com.twitter/carbonite "1.4.0"
                             :exclusions [com.twitter/chill-java]]
                            [com.twitter/chill_2.10 "0.5.0"
@@ -27,7 +25,8 @@
                                                    ]
                                   :resource-paths ["data"]
                                   ;; so gen-class stuff works in the repl
-                                  :aot            [flambo.function
+                                  :aot            [flambo.api
+                                                   flambo.function
                                                    flambo.scalaInterop]}
                        :jenkins  {:dependencies [[midje-junit-formatter "0.1.0-SNAPSHOT"]]
                                   :aliases      {"junit" ["midje" ":config" ".midje-jenkins.clj"]}
@@ -44,18 +43,31 @@
                                     ;; [/AVRO Feature]
 
                                     ]}
+                       :test     {:resource-paths ["dev-resources" "data"]
+                                  :aot            [flambo.api
+                                                   flambo.function
+                                                   flambo.scalaInterop
+                                                   flambo.destructuring
+                                                   flambo.debug
+                                                   flambo.rdd.hadoopAvro
+                                                   flambo.rdd.jdbc
+                                                   flambo.api-test
+                                                   flambo.conf-test
+                                                   flambo.rdd.hadoopAvro-test
+                                                   flambo.rdd.jdbc-test
+                                                   ]}
                        :uberjar  {:aot :all}
                        :example  {:main         flambo.example.tfidf
                                   :source-paths ["example"]
-                                  :aot            [flambo.function
-                                                   flambo.scalaInterop]}
+                                  :aot          [flambo.function
+                                                 flambo.scalaInterop]}
                        }
             :source-paths ["src/clojure"]
             :java-source-paths ["src/java"]
             :codox {:defaults                  {:doc/format :markdown}
                     :include                   [flambo.api flambo.conf flambo.kryo]
                     :output-dir                "doc/codox"
-                    :src-dir-uri               "http://github.com/yieldbot/flambo/blob/develop/"
+                    :src-dir-uri               "https://raw.githubusercontent.com/chrisbetz/flambo/develop/"
                     :src-linenum-anchor-prefix "L"}
             :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.6"]
             :jvm-opts ^:replace ["-server" "-Xmx1g"]

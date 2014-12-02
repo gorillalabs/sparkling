@@ -11,8 +11,7 @@
 ;;
 (ns flambo.api
   (:refer-clojure :exclude [fn map reduce first count take distinct filter group-by values partition-by keys comp])
-  (:require [serializable.fn :as sfn]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [flambo.function :refer [flat-map-function
                                      flat-map-function2
                                      function
@@ -31,8 +30,6 @@
             JavaRDD JavaPairRDD JavaDoubleRDD]
            [org.apache.spark HashPartitioner]
            [org.apache.spark.rdd PartitionwiseSampledRDD]
-           [flambo.function Function Function2 Function3 VoidFunction FlatMapFunction
-            PairFunction PairFlatMapFunction]
            [org.apache.spark.util Utils]
            [com.esotericsoftware.kryo KryoSerializable]))
 
@@ -58,7 +55,7 @@
 
 (defmacro fn
   [& body]
-  `(sfn/fn ~@body))
+  `(clojure.core/fn ~@body))
 
 (defmacro defsparkfn
   [name & body]
