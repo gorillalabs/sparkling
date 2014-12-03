@@ -1,37 +1,17 @@
 package flambo.function;
 
-import java.lang.ClassNotFoundException;
-import java.io.Serializable;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.ObjectInputStream;
-
 import clojure.lang.AFunction;
-
-import flambo.function.Utils;
-
+import flambo.kryo.AbstractSerializableWrappedAFunction;
 import org.apache.spark.api.java.function.VoidFunction;
 
-public class FlamboVoidFunction implements VoidFunction, Serializable {
+public class FlamboVoidFunction extends AbstractSerializableWrappedAFunction implements VoidFunction{
   
-  private AFunction f;
-  
-  public FlamboVoidFunction() {}
-  
-  public FlamboVoidFunction(AFunction func) {
-    f = func;
-  }
-
   @SuppressWarnings("unchecked")
   public void call(Object v1) throws Exception {
     f.invoke(v1);
   }
-  
-  private void writeObject(ObjectOutputStream out) throws IOException {
-    Utils.writeAFunction(out, f);
-  }
-  
-  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    f = Utils.readAFunction(in);
-  }
+
+    public FlamboVoidFunction(AFunction func) {
+        super(func);
+    }
 }

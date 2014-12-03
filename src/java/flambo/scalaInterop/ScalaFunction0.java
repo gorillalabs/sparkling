@@ -1,7 +1,7 @@
 package flambo.scalaInterop;
 
 import clojure.lang.AFunction;
-import flambo.function.Utils;
+import flambo.kryo.Utils;
 import scala.Function0;
 import scala.runtime.AbstractFunction0;
 

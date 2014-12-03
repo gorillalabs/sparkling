@@ -1,4 +1,4 @@
-package flambo.function;
+package flambo.kryo;
 
 import java.lang.ClassNotFoundException;
 import java.io.IOException;

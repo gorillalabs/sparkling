@@ -22,7 +22,7 @@
                                                    [lein-marginalia "0.8.0"]
                                                    [lein-ancient "0.5.4"]
                                                    [codox "0.8.9"]
-                                                   ]
+                                                   [lein-release "1.0.5"]]
                                   :resource-paths ["data"]
                                   ;; so gen-class stuff works in the repl
                                   :aot            [flambo.api
@@ -71,7 +71,9 @@
                     :src-linenum-anchor-prefix "L"}
             :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.6"]
             :jvm-opts ^:replace ["-server" "-Xmx1g"]
-            :global-vars {*warn-on-reflection* false})
+            :global-vars {*warn-on-reflection* false}
+            :lein-release {:deploy-via :clojars}
+            )
 
 ;; run example with
 ;;     lein with-profile example,provided run
