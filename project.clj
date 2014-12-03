@@ -18,8 +18,7 @@
 
             :profiles {:dev      {:dependencies   [[midje "1.6.3"]
                                                    [criterium "0.4.3"]]
-                                  :plugins        [[lein-midje "3.1.3"]
-                                                   [lein-marginalia "0.8.0"]
+                                  :plugins        [[lein-marginalia "0.8.0"]
                                                    [lein-ancient "0.5.4"]
                                                    [codox "0.8.9"]
                                                    [lein-release "1.0.5"]]
@@ -28,8 +27,7 @@
                                   :aot            [flambo.api
                                                    flambo.function
                                                    flambo.scalaInterop]}
-                       :jenkins  {:dependencies [[midje-junit-formatter "0.1.0-SNAPSHOT"]]
-                                  :aliases      {"junit" ["midje" ":config" ".midje-jenkins.clj"]}
+                       :jenkins  {:plugins      [[lein-test-out "0.3.1"]]
                                   }
                        :provided {:dependencies
                                    [[org.apache.spark/spark-core_2.10 "1.1.0" :exclusions [com.thoughtworks.paranamer/paranamer]]
