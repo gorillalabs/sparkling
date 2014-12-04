@@ -27,8 +27,9 @@ Apache Spark is a fast and general-purpose cluster computing system. It provides
 
 Flambo is a Clojure Library for Spark. It allows you to create and manipulate Spark data structures using idiomatic Clojure.
 
-chrisbetz/flambo is fork from yieldbot/flambo, but has some additions:
-
+chrisbetz/flambo is fork from [yieldbot/flambo](https://github.com/yieldbot/flambo) (which itself is an offspring of clj-spark from The Climate Corporation or one of its [forks](https://github.com/TheClimateCorporation/clj-spark/network)).
+ 
+I added some features:
 
 * It's about twice as fast by getting rid of a reflection call (thanks to [David Jacot](https://github.com/dajac) for his take on this).
 * Get rid of mapping/remapping inside the api functions, which 

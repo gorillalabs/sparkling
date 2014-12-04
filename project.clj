@@ -57,8 +57,7 @@
                        :uberjar  {:aot :all}
                        :example  {:main         flambo.example.tfidf
                                   :source-paths ["example"]
-                                  :aot          [flambo.function
-                                                 flambo.scalaInterop]}
+                                  :aot          [flambo.example.tfidf]}
                        }
             :source-paths ["src/clojure"]
             :java-source-paths ["src/java"]
