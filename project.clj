@@ -1,4 +1,4 @@
-(defproject chrisbetz/flambo "0.6.0"
+(defproject chrisbetz/flambo "0.6.1"
             :description "A Clojure DSL for Apache Spark"
             :url "https://github.com/chrisbetz/flambo"
             :license {:name "Eclipse Public License"
@@ -57,8 +57,7 @@
                        :uberjar  {:aot :all}
                        :example  {:main         flambo.example.tfidf
                                   :source-paths ["example"]
-                                  :aot          [flambo.function
-                                                 flambo.scalaInterop]}
+                                  :aot          [flambo.example.tfidf]}
                        }
             :source-paths ["src/clojure"]
             :java-source-paths ["src/java"]

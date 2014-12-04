@@ -105,29 +105,29 @@
     (f/with-context c conf
                     (testing
                         "map returns an RDD formed by passing each element of the source RDD through a function"
-                      (is (= (-> (f/parallelize c [1 2 3 4 5])
-                                 (f/map (f/fn [x] (* 2 x)))
-                                 f/collect
-                                 vec) [2 4 6 8 10])))
+                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 3 4 5])
+                                                    (f/map (f/fn [x] (* 2 x)))
+                                                    f/collect
+                                                    vec) [2 4 6 8 10])))
 
                     (testing
                         "map-to-pair returns an RDD of (K, V) pairs formed by passing each element of the source
                         RDD through a pair function"
-                      (is (= (-> (f/parallelize c ["a" "b" "c" "d"])
-                                 (f/map-to-pair (f/fn [x] (f/tuple x 1)))
-                                 (f/map (fd/tuple-fn identity-vec))
-                                 f/collect
-                                 vec) [["a" 1] ["b" 1] ["c" 1] ["d" 1]])))
+                      (is (equals-ignore-order? (-> (f/parallelize c ["a" "b" "c" "d"])
+                                                    (f/map-to-pair (f/fn [x] (f/tuple x 1)))
+                                                    (f/map (fd/tuple-fn identity-vec))
+                                                    f/collect
+                                                    vec) [["a" 1] ["b" 1] ["c" 1] ["d" 1]])))
 
 
                     (testing
                         "key-by returns an RDD of (K,V) pairs from an RDD of V elements formed by passing each V through a function to get to K."
-                      (is (= (-> (f/parallelize c [0 1 2 3 4])
-                                 (f/key-by even?)
-                                 (f/map f/untuple)
-                                 f/collect
-                                 vec)
-                             [[true 0] [false 1] [true 2] [false 3] [true 4]])))
+                      (is (equals-ignore-order? (-> (f/parallelize c [0 1 2 3 4])
+                                                    (f/key-by even?)
+                                                    (f/map f/untuple)
+                                                    f/collect
+                                                    vec)
+                                                [[true 0] [false 1] [true 2] [false 3] [true 4]])))
 
                     (testing
                         "reduce-by-key returns an RDD of (K, V) when called on an RDD of (K, V) pairs"
@@ -147,20 +147,20 @@
                     (testing
                         "similar to map, but each input item can be mapped to 0 or more output items;
                         mapping function must therefore return a sequence rather than a single item"
-                      (is (= (-> (f/parallelize c [["Four score and seven years ago our fathers"]
-                                                   ["brought forth on this continent a new nation"]])
-                                 (f/flat-map (f/fn [x] (clojure.string/split (first x) #" ")))
-                                 f/collect
-                                 vec)
-                             ["Four" "score" "and" "seven" "years" "ago" "our" "fathers" "brought" "forth" "on" "this" "continent" "a" "new" "nation"])))
+                      (is (equals-ignore-order? (-> (f/parallelize c [["Four score and seven years ago our fathers"]
+                                                                      ["brought forth on this continent a new nation"]])
+                                                    (f/flat-map (f/fn [x] (clojure.string/split (first x) #" ")))
+                                                    f/collect
+                                                    vec)
+                                                ["Four" "score" "and" "seven" "years" "ago" "our" "fathers" "brought" "forth" "on" "this" "continent" "a" "new" "nation"])))
 
                     (testing
                         "filter returns an RDD formed by selecting those elements of the source on which func returns true"
-                      (is (= (-> (f/parallelize c [1 2 3 4 5 6])
-                                 (f/filter (f/fn [x] (even? x)))
-                                 f/collect
-                                 vec)
-                             [2 4 6])))
+                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 3 4 5 6])
+                                                    (f/filter (f/fn [x] (even? x)))
+                                                    f/collect
+                                                    vec)
+                                                [2 4 6])))
 
 
                     (testing
@@ -176,17 +176,17 @@
                                                            #flambo/tuple["key6" 66]
                                                            #flambo/tuple["key6" 666]])
                             ]
-                        (is (= (-> (f/cogroup rdd other1)
-                                   (f/map (fd/cogroup-2-fn (f/fn [k v1 v2] [k [(vec$ v1) (vec$ v2)]])))
-                                   f/collect
-                                   vec))
-                            [["key1" [[1] [11]]]
-                             ["key2" [[2] nil]]
-                             ["key3" [[3] [33]]]
-                             ["key4" [[4] [44]]]
-                             ["key5" [[5] nil]]
-                             ["key6" [nil [66 666]]]
-                             ])))
+                        (is (equals-ignore-order? (-> (f/cogroup rdd other1)
+                                                      (f/map (fd/cogroup-2-fn (f/fn [k v1 v2] [k [(vec$ v1) (vec$ v2)]])))
+                                                      f/collect
+                                                      vec)
+                                                  [["key1" [[1] [11]]]
+                                                   ["key2" [[2] nil]]
+                                                   ["key3" [[3] [33]]]
+                                                   ["key4" [[4] [44]]]
+                                                   ["key5" [[5] nil]]
+                                                   ["key6" [nil [66 666]]]
+                                                   ]))))
 
 
 
@@ -207,18 +207,18 @@
                                                            #flambo/tuple["key5" 555]
                                                            ])
                             ]
-                        (is (=
+                        (is (equals-ignore-order?
                               (-> (f/cogroup rdd other1 other2)
                                   (f/map (fd/cogroup-3-fn (f/fn [k v1 v2 v3] [k [(vec$ v1) (vec$ v2) (vec$ v3)]])))
                                   f/collect
-                                  vec))
-                            [["key1" [[1] [11] [111]]]
-                             ["key2" [[2] nil nil]]
-                             ["key3" [[3] [33] [333]]]
-                             ["key4" [[4] [44] nil]]
-                             ["key5" [[5] nil [555]]]
-                             ["key6" [nil [66 666] nil]]
-                             ])))
+                                  vec)
+                              [["key1" [[1] [11] [111]]]
+                               ["key2" [[2] nil nil]]
+                               ["key3" [[3] [33] [333]]]
+                               ["key4" [[4] [44] nil]]
+                               ["key5" [[5] nil [555]]]
+                               ["key6" [nil [66 666] nil]]
+                               ]))))
 
 
                     (testing
@@ -232,13 +232,13 @@
                                                           #flambo/tuple["key3" [33]]
                                                           #flambo/tuple["key4" [44]]])
                             ]
-                        (is (= (-> (f/join LDATA RDATA)
-                                   (f/map (fd/tuple-value-fn identity-vec))
-                                   f/collect
-                                   vec))
-                            [["key3" [5] [33]]
-                             ["key4" [1] [44]]
-                             ["key1" [2] [22]]])))
+                        (is (equals-ignore-order? (-> (f/join LDATA RDATA)
+                                                      (f/map (fd/tuple-value-fn identity-vec))
+                                                      f/collect
+                                                      vec)
+                                                  [["key3" [5] [33]]
+                                                   ["key4" [1] [44]]
+                                                   ["key1" [2] [22]]]))))
 
                     (testing
                         "left-outer-join returns an RDD of (K, (V, W)) when called on RDDs of type (K, V) and (K, W)"
@@ -250,32 +250,32 @@
                             RDATA (f/parallelize-pairs c [#flambo/tuple["key1" [22]]
                                                           #flambo/tuple["key3" [33]]
                                                           #flambo/tuple["key4" [44]]])]
-                        (is (= (-> (f/left-outer-join LDATA RDATA)
-                                   (f/map (fd/tuple-value-fn identity-vec :optional-second-value? true))
-                                   f/collect
-                                   vec)
-                               [["key3" [5] [33]]
-                                ["key4" [1] [44]]
-                                ["key5" [2] nil]
-                                ["key1" [2] [22]]
-                                ["key2" [3] nil]]))))
+                        (is (equals-ignore-order? (-> (f/left-outer-join LDATA RDATA)
+                                                      (f/map (fd/tuple-value-fn identity-vec :optional-second-value? true))
+                                                      f/collect
+                                                      vec)
+                                                  [["key3" [5] [33]]
+                                                   ["key4" [1] [44]]
+                                                   ["key5" [2] nil]
+                                                   ["key1" [2] [22]]
+                                                   ["key2" [3] nil]]))))
 
 
                     (testing
                         "union concats two RDDs"
                       (let [rdd1 (f/parallelize c [1 2 3 4])
                             rdd2 (f/parallelize c [11 12 13])]
-                        (is (= (-> (f/union rdd1 rdd2)
-                                   f/collect
-                                   vec)
-                               [1 2 3 4 11 12 13]))))
+                        (is (equals-ignore-order? (-> (f/union rdd1 rdd2)
+                                                      f/collect
+                                                      vec)
+                                                  [1 2 3 4 11 12 13]))))
 
                     (testing
                         "union concats more than two RDDs"
                       (let [rdd1 (f/parallelize c [1 2 3 4])
                             rdd2 (f/parallelize c [11 12 13])
                             rdd3 (f/parallelize c [21 22 23])]
-                        (is (=
+                        (is (equals-ignore-order?
                               (-> (f/union rdd1 rdd2 rdd3)
                                   f/collect
                                   vec)
@@ -295,14 +295,14 @@
                     (testing
                         "combine-by-key returns an RDD by combining the elements for each key using a custom
                         set of aggregation functions"
-                      (is (= (-> (f/parallelize-pairs c [#flambo/tuple["key1" 1]
-                                                         #flambo/tuple["key2" 1]
-                                                         #flambo/tuple["key1" 1]])
-                                 (f/combine-by-key identity + +)
-                                 f/collect
-                                 untuple-all
-                                 vec)
-                             [["key1" 2] ["key2" 1]])))
+                      (is (equals-ignore-order? (-> (f/parallelize-pairs c [#flambo/tuple["key1" 1]
+                                                                            #flambo/tuple["key2" 1]
+                                                                            #flambo/tuple["key1" 1]])
+                                                    (f/combine-by-key identity + +)
+                                                    f/collect
+                                                    untuple-all
+                                                    vec)
+                                                [["key1" 2] ["key2" 1]])))
 
                     (testing
                         "sort-by-key returns an RDD of (K, V) pairs sorted by keys in asc or desc order"
@@ -318,53 +318,53 @@
 
                     (testing
                         "coalesce"
-                      (is (= (-> (f/parallelize c [1 2 3 4 5])
-                                 (f/coalesce 1)
-                                 f/collect
-                                 vec) [1 2 3 4 5])))
+                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 3 4 5])
+                                                    (f/coalesce 1)
+                                                    f/collect
+                                                    vec) [1 2 3 4 5])))
 
                     (testing
                         "group-by returns an RDD of items grouped by the grouping function"
-                      (is (= (-> (f/parallelize c [1 1 2 3 5 8])
-                                 (f/group-by (f/fn [x] (mod x 2)))
-                                 f/collect
-                                 untuple-all
-                                 seq-values
-                                 vec
-                                 )
-                             [[0 [2 8]] [1 [1 1 3 5]]])))
+                      (is (equals-ignore-order? (-> (f/parallelize c [1 1 2 3 5 8])
+                                                    (f/group-by (f/fn [x] (mod x 2)))
+                                                    f/collect
+                                                    untuple-all
+                                                    seq-values
+                                                    vec
+                                                    )
+                                                [[0 [2 8]] [1 [1 1 3 5]]])))
 
                     (testing
                         "group-by-key"
-                      (is (= (-> (f/parallelize-pairs c [#flambo/tuple["key1" 1]
-                                                         #flambo/tuple["key1" 2]
-                                                         #flambo/tuple["key2" 3]
-                                                         #flambo/tuple["key2" 4]
-                                                         #flambo/tuple["key3" 5]])
-                                 f/group-by-key
-                                 f/collect
-                                 untuple-all
-                                 seq-values
-                                 vec)
-                             [["key3" [5]] ["key1" [1 2]] ["key2" [3 4]]])))
+                      (is (equals-ignore-order? (-> (f/parallelize-pairs c [#flambo/tuple["key1" 1]
+                                                                            #flambo/tuple["key1" 2]
+                                                                            #flambo/tuple["key2" 3]
+                                                                            #flambo/tuple["key2" 4]
+                                                                            #flambo/tuple["key3" 5]])
+                                                    f/group-by-key
+                                                    f/collect
+                                                    untuple-all
+                                                    seq-values
+                                                    vec)
+                                                [["key3" [5]] ["key1" [1 2]] ["key2" [3 4]]])))
 
                     (testing
                         "flat-map-to-pair"
-                      (is (= (-> (f/parallelize c [["Four score and seven"]
-                                                   ["years ago"]])
-                                 (f/flat-map-to-pair (f/fn [x] (map (fn [y] (f/tuple y 1))
-                                                                    (clojure.string/split (first x) #" "))))
-                                 (f/map f/untuple)
-                                 f/collect
-                                 vec)
-                             [["Four" 1] ["score" 1] ["and" 1] ["seven" 1] ["years" 1] ["ago" 1]])))
+                      (is (equals-ignore-order? (-> (f/parallelize c [["Four score and seven"]
+                                                                      ["years ago"]])
+                                                    (f/flat-map-to-pair (f/fn [x] (map (fn [y] (f/tuple y 1))
+                                                                                       (clojure.string/split (first x) #" "))))
+                                                    (f/map f/untuple)
+                                                    f/collect
+                                                    vec)
+                                                [["Four" 1] ["score" 1] ["and" 1] ["seven" 1] ["years" 1] ["ago" 1]])))
 
                     (testing
                         "map-partition"
-                      (is (= (-> (f/parallelize c [0 1 2 3 4])
-                                 (f/map-partition (f/fn [it] (map identity (iterator-seq it))))
-                                 f/collect)
-                             [0 1 2 3 4])))
+                      (is (equals-ignore-order? (-> (f/parallelize c [0 1 2 3 4])
+                                                    (f/map-partition (f/fn [it] (map identity (iterator-seq it))))
+                                                    f/collect)
+                                                [0 1 2 3 4])))
 
                     (testing
                         "map-partition-with-index"
@@ -389,11 +389,11 @@
                         "cartesian creates cartesian product of two RDDS"
                       (let [rdd1 (f/parallelize c [1 2])
                             rdd2 (f/parallelize c [5 6 7])]
-                        (is (= (-> (f/cartesian rdd1 rdd2)
-                                   f/collect
-                                   vec)
-                               [#flambo/tuple[1 5] #flambo/tuple[1 6] #flambo/tuple[1 7] #flambo/tuple[2 5] #flambo/tuple[2 6] #flambo/tuple[2 7]]
-                               ))))
+                        (is (equals-ignore-order? (-> (f/cartesian rdd1 rdd2)
+                                                      f/collect
+                                                      vec)
+                                                  [#flambo/tuple[1 5] #flambo/tuple[1 6] #flambo/tuple[1 7] #flambo/tuple[2 5] #flambo/tuple[2 6] #flambo/tuple[2 7]]
+                                                  ))))
 
 
                     ;TODO:                      (future-fact "repartition returns a new RDD with exactly n partitions")
@@ -433,27 +433,27 @@
 
                     (testing
                         "values returns the values (V) of a hashmap of (K, V) pairs"
-                      (is (= (-> (f/parallelize-pairs c [#flambo/tuple["key1" 11]
-                                                         #flambo/tuple["key1" 11]
-                                                         #flambo/tuple["key2" 12]
-                                                         #flambo/tuple["key2" 12]
-                                                         #flambo/tuple["key3" 13]])
-                                 (f/values)
-                                 (f/collect)
-                                 vec)
-                             [11, 11, 12, 12, 13])))
+                      (is (equals-ignore-order? (-> (f/parallelize-pairs c [#flambo/tuple["key1" 11]
+                                                                            #flambo/tuple["key1" 11]
+                                                                            #flambo/tuple["key2" 12]
+                                                                            #flambo/tuple["key2" 12]
+                                                                            #flambo/tuple["key3" 13]])
+                                                    (f/values)
+                                                    (f/collect)
+                                                    vec)
+                                                [11, 11, 12, 12, 13])))
 
                     (testing
                         "keys returns the keys (K) of a hashmap of (K, V) pairs"
-                      (is (= (-> (f/parallelize-pairs c [#flambo/tuple["key1" 11]
-                                                         #flambo/tuple["key1" 11]
-                                                         #flambo/tuple["key2" 12]
-                                                         #flambo/tuple["key2" 12]
-                                                         #flambo/tuple["key3" 13]])
-                                 (f/keys)
-                                 (f/collect)
-                                 vec)
-                             ["key1" "key1" "key2" "key2" "key3"])))
+                      (is (equals-ignore-order? (-> (f/parallelize-pairs c [#flambo/tuple["key1" 11]
+                                                                            #flambo/tuple["key1" 11]
+                                                                            #flambo/tuple["key2" 12]
+                                                                            #flambo/tuple["key2" 12]
+                                                                            #flambo/tuple["key3" 13]])
+                                                    (f/keys)
+                                                    (f/collect)
+                                                    vec)
+                                                ["key1" "key1" "key2" "key2" "key3"])))
 
 
                     (testing
@@ -483,10 +483,10 @@
 
                     (testing
                         "collect returns all elements of the RDD as an array at the driver program"
-                      (is (= (-> (f/parallelize c [[1] [2] [3] [4] [5]])
-                                 f/collect
-                                 vec)
-                             [[1] [2] [3] [4] [5]])))
+                      (is (equals-ignore-order? (-> (f/parallelize c [[1] [2] [3] [4] [5]])
+                                                    f/collect
+                                                    vec)
+                                                [[1] [2] [3] [4] [5]])))
 
                     (testing
                         "distinct returns distinct elements of an RDD"
@@ -512,12 +512,12 @@
 
                     (testing
                         "glom returns an RDD created by coalescing all elements within each partition into a list"
-                      (is (= (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 2)
-                                 f/glom
-                                 f/collect
-                                 vec)
-                             [[1 2 3 4 5] [6 7 8 9 10]]
-                             )))
+                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 2)
+                                                    f/glom
+                                                    f/collect
+                                                    vec)
+                                                [[1 2 3 4 5] [6 7 8 9 10]]
+                                                )))
 
                     (testing
                         "cache persists this RDD with a default storage level (MEMORY_ONLY)"
@@ -563,14 +563,14 @@
 
                     (testing
                         "partition-by partitions a given RDD according to the partitioning-fn using a hash partitioner."
-                      (is (= (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
-                                 (f/map-to-pair (f/fn [x] (f/tuple x x)))
-                                 (f/partition-by (f/hash-partitioner-fn 2))
-                                 f/glom
-                                 f/collect
-                                 vec)
-                             [[#flambo/tuple[2 2] #flambo/tuple[4 4] #flambo/tuple[6 6] #flambo/tuple[8 8] #flambo/tuple[10 10]]
-                              [#flambo/tuple[1 1] #flambo/tuple[3 3] #flambo/tuple[5 5] #flambo/tuple[7 7] #flambo/tuple[9 9]]])))
+                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
+                                                    (f/map-to-pair (f/fn [x] (f/tuple x x)))
+                                                    (f/partition-by (f/hash-partitioner-fn 2))
+                                                    f/glom
+                                                    f/collect
+                                                    vec)
+                                                [[#flambo/tuple[2 2] #flambo/tuple[4 4] #flambo/tuple[6 6] #flambo/tuple[8 8] #flambo/tuple[10 10]]
+                                                 [#flambo/tuple[1 1] #flambo/tuple[3 3] #flambo/tuple[5 5] #flambo/tuple[7 7] #flambo/tuple[9 9]]])))
 
 
                     (testing

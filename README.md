@@ -1,11 +1,9 @@
-![Flambo](http://static1.wikia.nocookie.net/__cb20120216165717/adventuretimewithfinnandjake/images/e/ee/Flambos_fire_magic.jpg)
-
-# Flambo
+# Flambo - A clojure Library for Apache Spark
 
 [![Build Status](https://secure.travis-ci.org/chrisbetz/flambo.png)](http://travis-ci.org/chrisbetz/flambo)
 
 
-Flambo is a Clojure DSL for [Apache Spark](http://spark.apache.org/docs/latest/)
+Flambo is a Clojure Library for [Apache Spark](http://spark.apache.org/docs/latest/)
 
 **Contents**
 
@@ -27,47 +25,36 @@ Flambo is a Clojure DSL for [Apache Spark](http://spark.apache.org/docs/latest/)
 
 Apache Spark is a fast and general-purpose cluster computing system. It provides high-level APIs in Java, Scala and Python, and an optimized engine that supports general execution graphs.
 
-Flambo is a Clojure DSL for Spark. It allows you to create and manipulate Spark data structures using idiomatic Clojure.
+Flambo is a Clojure Library for Spark. It allows you to create and manipulate Spark data structures using idiomatic Clojure.
 
-chrisbetz/flambo is a fork of yieldbot/flambo with some additions:
+chrisbetz/flambo is fork from [yieldbot/flambo](https://github.com/yieldbot/flambo) (which itself is an offspring of clj-spark from The Climate Corporation or one of its [forks](https://github.com/TheClimateCorporation/clj-spark/network)).
+ 
+I added some features:
 
-* JdbcRDD: Reading Data from your JDBC source.
-* Hadoop-Avro-Reader: Reading AVRO Files from HDFS
-* Get rid of mapping/remapping inside the api functions, which bloated the execution plan (mine shrinked to a third) and (more importantly) allowed me to keep partitioner information.
+* It's about twice as fast by getting rid of a reflection call (thanks to [David Jacot](https://github.com/dajac) for his take on this).
+* Get rid of mapping/remapping inside the api functions, which 
+   * bloated the execution plan (mine shrinked to a third) and
+   * (more importantly) allowed me to keep partitioner information.
+* Additional Sources for RDDs:
+  * JdbcRDD: Reading Data from your JDBC source.
+  * Hadoop-Avro-Reader: Reading AVRO Files from HDFS
 
-
-
-**THIS README NEEDS TO BE FIXED, BUT THE ORIGINAL VERSION OF FLAMBO DID THROW AWAY ALL PARTITIONER-INFORMATION BY CLUTTERING THE RDDs WITH MAPPING BACK AND FORTH. THIS IS A PERFORMANCE KILLER, AS SPARK HEAVILY RELIES ON PARTITIONING**
-
-**UNIT TESTS AND EXAMPLE ARE UPDATED, BUT README IS NOT YET**
-
-
-
-
-"So that's where I came from." --Flambo
 
 <a name="versions">
 ## Supported Spark Versions
 
-|  flambo version         | targeting Spark version|
-|---------------------|-----------------------------------------------------------------------------------------------------------|
-| flambo 0.4.0 | Spark >= 1.1.0 |
+Flambo targets Spark Version 1.1.0 and up.
+
 
 <a name="installation">
 ## Installation
 
-Flambo is available from clojars. Depending on the version of Spark you're using, add one of the following to the dependences in your `project.clj` file:
+Flambo is available from clojars. To use with Leiningen, add 
 
-### With Leiningen
-
-Current version: [![Clojars Project](http://clojars.org/chrisbetz/flambo/latest-version.svg)](http://clojars.org/chrisbetz/flambo)
-
-|  flambo version         | targeting Spark version|
-|---------------------|-----------------------------------------------------------------------------------------------------------|
-| `[chrisbetz/flambo "0.4.0"]` | Spark >= 1.1.0 |
+[![Clojars Project](http://clojars.org/chrisbetz/flambo/latest-version.svg)](http://clojars.org/chrisbetz/flambo) to your dependencies.
 
 
-Don't forget to add spark (and possibly your hadoop distribution's hadoop-client library) to the `:provided` profile in your `project.clj` file:
+Don't forget to add spark (and possibly your hadoop distribution's hadoop-client library) to the `:provided` profile in your `project.clj` file (see ):
 
 ```clojure
 {:profiles {:provided
@@ -78,7 +65,7 @@ Don't forget to add spark (and possibly your hadoop distribution's hadoop-client
 <a name="aot">
 ## AOT
 
-It is necessary to AOT compile any namespaces which require `flambo.api`. You can AOT compile your application uberjar before running it in your spark cluster. This can easily accomplished by adding an `:uberjar` profile with `{:aot :all}` in it.
+It is necessary to AOT compile any namespaces with stuff you need to serialize in Spark. You can AOT compile your application uberjar before running it in your spark cluster. This can easily accomplished by adding an `:uberjar` profile with `{:aot :all}` in it.
 
 When working locally in a REPL, you'll want to AOT compile those namespaces as well. An easy way to do that is to add an `:aot` key to your `:dev` profile in your leiningen project.clj
 
@@ -89,6 +76,12 @@ When working locally in a REPL, you'll want to AOT compile those namespaces as w
 
 <a name="usage">
 ## Usage
+
+There's a fully working example in /example/flambo/example/tfidf.clj, which you could run locally without any prior installs using
+```
+ lein with-profile example,provided run
+```
+
 
 Flambo makes developing Spark applications quick and painless by utilizing the powerful abstractions available in Clojure. For instance, you can use the Clojure threading macro `->` to chain sequences of operations and transformations.
 
@@ -111,7 +104,7 @@ Here we create a SparkConf object with the string `local` to run in local mode:
 (def sc (f/spark-context c))
 ```
 
-The `master` url string parameter can be one of the following formats:
+The `master` url string parameter must match the Apache Spark [master definition] (https://spark.apache.org/docs/latest/submitting-applications.html):
 
 |  Master URL         | Meaning                                                                                                   |
 |---------------------|-----------------------------------------------------------------------------------------------------------|
@@ -120,8 +113,9 @@ The `master` url string parameter can be one of the following formats:
 | `local`             | Use one worker thread to run Spark locally (no parallelism).                                              |
 | `local[N]`          | Use `N` worker threads to run Spark locally.                                                              |
 | `local[*]`          | Use the same number of threads as cores to run Spark locally. <br> _Only_ available for Spark 1.0.0+      |
+| `yarn-client`       | Connect to a YARN cluster in client mode. The cluster location will be found based on the HADOOP_CONF_DIR variable. |
+| `yarn-cluster`      | Connect to a YARN cluster in cluster mode. The cluster location will be found based on HADOOP_CONF_DIR. |
 
-For running on YARN, see [running on YARN](https://spark.apache.org/docs/0.9.1/running-on-yarn.html) for details.
 
 Hard-coding the value of `master` and other configuration parameters can be avoided by passing the values to Spark when running `spark-submit` (Spark 1.0.0) or by allowing `spark-submit` to read these properties from a configuration file. See [Standalone Applications](#running-flambo) for information on running flambo applications and see Spark's [documentation](http://spark.apache.org/docs/latest/configuration.html) for more details about configuring Spark properties.
 
@@ -132,13 +126,15 @@ The main abstraction Spark provides is a _resilient distributed dataset_, RDD, w
 
 #### Parallelized Collections
 
-Parallelized collections (RDDs) in flambo are created by calling the `parallelize` function on your Clojure data structure:
+Parallelized collections (RDDs) in flambo are created by calling the `parallelize` or `parallelize-pairs` functions on your Clojure data structure, but remember to have scala.Tuple2 objects inside, if you need to create PairRdds. We provide you with the #flambo/tuple reader macro for this or the flambo.api/tuple function.
+
+The `flambo.destructuring` namespace contains functions to deal with the Spark datastructures, providing you with an idiomatic way to deal with your data in Clojure.
 
 ```clojure
 (ns com.fire.kingdom.flambit
   (:require [flambo.api :as f]))
 
-(def data (f/parallelize sc [["a" 1] ["b" 2] ["c" 3] ["d" 4] ["e" 5]]))
+(def data (f/parallelize-pairs sc [#flambo/tuple["a" 1] #flambo/tuple["b" 2] #flambo/tuple["c" 3] #flambo/tuple["d" 4] #flambo/tuple["e" 5]]))
 ```
 
 Once initialized, the distributed dataset or RDD can be operated on in parallel.
@@ -198,26 +194,7 @@ before the `reduce` action, which would cause the line-lengths RDD to be saved t
 <a name="flambo-functions">
 #### Passing Functions to flambo
 
-Spark’s API relies heavily on passing functions in the driver program to run on the cluster. Flambo makes it easy and natural to define serializable Spark functions/operations and provides two ways to do this:
-
-* `flambo.api/defsparkfn`: defines named functions:
-
-```clojure
-(ns com.fire.kingdom.flambit
-  (:require [flambo.api :as f]))
-
-(f/defsparkfn square [x] (* x x))
-```
-
-* `flambo.api/fn`: defines inline anonymous functions:
-
-```clojure
-(ns com.fire.kingdom.flambit
-  (:require [flambo.api :as f]))
-
-(-> (f/parallelize sc [1 2 3 4 5])
-    (f/map (f/fn [x] (* x x))))
-```
+Spark’s API relies heavily on passing functions in the driver program to run on the cluster. You can pass any function, as flambo takes care of serializability. However, you may have to extend Kryo when using Atoms and the like in your closures.
 
 When we evaluate this `map` transformation on the initial RDD, the result is another RDD. The result of this transformation can be seen using the `f/collect` action to return all of the elements of the RDD.
 
@@ -241,19 +218,20 @@ We can also use `f/first` or `f/take` to return just a subset of the data.
 
 While most Spark operations work on RDDs containing any type of objects, a few special operations are only available on RDDs of key-value pairs. The most common ones are distributed "shuffle" operations, such as grouping or aggregating the elements by a key.
 
-In flambo, these operations are available on RDDs of (key, value) tuples. Flambo handles all of the transformations/serializations to/from `Tuple`, `Tuple2`, `JavaRDD`, `JavaPairRDD`, etc., so you only need to define the sequence of operations you'd like to perform on your data.
+In flambo, these operations are available on RDDs of key-value-tuples. The wrapper functions in `flambo.destructuring` handle all of the transformations/serializations to/from `Tuple2`, etc., so you only need to define the sequence of operations you'd like to perform on your data and wrap you functions with the appropriate destructuring functions.
 
 The following code uses the `reduce-by-key` operation on key-value pairs to count how many times each word occurs in a file:
 
 ```clojure
 (ns com.fire.kingdom.flambit
   (:require [flambo.api :as f]
+            [flambo.destructuring :as fd]
             [clojure.string :as s]))
 
 (-> (f/text-file sc "data.txt")
-    (f/flat-map (f/fn [l] (s/split l #" ")))
-    (f/map (f/fn [w] [w 1]))
-    (f/reduce-by-key (f/fn [x y] (+ x y))))
+    (f/flat-map (fn [l] (s/split l #" ")))
+    (f/map-to-pair (fn [w] (f/tuple w 1)))
+    (f/reduce-by-key (fd/untuple (fn [x y] (+ x y)))))
 ```
 
 After the `reduce-by-key` operation, we can sort the pairs alphabetically using `f/sort-by-key`. To collect the word counts as an array of objects in the repl or to write them to a filesysten, we can use the `f/collect` action:
@@ -261,12 +239,13 @@ After the `reduce-by-key` operation, we can sort the pairs alphabetically using 
 ```clojure
 (ns com.fire.kingdom.flambit
   (:require [flambo.api :as f]
+            [flambo.destructuring :as fd]
             [clojure.string :as s]))
 
 (-> (f/text-file sc "data.txt")
     (f/flat-map (f/fn [l] (s/split l #" ")))
-    (f/map (f/fn [w] [w 1]))
-    (f/reduce-by-key (f/fn [x y] (+ x y)))
+    (f/map-to-pair (fn [w] (f/tuple w 1)))
+    (f/reduce-by-key (fd/untuple (fn [x y] (+ x y)))))
     f/sort-by-key
     f/collect
     clojure.pprint/pprint)
