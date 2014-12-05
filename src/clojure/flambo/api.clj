@@ -28,7 +28,7 @@
            [java.util Comparator ArrayList]
            [org.apache.spark.api.java JavaSparkContext StorageLevels
             JavaRDD JavaPairRDD JavaDoubleRDD]
-           [org.apache.spark HashPartitioner]
+           [org.apache.spark HashPartitioner Partitioner]
            [org.apache.spark.rdd PartitionwiseSampledRDD]
            [org.apache.spark.util Utils]
            [com.esotericsoftware.kryo KryoSerializable]))
@@ -154,7 +154,7 @@
 (defn parallelize-pairs
   "Distributes a local collection to form/return an RDD"
   ([spark-context lst] (.parallelizePairs spark-context lst))
-  ([spark-context lst num-slices] (.parallelizeParis spark-context lst num-slices)))
+  ([spark-context lst num-slices] (.parallelizePairs spark-context lst num-slices)))
 
 (defn union
   "Build the union of two or more RDDs"
@@ -187,6 +187,9 @@
   "Returns a new `JavaPairRDD` of (K, V) pairs by applying `f` to all elements of `rdd`."
   [rdd f]
   (.mapToPair rdd (pair-function f)))
+
+(defn map-values [rdd f]
+  (.mapValues rdd (function f)))
 
 (defn reduce
   "Aggregates the elements of `rdd` using the function `f` (which takes two arguments
@@ -461,21 +464,18 @@
   (into [] (.partitions (.rdd javaRdd))))
 
 
-(defn hash-partitioner-fn
+(defn hash-partitioner
   ([n]
-   (fn [rdd]
-       (HashPartitioner. n)))
-  #_([subkey-fn n]
-   (fn [rdd]
-       (proxy [HashPartitioner ] [n]
-         (getPartition [key]
-           (let [subkey (subkey-fn key)]
-             (mod (hash subkey) n))))))
-  )
+   (HashPartitioner. n))
+  ([subkey-fn n]
+   (proxy [HashPartitioner] [n]
+     (getPartition [key]
+       (let [subkey (subkey-fn key)]
+         (mod (hash subkey) n))))))
 
 (defn partition-by
-  [^JavaPairRDD rdd partitioner-fn]
-  (.partitionBy rdd (partitioner-fn rdd)))
+  [^JavaPairRDD rdd ^Partitioner partitioner]
+  (.partitionBy rdd partitioner))
 
 
 (defn foreach-partition
@@ -532,3 +532,6 @@
                              (.histogram bucket-count)
                              untuple)]
     [(into [] buckets) (into [] counts)]))
+
+(defn partitioner [^JavaPairRDD rdd]
+  (.partitioner (.rdd rdd)))

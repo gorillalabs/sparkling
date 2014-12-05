@@ -565,7 +565,7 @@
                         "partition-by partitions a given RDD according to the partitioning-fn using a hash partitioner."
                       (is (equals-ignore-order? (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
                                                     (f/map-to-pair (f/fn [x] (f/tuple x x)))
-                                                    (f/partition-by (f/hash-partitioner-fn 2))
+                                                    (f/partition-by (f/hash-partitioner 2))
                                                     f/glom
                                                     f/collect
                                                     vec)
@@ -573,30 +573,50 @@
                                                  [#flambo/tuple[1 1] #flambo/tuple[3 3] #flambo/tuple[5 5] #flambo/tuple[7 7] #flambo/tuple[9 9]]])))
 
 
+
+
                     (testing
                         "partition-by returns an RDD with a hash partitioner."
                       (is #(some-instance? HashPartitioner %1)
                           (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
                               (f/map-to-pair (f/fn [x] (f/tuple x x)))
-                              (f/partition-by (f/hash-partitioner-fn 2))
-                              (.rdd)
-                              (.partitioner)
+                              (f/partition-by (f/hash-partitioner 2))
+                              (f/partitioner)
                               )))
 
-                    #_(testing
-                       "partition-by partitions a given RDD according to the partitioning-fn using a hash partitioner."
-                       (-> (f/parallelize c [[{:a 1 :b 1} 11]  ;; for me, (mod (hash 1) 2) and (mod (hash 3) 2) return 0 and 1 respectively, resulting in splitting the rdd in two partitions based upon :b
-                                             [{:a 2 :b 1} 11]
-                                             [{:a 3 :b 1} 12]
-                                             [{:a 4 :b 3} 12]
-                                             [{:a 5 :b 3} 13]] 1)
-                           (f/partition-by (f/hash-partitioner-fn (f/fn [key] (:b key)) 2))
-                           f/glom
-                           f/collect
-                           vec) => (just [[[{:a 1 :b 1} 11]
-                                           [{:a 2 :b 1} 11]
-                                           [{:a 3 :b 1} 12]]
-                                          [[{:a 4 :b 3} 12]
-                                           [{:a 5 :b 3} 13]]] :in-any-order))
 
-                    )))
+                    (testing
+                        "map-values keeps the hash partitioner."
+                      (is #(some-instance? HashPartitioner %1)
+                          (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
+                              (f/map-to-pair (f/fn [x] (f/tuple x x)))
+                              (f/partition-by (f/hash-partitioner 2))
+                              (f/map-values #(* %1 2))
+                              (f/partitioner)
+                              )))
+
+
+                    (testing
+                        "partition-by partitions a given RDD according to the partitioning-fn using a hash partitioner."
+                      (is (equals-ignore-order?
+                            (-> (f/parallelize-pairs c
+                                                     [#flambo/tuple[{:a 1 :b 1} 11] ;; for me, (mod (hash 1) 2) and (mod (hash 3) 2) return 0 and 1 respectively, resulting in splitting the rdd in two partitions based upon :b
+                                                      #flambo/tuple[{:a 2 :b 1} 11]
+                                                      #flambo/tuple[{:a 3 :b 1} 12]
+                                                      #flambo/tuple[{:a 4 :b 3} 12]
+                                                      #flambo/tuple[{:a 5 :b 3} 13]] 1)
+                                (f/partition-by (f/hash-partitioner
+                                                  (f/fn [key] (:b key))
+                                                  2))
+                                f/glom
+                                f/collect
+                                vec)
+                            [; this is partition 1:
+                              [#flambo/tuple[{:a 1 :b 1} 11]
+                               #flambo/tuple[{:a 2 :b 1} 11]
+                               #flambo/tuple[{:a 3 :b 1} 12]]
+                             ; and this is partition 2:
+                              [#flambo/tuple[{:a 4 :b 3} 12]
+                               #flambo/tuple[{:a 5 :b 3} 13]]]))
+
+                      ))))
