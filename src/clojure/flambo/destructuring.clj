@@ -56,3 +56,9 @@
             v2 (second-value-fn v)
             ]
         (f v1 v2)))))
+
+
+
+(defn wrap-fn-after-cogroup3 [f]
+  (fn [^Tuple3 v]
+    (f (seq (._1 v)) (seq (._2 v)) (seq (._3 v)))))

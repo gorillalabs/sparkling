@@ -4,10 +4,14 @@
   )
 
 (defn inspect [rdd name]
-  (f/cache rdd)
-  (f/rdd-name rdd name)
-  (let [c (f/count rdd)]
-    (info "#items@" name ": " c)
-    (when-not (zero? c)
-      (info "first items@" name ": " (f/first rdd))))
-  rdd)
+  (let [cached (-> rdd
+                   (f/cache )
+                   (f/rdd-name  name))]
+    (try
+      (info name "/Partitioner: " (f/partitioner cached) ", #partitions:" (f/count-partitions cached))
+      (catch Throwable t))
+    (let [c (f/count cached)]
+      (info "#items@" name ": " c)
+      (when-not (zero? c)
+        (info "first items@" name ": " (f/first cached))))
+    cached))

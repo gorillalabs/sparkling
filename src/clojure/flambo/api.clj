@@ -20,18 +20,16 @@
                                      pair-function
                                      pair-flat-map-function
                                      void-function]]
+            [flambo.scalaInterop :as si]
             [flambo.conf :as conf]
             [flambo.utils :as u]
             [flambo.kryo :as k])
-  (:import [scala Tuple2 Tuple3]
-           [scala.reflect ClassTag$]
+  (:import [scala Tuple2]
            [java.util Comparator ArrayList]
            [org.apache.spark.api.java JavaSparkContext StorageLevels
-            JavaRDD JavaPairRDD JavaDoubleRDD]
+                                      JavaRDD JavaPairRDD JavaDoubleRDD]
            [org.apache.spark HashPartitioner Partitioner]
-           [org.apache.spark.rdd PartitionwiseSampledRDD]
-           [org.apache.spark.util Utils]
-           [com.esotericsoftware.kryo KryoSerializable]))
+           [org.apache.spark.rdd PartitionwiseSampledRDD]))
 
 ;; flambo makes extensive use of kryo to serialize and deserialize clojure functions
 ;; and data structures. Here we ensure that these properties are set so they are inhereted
@@ -66,11 +64,11 @@
   "Creates a spark context that loads settings from given configuration object
    or system properties"
   ([conf]
-   (log/debug "JavaSparkContext" (conf/to-string conf))
-   (JavaSparkContext. conf))
+    (log/debug "JavaSparkContext" (conf/to-string conf))
+    (JavaSparkContext. conf))
   ([master app-name]
-   (log/debug "JavaSparkContext" master app-name)
-   (JavaSparkContext. master app-name)))
+    (log/debug "JavaSparkContext" master app-name)
+    (JavaSparkContext. master app-name)))
 
 (defn local-spark-context
   [app-name]
@@ -158,10 +156,10 @@
 
 (defn union
   "Build the union of two or more RDDs"
-  ([^JavaRDD rdd1 ^JavaRDD rdd2]
-   (.union rdd1 rdd2))
-  ([^JavaRDD rdd1 ^JavaRDD rdd2 & rdds]
-   (.union (JavaSparkContext/fromSparkContext (.context rdd1)) rdd1 (ArrayList. (conj rdds rdd2)))))
+  ([rdd1 rdd2]
+    (.union rdd1 rdd2))
+  ([rdd1 rdd2 & rdds]
+    (.union (JavaSparkContext/fromSparkContext (.context rdd1)) rdd1 (ArrayList. (conj rdds rdd2)))))
 
 (defn partitionwise-sampled-rdd [rdd sampler preserve-partitioning? seed]
   "Creates a PartitionwiseSampledRRD from existing RDD and a sampler object"
@@ -222,6 +220,14 @@
   [rdd f]
   (.mapPartitions rdd (flat-map-function f)))
 
+
+(defn map-partitions-to-pair
+  "Similar to `map`, but runs separately on each partition (block) of the `rdd`, so function `f`
+  must be of type Iterator<T> => Iterable<U>.
+  https://issues.apache.org/jira/browse/SPARK-3369"
+  [rdd f & {:keys [preserves-partitioning]}]
+  (.mapPartitionsToPair rdd (pair-flat-map-function f) (u/truthy? preserves-partitioning)))
+
 (defn map-partition-with-index
   "Similar to `map-partition` but function `f` is of type (Int, Iterator<T>) => Iterator<U> where
   `i` represents the index of partition."
@@ -267,16 +273,16 @@
 (defn group-by
   "Returns an RDD of items grouped by the return value of function `f`."
   ([rdd f]
-   (.groupBy rdd (function f)))
+    (.groupBy rdd (function f)))
   ([rdd f n]
-   (.groupBy rdd (function f) n)))
+    (.groupBy rdd (function f) n)))
 
 (defn group-by-key
   "Groups the values for each key in `rdd` into a single sequence."
   ([rdd]
-   (.groupByKey rdd))
+    (.groupByKey rdd))
   ([rdd n]
-   (.groupByKey rdd n)))
+    (.groupByKey rdd n)))
 
 (defn combine-by-key
   "Combines the elements for each key using a custom set of aggregation functions.
@@ -288,35 +294,35 @@
   -- mergeValue, to merge a V into a C (e.g., adds it to the end of a list)
   -- mergeCombiners, to combine two C's into a single one."
   ([rdd create-combiner merge-value merge-combiners]
-   (.combineByKey rdd
-                  (function create-combiner)
-                  (function2 merge-value)
-                  (function2 merge-combiners)))
+    (.combineByKey rdd
+                   (function create-combiner)
+                   (function2 merge-value)
+                   (function2 merge-combiners)))
   ([rdd create-combiner merge-value merge-combiners n]
-   (.combineByKey rdd
-                  (function create-combiner)
-                  (function2 merge-value)
-                  (function2 merge-combiners)
-                  n)))
+    (.combineByKey rdd
+                   (function create-combiner)
+                   (function2 merge-value)
+                   (function2 merge-combiners)
+                   n)))
 
 (defn sort-by-key
   "When called on `rdd` of (K, V) pairs where K implements ordered, returns a dataset of
    (K, V) pairs sorted by keys in ascending or descending order, as specified by the boolean
    ascending argument."
   ([rdd]
-   (sort-by-key rdd compare true))
+    (sort-by-key rdd compare true))
   ([rdd x]
-   ;; RDD has a .sortByKey signature with just a Boolean arg, but it doesn't
-   ;; seem to work when I try it, bool is ignored.
-   (if (instance? Boolean x)
-     (sort-by-key rdd compare x)
-     (sort-by-key rdd x true)))
+    ;; RDD has a .sortByKey signature with just a Boolean arg, but it doesn't
+    ;; seem to work when I try it, bool is ignored.
+    (if (instance? Boolean x)
+      (sort-by-key rdd compare x)
+      (sort-by-key rdd x true)))
   ([rdd compare-fn asc?]
-   (.sortByKey rdd
-               (if (instance? Comparator compare-fn)
-                 compare-fn
-                 (comparator compare-fn))
-               (u/truthy? asc?))))
+    (.sortByKey rdd
+                (if (instance? Comparator compare-fn)
+                  compare-fn
+                  (comparator compare-fn))
+                (u/truthy? asc?))))
 
 (defn join
   "When called on `rdd` of type (K, V) and (K, W), returns a dataset of
@@ -341,9 +347,20 @@
   "Decrease the number of partitions in `rdd` to `n`.
   Useful for running operations more efficiently after filtering down a large dataset."
   ([rdd n]
-   (.coalesce rdd n))
+    (.coalesce rdd n))
   ([rdd n shuffle?]
-   (.coalesce rdd n shuffle?)))
+    (.coalesce rdd n shuffle?)))
+
+(defn count-partitions [rdd]
+  (alength (.partitions (.rdd rdd))))
+
+(defn coalesce-max
+  "Decrease the number of partitions in `rdd` to `n`.
+  Useful for running operations more efficiently after filtering down a large dataset."
+  ([rdd n]
+    (.coalesce rdd (min n (count-partitions rdd))))
+  ([rdd n shuffle?]
+    (.coalesce rdd (min n (count-partitions rdd)) shuffle?)))
 
 (defn repartition
   "Returns a new `rdd` with exactly `n` partitions."
@@ -413,9 +430,9 @@
 (defn distinct
   "Return a new RDD that contains the distinct elements of the source `rdd`."
   ([rdd]
-   (.distinct rdd))
+    (.distinct rdd))
   ([rdd n]
-   (.distinct rdd n)))
+    (.distinct rdd n)))
 
 (defn take
   "Return an array with the first n elements of `rdd`.
@@ -437,26 +454,33 @@
   ([] identity)
   ([f] f)
   ([f g]
-   (fn
-     ([] (f (g)))
-     ([x] (f (g x)))
-     ([x y] (f (g x y)))
-     ([x y z] (f (g x y z)))
-     ([x y z & args] (f (apply g x y z args)))))
+    (fn
+      ([] (f (g)))
+      ([x] (f (g x)))
+      ([x y] (f (g x y)))
+      ([x y z] (f (g x y z)))
+      ([x y z & args] (f (apply g x y z args)))))
   ([f g h]
-   (fn
-     ([] (f (g (h))))
-     ([x] (f (g (h x))))
-     ([x y] (f (g (h x y))))
-     ([x y z] (f (g (h x y z))))
-     ([x y z & args] (f (g (apply h x y z args))))))
+    (fn
+      ([] (f (g (h))))
+      ([x] (f (g (h x))))
+      ([x y] (f (g (h x y))))
+      ([x y z] (f (g (h x y z))))
+      ([x y z & args] (f (g (apply h x y z args))))))
   ([f g h i]
-   (fn
-     ([] (f (g (h (i)))))
-     ([x] (f (g (h (i x)))))
-     ([x y] (f (g (h (i x y)))))
-     ([x y z] (f (g (h (i x y z)))))
-     ([x y z & args] (f (g (h (apply i x y z args))))))))
+    (fn
+      ([] (f (g (h (i)))))
+      ([x] (f (g (h (i x)))))
+      ([x y] (f (g (h (i x y)))))
+      ([x y z] (f (g (h (i x y z)))))
+      ([x y z & args] (f (g (h (apply i x y z args))))))))
+
+
+
+(defn partitions
+  "Returns a vector of partitions for a given JavaRDD"
+  [javaRdd]
+  (into [] (.partitions (.rdd javaRdd))))
 
 (defn partitions
   "Returns a vector of partitions for a given JavaRDD"
@@ -466,12 +490,12 @@
 
 (defn hash-partitioner
   ([n]
-   (HashPartitioner. n))
+    (HashPartitioner. n))
   ([subkey-fn n]
-   (proxy [HashPartitioner] [n]
-     (getPartition [key]
-       (let [subkey (subkey-fn key)]
-         (mod (hash subkey) n))))))
+    (proxy [HashPartitioner] [n]
+      (getPartition [key]
+        (let [subkey (subkey-fn key)]
+          (mod (hash subkey) n))))))
 
 (defn partition-by
   [^JavaPairRDD rdd ^Partitioner partitioner]
@@ -498,14 +522,13 @@
 
 
 
-
 (defn cogroup
   ([^JavaPairRDD rdd ^JavaPairRDD other]
-   (.cogroup rdd other))
+    (.cogroup rdd other))
   ([^JavaPairRDD rdd ^JavaPairRDD other1 ^JavaPairRDD other2]
-   (.cogroup rdd
-             other1
-             other2)))
+    (.cogroup rdd
+              other1
+              other2)))
 
 
 (defn checkpoint [^JavaRDD rdd]
@@ -514,9 +537,9 @@
 
 (defn rdd-name
   ([rdd name]
-   (.setName rdd name))
+    (.setName rdd name))
   ([rdd]
-   (.name rdd)))
+    (.name rdd)))
 
 
 (defmulti histogram "compute histogram of an RDD of doubles"
@@ -534,4 +557,15 @@
     [(into [] buckets) (into [] counts)]))
 
 (defn partitioner [^JavaPairRDD rdd]
-  (.partitioner (.rdd rdd)))
+  (si/some-or-nil (.partitioner (.rdd rdd))))
+
+(defn rekey-preserving-partitioning-without-check
+  "This re-keys a pair-rdd by applying the rekey-fn to generate new tuples. However, it does not check whether your new keys would keep the same partitioning, so watch out!!!!"
+  [rdd rekey-fn]
+  (map-partitions-to-pair
+    rdd
+    (fn [iterator]
+        (clojure.core/map rekey-fn
+                          (iterator-seq iterator)))
+    :preserves-partitioning true
+    ))
