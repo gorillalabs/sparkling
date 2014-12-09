@@ -569,3 +569,6 @@
                           (iterator-seq iterator)))
     :preserves-partitioning true
     ))
+
+(defn t-value [^Tuple2 tuple]
+  (._2 tuple))
