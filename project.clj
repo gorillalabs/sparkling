@@ -1,5 +1,5 @@
 (defproject chrisbetz/flambo "0.6.2-SNAPSHOT"
-            :description "A Clojure DSL for Apache Spark"
+            :description "A Clojure Library for Apache Spark"
             :url "https://github.com/chrisbetz/flambo"
             :license {:name "Eclipse Public License"
                       :url  "http://www.eclipse.org/legal/epl-v10.html"}
@@ -21,7 +21,8 @@
                                   :plugins        [[lein-marginalia "0.8.0"]
                                                    [lein-ancient "0.5.4"]
                                                    [codox "0.8.9"]
-                                                   [lein-release "1.0.5"]]
+                                                   [lein-release "1.0.5"]
+                                                   [lein-pprint "1.1.1"]]
                                   :resource-paths ["data"]
                                   ;; so gen-class stuff works in the repl
                                   :aot            [flambo.api
