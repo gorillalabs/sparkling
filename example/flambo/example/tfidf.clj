@@ -14,7 +14,7 @@
 
 ;; Returns a stopword filtered seq of
 ;; [doc-id term term-frequency doc-terms-count] tuples
-(f/defsparkfn gen-docid-term-tuples [doc-id content]
+(defn gen-docid-term-tuples [doc-id content]
   (let [terms (filter #(not (contains? stopwords %))
                       (clojure.string/split content #" "))
         doc-terms-count (count terms)

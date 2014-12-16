@@ -1,7 +1,8 @@
 (ns flambo.destructuring
   "Contains wrapper-functions to destructure scala/spark data structures"
   (:require [flambo.api :as f])
-  (:import [scala Tuple2 Tuple3]))
+  (:import [scala Tuple2 Tuple3]
+           [com.google.common.base Optional]))
 
 (defn cogroup-2-fn [f]
   (fn [^Tuple2 t]
@@ -30,7 +31,7 @@
   )
 
 (defn optional-second-value [^Tuple2 t]
-  (.orNull (._2 t)))
+  (.orNull ^Optional (._2 t)))
 
 (defn tuple-value-fn [f & {:keys [optional-second-value?] :or {optional-second-value? false}}]
   (let [second-value-fn (if optional-second-value?
@@ -51,7 +52,7 @@
   (let [second-value-fn (if optional-second-value?
                           optional-second-value
                           second-value)]
-    (fn [v]
+    (fn [^Tuple2 v]
       (let [v1 (._1 v)
             v2 (second-value-fn v)
             ]

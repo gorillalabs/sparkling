@@ -29,7 +29,9 @@
            [org.apache.spark.api.java JavaSparkContext StorageLevels
                                       JavaRDD JavaPairRDD JavaDoubleRDD]
            [org.apache.spark HashPartitioner Partitioner]
-           [org.apache.spark.rdd PartitionwiseSampledRDD]))
+           [org.apache.spark.rdd PartitionwiseSampledRDD PartitionerAwareUnionRDD]
+           [scala.collection JavaConversions]
+           [scala.reflect ClassTag$]))
 
 ;; flambo makes extensive use of kryo to serialize and deserialize clojure functions
 ;; and data structures. Here we ensure that these properties are set so they are inhereted
@@ -160,6 +162,18 @@
     (.union rdd1 rdd2))
   ([rdd1 rdd2 & rdds]
     (.union (JavaSparkContext/fromSparkContext (.context rdd1)) rdd1 (ArrayList. (conj rdds rdd2)))))
+
+(defn partitioner-aware-union [pair-rdd1 pair-rdd2 & pair-rdds]
+  ;; TODO: add check to make sure every rdd is a pair-rdd and has the same partitioner.
+  (JavaPairRDD/fromRDD
+    (PartitionerAwareUnionRDD.
+      (.context pair-rdd1)
+      (JavaConversions/asScalaBuffer (into [] (clojure.core/map #(.rdd %1) (conj pair-rdds pair-rdd2 pair-rdd1))))
+      (.apply ClassTag$/MODULE$ Object)
+      )
+    (.apply ClassTag$/MODULE$ Object)
+    (.apply ClassTag$/MODULE$ Object)
+    ))
 
 (defn partitionwise-sampled-rdd [rdd sampler preserve-partitioning? seed]
   "Creates a PartitionwiseSampledRRD from existing RDD and a sampler object"

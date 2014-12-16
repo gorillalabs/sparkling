@@ -1,7 +1,10 @@
 (ns flambo.api-test
   (:import [org.apache.spark HashPartitioner]
            [scala None Some]
-           [org.apache.spark.api.java JavaSparkContext JavaRDD])
+           [org.apache.spark.api.java JavaSparkContext JavaRDD]
+           [org.apache.spark.rdd PartitionerAwareUnionRDD]
+           [scala.collection JavaConversions]
+           [scala.reflect ClassTag$])
   (:use clojure.test)
   (:require [flambo.api :as f]
             [flambo.conf :as conf]
@@ -621,26 +624,24 @@
                     (let [b-partitioner (f/hash-partitioner
                                           :b
                                           2)
-
+                          rdd (f/parallelize-pairs c
+                                                   [#flambo/tuple[{:a 1 :b 1} {:a 1 :b 1 :c 1}]
+                                                    #flambo/tuple[{:a 2 :b 1} {:a 2 :b 1 :c 2}]
+                                                    #flambo/tuple[{:a 3 :b 1} {:a 3 :b 1 :c 3}]
+                                                    #flambo/tuple[{:a 4 :b 3} {:a 4 :b 3 :c 4}]
+                                                    #flambo/tuple[{:a 5 :b 3} {:a 5 :b 3 :c 5}]] 1)
                           re-partitioned-rdd (->
-                                               (f/parallelize-pairs c
-                                                                    [#flambo/tuple[{:a 1 :b 1} {:a 1 :b 1 :c 1}]
-                                                                     #flambo/tuple[{:a 2 :b 1} {:a 2 :b 1 :c 2}]
-                                                                     #flambo/tuple[{:a 3 :b 1} {:a 3 :b 1 :c 3}]
-                                                                     #flambo/tuple[{:a 4 :b 3} {:a 4 :b 3 :c 4}]
-                                                                     #flambo/tuple[{:a 5 :b 3} {:a 5 :b 3 :c 5}]] 1)
+                                               rdd
                                                (f/partition-by b-partitioner)
                                                (f/rekey-preserving-partitioning-without-check
                                                  (fd/tuple-fn
-                                                   (fn [_ value] (f/tuple (select-keys value [:b :c]) value))))
-                                               )
-                          ]
+                                                   (fn [_ value] (f/tuple (select-keys value [:b :c]) value)))))]
                       (testing
-                        "key-by keeps the hash partitioner if told to"
+                        "rekey keeps the hash partitioner if told to"
                         (is (= b-partitioner (f/partitioner re-partitioned-rdd))))
 
                       (testing
-                        "key-by keeps the hash partitioner if told to"
+                        "rekey does keep all elements"
                         (is (= (f/collect re-partitioned-rdd)
 
                                [#flambo/tuple[{:c 1 :b 1} {:a 1 :b 1 :c 1}]
@@ -649,6 +650,58 @@
                                 #flambo/tuple[{:c 4 :b 3} {:a 4 :b 3 :c 4}]
                                 #flambo/tuple[{:c 5 :b 3} {:a 5 :b 3 :c 5}]]
                                )))
+
+
+
+                      (testing
+                        "union concats two identical RDDs "
+                        (is (equals-ignore-order? (-> (f/partitioner-aware-union re-partitioned-rdd re-partitioned-rdd)
+                                                      f/collect
+                                                      vec)
+                                                  [#flambo/tuple[{:c 1 :b 1} {:a 1 :b 1 :c 1}]
+                                                   #flambo/tuple[{:c 2 :b 1} {:a 2 :b 1 :c 2}]
+                                                   #flambo/tuple[{:c 3 :b 1} {:a 3 :b 1 :c 3}]
+                                                   #flambo/tuple[{:c 4 :b 3} {:a 4 :b 3 :c 4}]
+                                                   #flambo/tuple[{:c 5 :b 3} {:a 5 :b 3 :c 5}]
+                                                   #flambo/tuple[{:c 1 :b 1} {:a 1 :b 1 :c 1}]
+                                                   #flambo/tuple[{:c 2 :b 1} {:a 2 :b 1 :c 2}]
+                                                   #flambo/tuple[{:c 3 :b 1} {:a 3 :b 1 :c 3}]
+                                                   #flambo/tuple[{:c 4 :b 3} {:a 4 :b 3 :c 4}]
+                                                   #flambo/tuple[{:c 5 :b 3} {:a 5 :b 3 :c 5}]
+                                                   ])))
+
+
+                      (testing
+                        "union keeps the hash partitioner if told to"
+                        (is (= b-partitioner (f/partitioner (f/partitioner-aware-union re-partitioned-rdd re-partitioned-rdd)))))
+
+
+                      #_(testing
+                        "union keeps the hash partitioner if told to"
+                        (is (= b-partitioner (f/partitioner
+                                               (org.apache.spark.api.java.JavaPairRDD/fromRDD
+                                               (PartitionerAwareUnionRDD.
+                                                              (.sc c)
+                                                              (JavaConversions/asScalaBuffer [(.rdd re-partitioned-rdd) (.rdd re-partitioned-rdd)])
+                                                              (.apply ClassTag$/MODULE$ java.lang.Object)
+                                                              )
+                                               (.apply ClassTag$/MODULE$ java.lang.Object)
+                                               (.apply ClassTag$/MODULE$ java.lang.Object)
+                                               )))))
+
+
+
+                      #_(testing
+                        "union concats more than two RDDs"
+                        (let [rdd1 (f/parallelize c [1 2 3 4])
+                              rdd2 (f/parallelize c [11 12 13])
+                              rdd3 (f/parallelize c [21 22 23])]
+                          (is (equals-ignore-order?
+                                (-> (f/union rdd1 rdd2 rdd3)
+                                    f/collect
+                                    vec)
+                                [1 2 3 4 11 12 13 21 22 23]))))
+
                       ))))
 
 (deftest
