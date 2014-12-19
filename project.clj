@@ -51,6 +51,7 @@
                                                    flambo.rdd.hadoopAvro
                                                    flambo.rdd.jdbc
                                                    flambo.api-test
+                                                   flambo.function-test
                                                    flambo.conf-test
                                                    flambo.rdd.hadoopAvro-test
                                                    flambo.rdd.jdbc-test
