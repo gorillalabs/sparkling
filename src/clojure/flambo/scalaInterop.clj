@@ -84,7 +84,7 @@
 
 (defn some-or-nil [option]
   (when (instance? Some option)
-    (.get option)))
+    (.get ^Some option)))
 
 
 
