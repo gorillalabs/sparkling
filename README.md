@@ -22,6 +22,6 @@ then navigate to [localhost:4000](http://localhost:4000)
 
 ## License & Copyright
 
-Copyright (C) 2014 Alexander Petrov, Michael S. Klishin, Zack Maril.
+Copyright (C) 2014-2015 Alexander Petrov, Michael S. Klishin, Zack Maril, and the ClojureWerkz team.
 
 Distributed under the Eclipse Public License, the same as Clojure.
