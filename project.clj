@@ -74,6 +74,10 @@
             :lein-release {:deploy-via :clojars}
             )
 
+;; test with
+;;     lein do clean, test
+
 ;; run example with
 ;;     lein with-profile example,provided run
+
 
