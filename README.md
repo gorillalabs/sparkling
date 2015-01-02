@@ -177,8 +177,8 @@ To illustrate RDD basics in flambo, consider the following simple application us
 
 ;; NOTE: we are using the flambo.api/fn not clojure.core/fn
 (-> (f/text-file sc "data.txt")   ;; returns an unrealized lazy dataset
-    (f/map (f/fn [s] (count s)))  ;; returns RDD array of length of lines
-    (f/reduce (f/fn [x y] (+ x y)))) ;; returns a value, should be 1406
+    (f/map (fn [s] (count s)))  ;; returns RDD array of length of lines
+    (f/reduce (fn [x y] (+ x y)))) ;; returns a value, should be 1406
 ```
 
 The first line defines a base RDD from an external file. The dataset is not loaded into memory; it is merely a pointer to the file. The second line defines an RDD of the lengths of the lines as a result of the `map` transformation. Note, the lengths are not immediately computed due to laziness. Finally, we run `reduce` on the transformed RDD, which is an action, returning only a _value_ to the driver program.
@@ -200,7 +200,7 @@ When we evaluate this `map` transformation on the initial RDD, the result is ano
 
 ```clojure
 (-> (f/parallelize sc [1 2 3 4 5])
-    (f/map (f/fn [x] (* x x)))
+    (f/map (fn [x] (* x x)))
     f/collect)
 ;; => [1 4 9 16 25]
 ```
@@ -243,7 +243,7 @@ After the `reduce-by-key` operation, we can sort the pairs alphabetically using 
             [clojure.string :as s]))
 
 (-> (f/text-file sc "data.txt")
-    (f/flat-map (f/fn [l] (s/split l #" ")))
+    (f/flat-map (fn [l] (s/split l #" ")))
     (f/map-to-pair (fn [w] (f/tuple w 1)))
     (f/reduce-by-key (fd/untuple (fn [x y] (+ x y)))))
     f/sort-by-key
@@ -301,10 +301,10 @@ Spark provides the ability to persist (or cache) a dataset in memory across oper
   (:require [flambo.api :as f]))
 
 (let [line-lengths (-> (f/text-file sc "data.txt")
-                       (f/map (f/fn [s] (count s)))
+                       (f/map (fn [s] (count s)))
                        f/cache)]
   (-> line-lengths
-      (f/reduce (f/fn [x y] (+ x y)))))
+      (f/reduce (fn [x y] (+ x y)))))
 ```
 
 <a name="running-flambo">

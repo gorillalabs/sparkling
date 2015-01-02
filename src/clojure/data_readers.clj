@@ -1,2 +1,2 @@
-{flambo/tuple flambo.scalaInterop/tuple-reader
+{sparkling/tuple sparkling.scalaInterop/tuple-reader
  }

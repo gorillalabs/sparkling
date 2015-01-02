@@ -81,7 +81,7 @@ To compute the term freqencies, we need a dictionary of the terms in each docume
 `flat-map` transforms the source RDD by passing each tuple through a function. It is similar to `map`, but the output is a collection of 0 or more items which is then flattened. We use the flambo named function macro `flambo.api/defsparkfn` to define our Clojure function `gen-docid-term-tuples`: 
 
 ```clojure
-user=> (f/defsparkfn gen-docid-term-tuples [doc-tuple]
+user=> (defn gen-docid-term-tuples [doc-tuple]
          (let [[doc-id content] doc-tuple
                terms (filter #(not (contains? stopwords %))
                              (clojure.string/split content #" "))
@@ -100,11 +100,11 @@ This is the raison d'être for flambo. It handles all of the underlying serializ
 
 Having constructed our dictionary we `f/cache` (or _persist_) the dataset in memory for future actions.
 
-Recall term-freqency is defined as a function of the document id and term, `tf(document, term)`. At this point we have an RDD of *raw* term frequencies, but we need normalized term frequencies. We use the flambo inline anonymous function macro, `f/fn`, to define an anonymous Clojure function to normalize the frequencies and `map` our `doc-term-seq` RDD of `[doc-id term term-freq doc-terms-count]` tuples to an RDD of key/value, `[term [doc-id tf]]`, tuples. This new tuple format of the term-frequency RDD will be later used to `join` the inverse-document-frequency RDD and compute the final tfidf weights.
+Recall term-freqency is defined as a function of the document id and term, `tf(document, term)`. At this point we have an RDD of *raw* term frequencies, but we need normalized term frequencies. We use the flambo inline anonymous function macro, `fn`, to define an anonymous Clojure function to normalize the frequencies and `map` our `doc-term-seq` RDD of `[doc-id term term-freq doc-terms-count]` tuples to an RDD of key/value, `[term [doc-id tf]]`, tuples. This new tuple format of the term-frequency RDD will be later used to `join` the inverse-document-frequency RDD and compute the final tfidf weights.
 
 ```clojure
 user=> (def tf-by-doc (-> doc-term-seq
-                          (f/map (f/fn [[doc-id term term-freq doc-terms-count]]
+                          (f/map (fn [[doc-id term term-freq doc-terms-count]]
                                        [term [doc-id (double (/ term-freq doc-terms-count))]]))
                           f/cache))
 ```
@@ -126,11 +126,11 @@ and the number of documents that contain each term. The following step maps over
 
 ```clojure
 user=> (defn calc-idf [doc-count]
-         (f/fn [[term tuple-seq]]
+         (fn [[term tuple-seq]]
            (let [df (count tuple-seq)]
              [term (Math/log (/ doc-count (+ 1.0 df)))])))
 user=> (def idf-by-term (-> doc-term-seq
-                            (f/group-by (f/fn [[_ term _ _]] term))
+                            (f/group-by (fn [[_ term _ _]] term))
                             (f/map (calc-idf num-docs))
                             f/cache))
 ```
@@ -141,7 +141,7 @@ Now that we have both a term-frequency RDD of `[term [doc-id tf]]` tuples and an
 
 ```clojure
 user=> (def tfidf-by-term (-> (f/join tf-by-doc idf-by-term)
-                              (f/map (f/fn [[term [[doc-id tf] idf]]]
+                              (f/map (fn [[term [[doc-id tf] idf]]]
                                            [doc-id term (* tf idf)]))
                               f/cache))
 ```

@@ -1,6 +1,6 @@
-(defproject chrisbetz/flambo "1.0.0-SNAPSHOT"
+(defproject chrisbetz/sparkling "1.0.0-SNAPSHOT"
             :description "A Clojure Library for Apache Spark"
-            :url "https://github.com/chrisbetz/flambo"
+            :url "https://github.com/chrisbetz/sparkling"
             :license {:name "Eclipse Public License"
                       :url  "http://www.eclipse.org/legal/epl-v10.html"}
             :dependencies [[org.clojure/clojure "1.6.0"]
@@ -25,9 +25,9 @@
                                                    [lein-pprint "1.1.1"]]
                                   :resource-paths ["data"]
                                   ;; so gen-class stuff works in the repl
-                                  :aot            [flambo.api
-                                                   flambo.function
-                                                   flambo.scalaInterop]}
+                                  :aot            [sparkling.api
+                                                   sparkling.function
+                                                   sparkling.scalaInterop]}
                        :jenkins  {:plugins      [[lein-test-out "0.3.1"]]
                                   }
                        :provided {:dependencies
@@ -43,30 +43,30 @@
 
                                     ]}
                        :test     {:resource-paths ["dev-resources" "data"]
-                                  :aot            [flambo.api
-                                                   flambo.function
-                                                   flambo.scalaInterop
-                                                   flambo.destructuring
-                                                   flambo.debug
-                                                   flambo.rdd.hadoopAvro
-                                                   flambo.rdd.jdbc
-                                                   flambo.api-test
-                                                   flambo.function-test
-                                                   flambo.conf-test
-                                                   flambo.rdd.hadoopAvro-test
-                                                   flambo.rdd.jdbc-test
+                                  :aot            [sparkling.api
+                                                   sparkling.function
+                                                   sparkling.scalaInterop
+                                                   sparkling.destructuring
+                                                   sparkling.debug
+                                                   sparkling.rdd.hadoopAvro
+                                                   sparkling.rdd.jdbc
+                                                   sparkling.api-test
+                                                   sparkling.function-test
+                                                   sparkling.conf-test
+                                                   sparkling.rdd.hadoopAvro-test
+                                                   sparkling.rdd.jdbc-test
                                                    ]}
                        :uberjar  {:aot :all}
-                       :example  {:main         flambo.example.tfidf
+                       :example  {:main         sparkling.example.tfidf
                                   :source-paths ["example"]
-                                  :aot          [flambo.example.tfidf]}
+                                  :aot          [sparkling.example.tfidf]}
                        }
             :source-paths ["src/clojure"]
             :java-source-paths ["src/java"]
             :codox {:defaults                  {:doc/format :markdown}
-                    :include                   [flambo.api flambo.conf flambo.kryo]
+                    :include                   [sparkling.api sparkling.conf sparkling.kryo]
                     :output-dir                "doc/codox"
-                    :src-dir-uri               "https://raw.githubusercontent.com/chrisbetz/flambo/develop/"
+                    :src-dir-uri               "https://raw.githubusercontent.com/chrisbetz/sparkling/develop/"
                     :src-linenum-anchor-prefix "L"}
             :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.6"]
             :jvm-opts ^:replace ["-server" "-Xmx1g"]
