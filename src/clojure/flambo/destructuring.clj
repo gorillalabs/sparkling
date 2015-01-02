@@ -20,6 +20,10 @@
   (fn [^Tuple2 t]
     (f (._1 t) (._2 t))))
 
+(defn tuple-seq-fn [f]
+  (fn [^Tuple2 t]
+    (f (seq (._1 t)) (seq (._2 t)))))
+
 (defn tuple-value-fn [f]
   (fn [^Tuple2 t]
     (let [k (._1 t)
