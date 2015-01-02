@@ -365,6 +365,17 @@
                                                 [["Four" 1] ["score" 1] ["and" 1] ["seven" 1] ["years" 1] ["ago" 1]])))
 
                     (testing
+                      "flat-map-values"
+                      (is (equals-ignore-order? (-> (f/parallelize-pairs c [#flambo/tuple["key1" [1 2]]
+                                                                            #flambo/tuple["key2" [3 4]]
+                                                                            #flambo/tuple["key3" [5]]])
+                                                    (f/flat-map-values (f/fn [x] x))
+                                                    f/collect
+                                                    untuple-all
+                                                    vec)
+                                                [["key1" 1] ["key1" 2] ["key2" 3] ["key2" 4] ["key3" 5]])))
+
+                    (testing
                       "map-partition"
                       (is (equals-ignore-order? (-> (f/parallelize c [0 1 2 3 4])
                                                     (f/map-partition (f/fn [it] (map identity (iterator-seq it))))

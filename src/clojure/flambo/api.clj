@@ -91,7 +91,7 @@
   (let [clazz (Class/forName (clojure.string/replace (str ns) #"-" "_"))]
     (JavaSparkContext/jarOfClass clazz)))
 
-(defsparkfn tuple [k v]
+(defn tuple [k v]
             (Tuple2. k v))
 
 
@@ -226,6 +226,10 @@
   the results."
   [rdd f]
   (.flatMapToPair rdd (pair-flat-map-function f)))
+
+(defn flat-map-values
+  [rdd f]
+  (.flatMapValues rdd (function f)))
 
 (defn map-partition
   "Similar to `map`, but runs separately on each partition (block) of the `rdd`, so function `f`
