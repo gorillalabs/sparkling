@@ -1,8 +1,10 @@
-(defproject chrisbetz/sparkling "1.0.0-SNAPSHOT"
+(defproject gorillalabs/sparkling "1.0.0-SNAPSHOT"
             :description "A Clojure Library for Apache Spark"
             :url "https://github.com/chrisbetz/sparkling"
             :license {:name "Eclipse Public License"
                       :url  "http://www.eclipse.org/legal/epl-v10.html"}
+            :scm {:name "git"
+                  :url "https://github.com/gorillalabs/sparkling"}
             :dependencies [[org.clojure/clojure "1.6.0"]
                            [org.clojure/tools.logging "0.3.1"]
                            [com.twitter/carbonite "1.4.0"
