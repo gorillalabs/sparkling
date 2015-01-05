@@ -10,3 +10,4 @@ pom.xml.asc
 /doc
 *.iml
 report.xml
+.idea
