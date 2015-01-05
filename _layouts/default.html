@@ -3,8 +3,8 @@
   <head>
     <title>{{page.title}}</title>
     <meta content='width=device-width, initial-scale=1.0' name='viewport' />
-    <meta content='' name='description' />
-    <meta content='The ClojureWerkz Team' name='author' />
+    <meta content='{{page.description}}' name='description' />
+    <meta content='Dr. Christian Betz' name='author' />
     <link href='/assets/stylesheets/bootstrap.css' media='screen' rel='stylesheet' type='text/css' />
     <link href='/assets/stylesheets/bootstrap-responsive.css' media='screen' rel='stylesheet' type='text/css' />
     <link href='/assets/stylesheets/bootstrap-docs.css' media='screen' rel='stylesheet' type='text/css' />
@@ -15,19 +15,16 @@
     <script src='/assets/javascripts/toc.js'></script>
     <script src='http://twitter.github.com/bootstrap/assets/js/bootstrap-dropdown.js'></script>
     <meta content='text/html;charset=utf-8' http-equiv='Content-Type' />
-    <script type="text/javascript">
-      if(!(window.location.hostname === "localhost")) {
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', '']);
-      _gaq.push(['_trackPageview']);
+    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-      (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-      }
-    </script>
+  ga('create', 'UA-58255457-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
   </head>
   <body style='height: 100%'>
     <div class='navbar navbar-inverse navbar-fixed-top'>
@@ -49,7 +46,7 @@
               <li>
                 <a href='/articles/community.html'>Community</a>
               </li>
-              <li>
+              <!--li>
                 <a href='http://clojurewerkz.org'>More Clojure libraries</a>
               </li>
               <li>
@@ -57,7 +54,7 @@
               </li>
               <li>
                 <a href='http://clojure-doc.org'>Clojure Docs</a>
-              </li>
+              </li-->
             </ul>
           </div>
         </div>
@@ -68,13 +65,8 @@
     </div>
     <footer class='footer'>
       <div class='container'>
-        <p>This website was developed by the
-          &nbsp;<a href='http://github.com/clojurewerkz'>ClojureWerkz Team</a>.</p>
         <p>Follow us on Twitter:
-          &nbsp;<a href='http://twitter.com/clojurewerkz'>ClojureWerkz</a>,&nbsp;<a href='http://twitter.com/michaelklishin'>Michael
-          Klishin</a>,&nbsp;<a href='http://twitter.com/ifesdjeen'>Alex
-          P</a>,&nbsp;<a href='http://twitter.com/ZackMaril'>Zack
-          Maril</a>
+          &nbsp;<a href='http://twitter.com/gorillalabs_de'>@gorillalabs_de</a>,&nbsp;<a href='http://twitter.com/chris_betz'>Christian Betz</a>
         </p>
       </div>
     </footer>
