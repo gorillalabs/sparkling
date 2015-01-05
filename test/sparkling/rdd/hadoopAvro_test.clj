@@ -1,6 +1,6 @@
 (ns sparkling.rdd.hadoopAvro-test
   (:require [sparkling.rdd.hadoopAvro :refer :all]
-            [sparkling.api :as f]
+            [sparkling.api :as s]
             [sparkling.conf :as conf]
             [clojure.test :refer :all]))
 
@@ -13,10 +13,10 @@
   (let [conf (-> (conf/spark-conf)
                  (conf/master "local[*]")
                  (conf/app-name "hadoop-avro-test"))]
-    (f/with-context c conf
+    (s/with-context c conf
                     (testing
                         "load stuff from hadoop using AVRO"
-                      (is (= (f/collect (load-avro-file c "data/avro/twitter.avro"))
+                      (is (= (s/collect (load-avro-file c "data/avro/twitter.avro"))
                              [{:username "miguno", :tweet "Rock: Nerf paper, scissors is fine.", :timestamp 1366150681}
                               {:username "BlizzardCS", :tweet "Works as intended.  Terran is IMBA.", :timestamp 1366154481}
                               {:username "DarkTemplar", :tweet "From the shadows I come!", :timestamp 1366154681}

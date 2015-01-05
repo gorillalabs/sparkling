@@ -1,6 +1,5 @@
 (ns sparkling.rdd.hadoopAvro
-  (:require [sparkling.conf :as conf]
-            [sparkling.api :as f]
+  (:require [sparkling.api :as s]
             )
   (:import  ;; TODO: Clean imports
            [org.apache.hadoop.io NullWritable]
@@ -20,7 +19,7 @@
   [^JavaSparkContext sc path]
   (let [conf (.hadoopConfiguration sc)]
     (AvroSerialization/setDataModelClass conf ClojureData)
-  (f/map (.newAPIHadoopFile sc
+  (s/map (.newAPIHadoopFile sc
                             path
                             ClojureAvroInputFormat
                             Object
@@ -37,7 +36,7 @@
     (AvroSerialization/setDataModelClass conf ClojureData)
     (AvroJob/setOutputKeySchema job schema)
     #_(-> rdd
-        (f/map key-only)                                    ;; TODO not quite right!!
+        (s/map key-only)                                    ;; TODO not quite right!!
 
         )
     (.saveAsNewAPIHadoopFile rdd

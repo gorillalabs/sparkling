@@ -1,6 +1,5 @@
 (ns sparkling.destructuring
   "Contains wrapper-functions to destructure scala/spark data structures"
-  (:require [sparkling.api :as f])
   (:import [scala Tuple2 Tuple3]
            [com.google.common.base Optional]))
 

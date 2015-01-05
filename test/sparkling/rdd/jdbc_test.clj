@@ -1,7 +1,7 @@
 (ns sparkling.rdd.jdbc-test
   (:import [java.sql Connection PreparedStatement ResultSet DatabaseMetaData ResultSetMetaData])
   (:require [sparkling.rdd.jdbc :refer :all]
-            [sparkling.api :as f]
+            [sparkling.api :as s]
             [sparkling.conf :as conf]
             [clojure.test :refer :all]))
 
@@ -40,10 +40,10 @@
   (let [conf (-> (conf/spark-conf)
                  (conf/master "local[*]")
                  (conf/app-name "jdbc-test"))]
-    (f/with-context c conf
+    (s/with-context c conf
                     (testing
                         "load stuff from jdbc"
-                      (is (= (f/collect (load-jdbc c get-connection "query" 0 10 1))
+                      (is (= (s/collect (load-jdbc c get-connection "query" 0 10 1))
                              [{:id-column 1} {:id-column 2} {:id-column 3} {:id-column 4} {:id-column 5} {:id-column 6} {:id-column 7} {:id-column 8} {:id-column 9} {:id-column 10}]
                              )
                           )))))

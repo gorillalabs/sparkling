@@ -1,7 +1,5 @@
 (ns sparkling.rdd.jdbc
-  (:require [sparkling.conf :as conf]
-            [sparkling.api :as f]
-            [clojure.tools.logging :refer :all]
+  (:require [clojure.tools.logging :refer :all]
             [sparkling.scalaInterop :as scala :refer [function0 function1]])
   (:import [java.sql ResultSet ResultSetMetaData]
            [org.apache.spark.rdd JdbcRDD]

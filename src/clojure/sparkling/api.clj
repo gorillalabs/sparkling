@@ -1,4 +1,4 @@
-;; This is the main entry point to sparkling, typically required like `[sparkling.api :as f]`.
+;; This is the main entry point to sparkling, typically required like `[sparkling.api :as s]`.
 
 ;; By design, most operations in sparkling are built up via the threading macro `->`.
 
@@ -73,7 +73,7 @@
 
 (defmacro with-context
   [context-sym conf & body]
-  `(let [~context-sym (f/spark-context ~conf)]
+  `(let [~context-sym (sparkling.api/spark-context ~conf)]
      (try
        ~@body
        (finally (.stop ~context-sym)))))

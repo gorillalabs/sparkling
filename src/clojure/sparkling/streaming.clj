@@ -5,7 +5,7 @@
 ;;
 (ns sparkling.streaming
   (:refer-clojure :exclude [map time print union count])
-  (:require [sparkling.api :as f]
+  (:require [sparkling.api :as s]
             [sparkling.conf :as conf]
             [sparkling.function :refer [flat-map-function
                                      function
@@ -59,11 +59,11 @@
     (-> dstream
       (.mapToPair (pair-function identity))
       (.reduceByKey (function2 f))
-      (.map (function f/untuple)))
+      (.map (function s/untuple)))
     ;; if it's already JavaPairDStream, we're good
     (-> dstream
         (.reduceByKey (function2 f))
-        (.map (function f/untuple)))))
+        (.map (function s/untuple)))))
 
 (defn map-to-pair [dstream f]
   (.mapToPair dstream (pair-function f)))
@@ -96,7 +96,7 @@
   (-> dstream
       (.mapToPair (pair-function identity))
       (.groupByKeyAndWindow (duration window-length) (duration slide-interval))
-      (.map (function f/untuple))))
+      (.map (function s/untuple))))
 
 (defn reduce-by-window [dstream f f-inv window-length slide-interval]
   (.reduceByWindow dstream (function2 f) (function2 f-inv) (duration window-length) (duration slide-interval)))
@@ -105,7 +105,7 @@
   (-> dstream
       (.mapToPair (pair-function identity))
       (.reduceByKeyAndWindow (function2 f) (duration window-length) (duration slide-interval))
-      (.map (function f/untuple))))
+      (.map (function s/untuple))))
 
 
 ;; ## Actions

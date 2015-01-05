@@ -3,7 +3,6 @@
 ;; This code as well as SparkSQL itself are considered experimental.
 ;;
 (ns sparkling.sql
-  (:require [sparkling.api :as f :refer [defsparkfn]])
   (:import [org.apache.spark.sql.api.java JavaSQLContext Row]
            [org.apache.spark.sql SQLContext]))
 

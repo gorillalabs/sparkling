@@ -1,9 +1,9 @@
 (ns sparkling.api-test
   (:import [org.apache.spark.broadcast Broadcast])
   (:use clojure.test)
-  (:require [sparkling.api :as f]
+  (:require [sparkling.api :as s]
             [sparkling.conf :as conf]
-            [sparkling.broadcast :as fb]
+            [sparkling.broadcast :as sb]
             ))
 
 
@@ -13,12 +13,12 @@
   (let [conf (-> (conf/spark-conf)
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))]
-    (f/with-context
+    (s/with-context
       c conf
       (testing
         "gives us a Broadcast Var"
-        (is (= (class Broadcast) (fb/broadcast c 'anything))))
+        (is (= (class Broadcast) (sb/broadcast c 'anything))))
 
       (testing
         "creates a JavaRDD"
-        (is (= (fb/value (fb/broadcast c 'anything)) 'anything))))))
+        (is (= (sb/value (sb/broadcast c 'anything)) 'anything))))))

@@ -1,16 +1,13 @@
 (ns sparkling.api-test
   (:import [org.apache.spark HashPartitioner]
-           [scala None Some]
-           [org.apache.spark.api.java JavaSparkContext JavaRDD]
-           [org.apache.spark.rdd PartitionerAwareUnionRDD]
-           [scala.collection JavaConversions]
-           [scala.reflect ClassTag$])
+           [scala Some]
+           [org.apache.spark.api.java JavaSparkContext JavaRDD])
   (:use clojure.test)
-  (:require [sparkling.api :as f]
+  (:require [sparkling.api :as s]
             [sparkling.conf :as conf]
             [sparkling.scalaInterop :as si]
             ;; this is to have the reader macro sparkling/tuple defined
-            [sparkling.destructuring :as fd]
+            [sparkling.destructuring :as sd]
             [sparkling.kryoserializer :as ks]
             ))
 
@@ -19,16 +16,16 @@
 
 
 (defn untuple-all [coll]
-  (map f/untuple coll))
+  (map s/untuple coll))
 
 (defn seq-values [coll]
-  (map f/seq-value coll))
+  (map s/seq-value coll))
 
 (defn untuple-values [coll]
-  (map f/untuple-value coll))
+  (map s/untuple-value coll))
 
 (defn optional-second-values [coll]
-  (map f/optional-second-value coll))
+  (map s/optional-second-value coll))
 
 (defn some-instance? [cls option]
   (and (instance? Some option) (instance? cls (.get option))))
@@ -44,22 +41,22 @@
   (let [conf (-> (conf/spark-conf)
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))]
-    (f/with-context c conf
+    (s/with-context c conf
                     (testing
                       "gives us a JavaSparkContext"
                       (is (= (class c) JavaSparkContext)))
 
                     (testing
                       "creates a JavaRDD"
-                      (is (= (class (f/parallelize c [1 2 3 4 5])) JavaRDD)))
+                      (is (= (class (s/parallelize c [1 2 3 4 5])) JavaRDD)))
 
                     (testing
                       "round-trips a clojure vector"
-                      (is (= (-> (f/parallelize c [1 2 3 4 5]) f/collect vec) [1 2 3 4 5]))))))
+                      (is (= (-> (s/parallelize c [1 2 3 4 5]) s/collect vec) [1 2 3 4 5]))))))
 
 (deftest serializable-functions
 
-  (let [kryo (ks/kryo-serializer)                           ; ((ks/round-trip kryo (f/comp (partial * 2) inc)) 1)
+  (let [kryo (ks/kryo-serializer)                           ; ((ks/round-trip kryo (s/comp (partial * 2) inc)) 1)
         myfn (fn [x] (* 2 x))]
     #_(testing
       "inline op returns a serializable fn"
@@ -78,15 +75,15 @@
 
     #_(testing :comp
           "it round-trips back to a serializable fn (comp)"
-          (type (-> (f/comp myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
+          (type (-> (s/comp myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
 
     #_(testing :comp
           "it round-trips back to a serializable fn (comp)"
-          (type (-> (f/comp myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
+          (type (-> (s/comp myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
 
     #_(testing :comp ;; this won't work due to a limitation in serializable-fn
           "it round-trips back to a serializable fn (comp)"
-          (type (-> (f/comp myfn myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
+          (type (-> (s/comp myfn myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
 
     ))
 
@@ -95,54 +92,54 @@
   (testing
     "untuple returns a 2 vector"
     (let [tuple2 (scala.Tuple2. 1 "hi")]
-      (is (= (f/untuple tuple2) [1 "hi"]))))
+      (is (= (s/untuple tuple2) [1 "hi"]))))
 
   (testing
     "double untuple returns a vector with a key and a 2 vector value"
     (let [double-tuple2 (scala.Tuple2. 1 (scala.Tuple2. 2 "hi"))]
-      (is (= (f/double-untuple double-tuple2) [1 [2 "hi"]])))))
+      (is (= (s/double-untuple double-tuple2) [1 [2 "hi"]])))))
 
 (deftest transformations
 
   (let [conf (-> (conf/spark-conf)
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))]
-    (f/with-context c conf
+    (s/with-context c conf
                     (testing
                       "map returns an RDD formed by passing each element of the source RDD through a function"
-                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 3 4 5])
-                                                    (f/map (fn [x] (* 2 x)))
-                                                    f/collect
+                      (is (equals-ignore-order? (-> (s/parallelize c [1 2 3 4 5])
+                                                    (s/map (fn [x] (* 2 x)))
+                                                    s/collect
                                                     vec) [2 4 6 8 10])))
 
                     (testing
                       "map-to-pair returns an RDD of (K, V) pairs formed by passing each element of the source
                       RDD through a pair function"
-                      (is (equals-ignore-order? (-> (f/parallelize c ["a" "b" "c" "d"])
-                                                    (f/map-to-pair (fn [x] (f/tuple x 1)))
-                                                    (f/map (fd/tuple-fn identity-vec))
-                                                    f/collect
+                      (is (equals-ignore-order? (-> (s/parallelize c ["a" "b" "c" "d"])
+                                                    (s/map-to-pair (fn [x] (s/tuple x 1)))
+                                                    (s/map (sd/tuple-fn identity-vec))
+                                                    s/collect
                                                     vec) [["a" 1] ["b" 1] ["c" 1] ["d" 1]])))
 
 
                     (testing
                       "key-by returns an RDD of (K,V) pairs from an RDD of V elements formed by passing each V through a function to get to K."
-                      (is (equals-ignore-order? (-> (f/parallelize c [0 1 2 3 4])
-                                                    (f/key-by even?)
-                                                    (f/map f/untuple)
-                                                    f/collect
+                      (is (equals-ignore-order? (-> (s/parallelize c [0 1 2 3 4])
+                                                    (s/key-by even?)
+                                                    (s/map s/untuple)
+                                                    s/collect
                                                     vec)
                                                 [[true 0] [false 1] [true 2] [false 3] [true 4]])))
 
                     (testing
                       "reduce-by-key returns an RDD of (K, V) when called on an RDD of (K, V) pairs"
-                      (is (equals-ignore-order? (-> (f/parallelize-pairs c [#sparkling/tuple ["key1" 1]
+                      (is (equals-ignore-order? (-> (s/parallelize-pairs c [#sparkling/tuple ["key1" 1]
                                                                             #sparkling/tuple ["key1" 2]
                                                                             #sparkling/tuple ["key2" 3]
                                                                             #sparkling/tuple ["key2" 4]
                                                                             #sparkling/tuple ["key3" 5]])
-                                                    (f/reduce-by-key (fn [x y] (+ x y)))
-                                                    f/collect
+                                                    (s/reduce-by-key (fn [x y] (+ x y)))
+                                                    s/collect
                                                     untuple-all
                                                     vec)
                                                 [["key1" 3]
@@ -152,38 +149,38 @@
                     (testing
                       "similar to map, but each input item can be mapped to 0 or more output items;
                       mapping function must therefore return a sequence rather than a single item"
-                      (is (equals-ignore-order? (-> (f/parallelize c [["Four score and seven years ago our fathers"]
+                      (is (equals-ignore-order? (-> (s/parallelize c [["Four score and seven years ago our fathers"]
                                                                       ["brought forth on this continent a new nation"]])
-                                                    (f/flat-map (fn [x] (clojure.string/split (first x) #" ")))
-                                                    f/collect
+                                                    (s/flat-map (fn [x] (clojure.string/split (first x) #" ")))
+                                                    s/collect
                                                     vec)
                                                 ["Four" "score" "and" "seven" "years" "ago" "our" "fathers" "brought" "forth" "on" "this" "continent" "a" "new" "nation"])))
 
                     (testing
                       "filter returns an RDD formed by selecting those elements of the source on which func returns true"
-                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 3 4 5 6])
-                                                    (f/filter (fn [x] (even? x)))
-                                                    f/collect
+                      (is (equals-ignore-order? (-> (s/parallelize c [1 2 3 4 5 6])
+                                                    (s/filter (fn [x] (even? x)))
+                                                    s/collect
                                                     vec)
                                                 [2 4 6])))
 
 
                     (testing
                       "cogroup returns an RDD of (K, (V, W)) pairs with all pairs of elements of each key when called on RDDs of type (K, V) and (K, W)"
-                      (let [rdd (f/parallelize-pairs c [#sparkling/tuple["key1" 1]
+                      (let [rdd (s/parallelize-pairs c [#sparkling/tuple["key1" 1]
                                                         #sparkling/tuple["key2" 2]
                                                         #sparkling/tuple["key3" 3]
                                                         #sparkling/tuple["key4" 4]
                                                         #sparkling/tuple["key5" 5]])
-                            other1 (f/parallelize-pairs c [#sparkling/tuple["key1" 11]
+                            other1 (s/parallelize-pairs c [#sparkling/tuple["key1" 11]
                                                            #sparkling/tuple["key3" 33]
                                                            #sparkling/tuple["key4" 44]
                                                            #sparkling/tuple["key6" 66]
                                                            #sparkling/tuple["key6" 666]])
                             ]
-                        (is (equals-ignore-order? (-> (f/cogroup rdd other1)
-                                                      (f/map (fd/cogroup-2-fn (fn [k v1 v2] [k [(vec$ v1) (vec$ v2)]])))
-                                                      f/collect
+                        (is (equals-ignore-order? (-> (s/cogroup rdd other1)
+                                                      (s/map (sd/cogroup-2-fn (fn [k v1 v2] [k [(vec$ v1) (vec$ v2)]])))
+                                                      s/collect
                                                       vec)
                                                   [["key1" [[1] [11]]]
                                                    ["key2" [[2] nil]]
@@ -197,25 +194,25 @@
 
                     (testing
                       "cogroup returns an RDD of (K, (V, W, X)) pairs with all pairs of elements of each key when called on RDDs of type (K, V), (K, W) and (K,X)"
-                      (let [rdd (f/parallelize-pairs c [#sparkling/tuple["key1" 1]
+                      (let [rdd (s/parallelize-pairs c [#sparkling/tuple["key1" 1]
                                                         #sparkling/tuple["key2" 2]
                                                         #sparkling/tuple["key3" 3]
                                                         #sparkling/tuple["key4" 4]
                                                         #sparkling/tuple["key5" 5]])
-                            other1 (f/parallelize-pairs c [#sparkling/tuple["key1" 11]
+                            other1 (s/parallelize-pairs c [#sparkling/tuple["key1" 11]
                                                            #sparkling/tuple["key3" 33]
                                                            #sparkling/tuple["key4" 44]
                                                            #sparkling/tuple["key6" 66]
                                                            #sparkling/tuple["key6" 666]])
-                            other2 (f/parallelize-pairs c [#sparkling/tuple["key1" 111]
+                            other2 (s/parallelize-pairs c [#sparkling/tuple["key1" 111]
                                                            #sparkling/tuple["key3" 333]
                                                            #sparkling/tuple["key5" 555]
                                                            ])
                             ]
                         (is (equals-ignore-order?
-                              (-> (f/cogroup rdd other1 other2)
-                                  (f/map (fd/cogroup-3-fn (fn [k v1 v2 v3] [k [(vec$ v1) (vec$ v2) (vec$ v3)]])))
-                                  f/collect
+                              (-> (s/cogroup rdd other1 other2)
+                                  (s/map (sd/cogroup-3-fn (fn [k v1 v2 v3] [k [(vec$ v1) (vec$ v2) (vec$ v3)]])))
+                                  s/collect
                                   vec)
                               [["key1" [[1] [11] [111]]]
                                ["key2" [[2] nil nil]]
@@ -228,18 +225,18 @@
 
                     (testing
                       "join returns an RDD of (K, (V, W)) pairs with all pairs of elements of each key when called on RDDs of type (K, V) and (K, W)"
-                      (let [LDATA (f/parallelize-pairs c [#sparkling/tuple["key1" [2]]
+                      (let [LDATA (s/parallelize-pairs c [#sparkling/tuple["key1" [2]]
                                                           #sparkling/tuple["key2" [3]]
                                                           #sparkling/tuple["key3" [5]]
                                                           #sparkling/tuple["key4" [1]]
                                                           #sparkling/tuple["key5" [2]]])
-                            RDATA (f/parallelize-pairs c [#sparkling/tuple["key1" [22]]
+                            RDATA (s/parallelize-pairs c [#sparkling/tuple["key1" [22]]
                                                           #sparkling/tuple["key3" [33]]
                                                           #sparkling/tuple["key4" [44]]])
                             ]
-                        (is (equals-ignore-order? (-> (f/join LDATA RDATA)
-                                                      (f/map (fd/tuple-value-fn identity-vec))
-                                                      f/collect
+                        (is (equals-ignore-order? (-> (s/join LDATA RDATA)
+                                                      (s/map (sd/tuple-value-fn identity-vec))
+                                                      s/collect
                                                       vec)
                                                   [["key3" [5] [33]]
                                                    ["key4" [1] [44]]
@@ -247,17 +244,17 @@
 
                     (testing
                       "left-outer-join returns an RDD of (K, (V, W)) when called on RDDs of type (K, V) and (K, W)"
-                      (let [LDATA (f/parallelize-pairs c [#sparkling/tuple["key1" [2]]
+                      (let [LDATA (s/parallelize-pairs c [#sparkling/tuple["key1" [2]]
                                                           #sparkling/tuple["key2" [3]]
                                                           #sparkling/tuple["key3" [5]]
                                                           #sparkling/tuple["key4" [1]]
                                                           #sparkling/tuple["key5" [2]]])
-                            RDATA (f/parallelize-pairs c [#sparkling/tuple["key1" [22]]
+                            RDATA (s/parallelize-pairs c [#sparkling/tuple["key1" [22]]
                                                           #sparkling/tuple["key3" [33]]
                                                           #sparkling/tuple["key4" [44]]])]
-                        (is (equals-ignore-order? (-> (f/left-outer-join LDATA RDATA)
-                                                      (f/map (fd/tuple-value-fn identity-vec :optional-second-value? true))
-                                                      f/collect
+                        (is (equals-ignore-order? (-> (s/left-outer-join LDATA RDATA)
+                                                      (s/map (sd/tuple-value-fn identity-vec :optional-second-value? true))
+                                                      s/collect
                                                       vec)
                                                   [["key3" [5] [33]]
                                                    ["key4" [1] [44]]
@@ -268,21 +265,21 @@
 
                     (testing
                       "union concats two RDDs"
-                      (let [rdd1 (f/parallelize c [1 2 3 4])
-                            rdd2 (f/parallelize c [11 12 13])]
-                        (is (equals-ignore-order? (-> (f/union rdd1 rdd2)
-                                                      f/collect
+                      (let [rdd1 (s/parallelize c [1 2 3 4])
+                            rdd2 (s/parallelize c [11 12 13])]
+                        (is (equals-ignore-order? (-> (s/union rdd1 rdd2)
+                                                      s/collect
                                                       vec)
                                                   [1 2 3 4 11 12 13]))))
 
                     (testing
                       "union concats more than two RDDs"
-                      (let [rdd1 (f/parallelize c [1 2 3 4])
-                            rdd2 (f/parallelize c [11 12 13])
-                            rdd3 (f/parallelize c [21 22 23])]
+                      (let [rdd1 (s/parallelize c [1 2 3 4])
+                            rdd2 (s/parallelize c [11 12 13])
+                            rdd3 (s/parallelize c [21 22 23])]
                         (is (equals-ignore-order?
-                              (-> (f/union rdd1 rdd2 rdd3)
-                                  f/collect
+                              (-> (s/union rdd1 rdd2 rdd3)
+                                  s/collect
                                   vec)
                               [1 2 3 4 11 12 13 21 22 23]))))
 
@@ -290,9 +287,9 @@
                       "sample returns a fraction of the RDD, with/without replacement,
                       using a given random number generator seed"
                       (is (#(<= 1 %1 2)
-                            (-> (f/parallelize c [0 1 2 3 4 5 6 7 8 9])
-                                (f/sample false 0.1 2)
-                                f/collect
+                            (-> (s/parallelize c [0 1 2 3 4 5 6 7 8 9])
+                                (s/sample false 0.1 2)
+                                s/collect
                                 vec
                                 count)
                             )))
@@ -300,39 +297,39 @@
                     (testing
                       "combine-by-key returns an RDD by combining the elements for each key using a custom
                       set of aggregation functions"
-                      (is (equals-ignore-order? (-> (f/parallelize-pairs c [#sparkling/tuple["key1" 1]
+                      (is (equals-ignore-order? (-> (s/parallelize-pairs c [#sparkling/tuple["key1" 1]
                                                                             #sparkling/tuple["key2" 1]
                                                                             #sparkling/tuple["key1" 1]])
-                                                    (f/combine-by-key identity + +)
-                                                    f/collect
+                                                    (s/combine-by-key identity + +)
+                                                    s/collect
                                                     untuple-all
                                                     vec)
                                                 [["key1" 2] ["key2" 1]])))
 
                     (testing
                       "sort-by-key returns an RDD of (K, V) pairs sorted by keys in asc or desc order"
-                      (is (= (-> (f/parallelize-pairs c [#sparkling/tuple[2 "aa"]
+                      (is (= (-> (s/parallelize-pairs c [#sparkling/tuple[2 "aa"]
                                                          #sparkling/tuple[5 "bb"]
                                                          #sparkling/tuple[3 "cc"]
                                                          #sparkling/tuple[1 "dd"]])
-                                 (f/sort-by-key compare false)
-                                 f/collect
+                                 (s/sort-by-key compare false)
+                                 s/collect
                                  untuple-all
                                  vec)
                              [[5 "bb"] [3 "cc"] [2 "aa"] [1 "dd"]])))
 
                     (testing
                       "coalesce"
-                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 3 4 5])
-                                                    (f/coalesce 1)
-                                                    f/collect
+                      (is (equals-ignore-order? (-> (s/parallelize c [1 2 3 4 5])
+                                                    (s/coalesce 1)
+                                                    s/collect
                                                     vec) [1 2 3 4 5])))
 
                     (testing
                       "group-by returns an RDD of items grouped by the grouping function"
-                      (is (equals-ignore-order? (-> (f/parallelize c [1 1 2 3 5 8])
-                                                    (f/group-by (fn [x] (mod x 2)))
-                                                    f/collect
+                      (is (equals-ignore-order? (-> (s/parallelize c [1 1 2 3 5 8])
+                                                    (s/group-by (fn [x] (mod x 2)))
+                                                    s/collect
                                                     untuple-all
                                                     seq-values
                                                     vec
@@ -341,13 +338,13 @@
 
                     (testing
                       "group-by-key"
-                      (is (equals-ignore-order? (-> (f/parallelize-pairs c [#sparkling/tuple["key1" 1]
+                      (is (equals-ignore-order? (-> (s/parallelize-pairs c [#sparkling/tuple["key1" 1]
                                                                             #sparkling/tuple["key1" 2]
                                                                             #sparkling/tuple["key2" 3]
                                                                             #sparkling/tuple["key2" 4]
                                                                             #sparkling/tuple["key3" 5]])
-                                                    f/group-by-key
-                                                    f/collect
+                                                    s/group-by-key
+                                                    s/collect
                                                     untuple-all
                                                     seq-values
                                                     vec)
@@ -355,39 +352,39 @@
 
                     (testing
                       "flat-map-to-pair"
-                      (is (equals-ignore-order? (-> (f/parallelize c [["Four score and seven"]
+                      (is (equals-ignore-order? (-> (s/parallelize c [["Four score and seven"]
                                                                       ["years ago"]])
-                                                    (f/flat-map-to-pair (fn [x] (map (fn [y] (f/tuple y 1))
+                                                    (s/flat-map-to-pair (fn [x] (map (fn [y] (s/tuple y 1))
                                                                                        (clojure.string/split (first x) #" "))))
-                                                    (f/map f/untuple)
-                                                    f/collect
+                                                    (s/map s/untuple)
+                                                    s/collect
                                                     vec)
                                                 [["Four" 1] ["score" 1] ["and" 1] ["seven" 1] ["years" 1] ["ago" 1]])))
 
                     (testing
                       "flat-map-values"
-                      (is (equals-ignore-order? (-> (f/parallelize-pairs c [#sparkling/tuple["key1" [1 2]]
+                      (is (equals-ignore-order? (-> (s/parallelize-pairs c [#sparkling/tuple["key1" [1 2]]
                                                                             #sparkling/tuple["key2" [3 4]]
                                                                             #sparkling/tuple["key3" [5]]])
-                                                    (f/flat-map-values (fn [x] x))
-                                                    f/collect
+                                                    (s/flat-map-values (fn [x] x))
+                                                    s/collect
                                                     untuple-all
                                                     vec)
                                                 [["key1" 1] ["key1" 2] ["key2" 3] ["key2" 4] ["key3" 5]])))
 
                     (testing
                       "map-partition"
-                      (is (equals-ignore-order? (-> (f/parallelize c [0 1 2 3 4])
-                                                    (f/map-partition (fn [it] (map identity (iterator-seq it))))
-                                                    f/collect)
+                      (is (equals-ignore-order? (-> (s/parallelize c [0 1 2 3 4])
+                                                    (s/map-partition (fn [it] (map identity (iterator-seq it))))
+                                                    s/collect)
                                                 [0 1 2 3 4])))
 
                     (testing
                       "map-partition-with-index"
-                      (let [ret (-> (f/parallelize c [0 1 2 3 4])
-                                    (f/repartition 4)
-                                    (f/map-partition-with-index (fn [i it] (.iterator (map identity [i (iterator-seq it)]))))
-                                    (f/collect)
+                      (let [ret (-> (s/parallelize c [0 1 2 3 4])
+                                    (s/repartition 4)
+                                    (s/map-partition-with-index (fn [i it] (.iterator (map identity [i (iterator-seq it)]))))
+                                    (s/collect)
                                     ((fn [key-value-list]
                                        (let [key-value-map (apply array-map key-value-list)]
                                          [(keys key-value-map)
@@ -403,10 +400,10 @@
 
                     (testing
                       "cartesian creates cartesian product of two RDDS"
-                      (let [rdd1 (f/parallelize c [1 2])
-                            rdd2 (f/parallelize c [5 6 7])]
-                        (is (equals-ignore-order? (-> (f/cartesian rdd1 rdd2)
-                                                      f/collect
+                      (let [rdd1 (s/parallelize c [1 2])
+                            rdd2 (s/parallelize c [5 6 7])]
+                        (is (equals-ignore-order? (-> (s/cartesian rdd1 rdd2)
+                                                      s/collect
                                                       vec)
                                                   [#sparkling/tuple[1 5] #sparkling/tuple[1 6] #sparkling/tuple[1 7] #sparkling/tuple[2 5] #sparkling/tuple[2 6] #sparkling/tuple[2 7]]
                                                   ))))
@@ -421,137 +418,137 @@
   (let [conf (-> (conf/spark-conf)
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))]
-    (f/with-context c conf
+    (s/with-context c conf
                     (testing
                       "aggregates elements of RDD using a function that takes two arguments and returns one,
                       return type is a value"
-                      (is (= (-> (f/parallelize c [1 2 3 4 5])
-                                 (f/reduce (fn [x y] (+ x y)))) 15)))
+                      (is (= (-> (s/parallelize c [1 2 3 4 5])
+                                 (s/reduce (fn [x y] (+ x y)))) 15)))
 
                     (testing
                       "count-by-key returns a hashmap of (K, int) pairs with the count of each key; only available on RDDs of type (K, V)"
-                      (is (= (-> (f/parallelize-pairs c [#sparkling/tuple["key1" 1]
+                      (is (= (-> (s/parallelize-pairs c [#sparkling/tuple["key1" 1]
                                                          #sparkling/tuple["key1" 2]
                                                          #sparkling/tuple["key2" 3]
                                                          #sparkling/tuple["key2" 4]
                                                          #sparkling/tuple["key3" 5]])
-                                 (f/count-by-key))
+                                 (s/count-by-key))
                              {"key1" 2 "key2" 2 "key3" 1})))
 
                     (testing
                       "count-by-value returns a hashmap of (V, int) pairs with the count of each value"
-                      (is (= (-> (f/parallelize c [["key1" 11]
+                      (is (= (-> (s/parallelize c [["key1" 11]
                                                    ["key1" 11]
                                                    ["key2" 12]
                                                    ["key2" 12]
                                                    ["key3" 13]])
-                                 (f/count-by-value)) {["key1" 11] 2, ["key2" 12] 2, ["key3" 13] 1})))
+                                 (s/count-by-value)) {["key1" 11] 2, ["key2" 12] 2, ["key3" 13] 1})))
 
                     (testing
                       "values returns the values (V) of a hashmap of (K, V) pairs"
-                      (is (equals-ignore-order? (-> (f/parallelize-pairs c [#sparkling/tuple["key1" 11]
+                      (is (equals-ignore-order? (-> (s/parallelize-pairs c [#sparkling/tuple["key1" 11]
                                                                             #sparkling/tuple["key1" 11]
                                                                             #sparkling/tuple["key2" 12]
                                                                             #sparkling/tuple["key2" 12]
                                                                             #sparkling/tuple["key3" 13]])
-                                                    (f/values)
-                                                    (f/collect)
+                                                    (s/values)
+                                                    (s/collect)
                                                     vec)
                                                 [11, 11, 12, 12, 13])))
 
                     (testing
                       "keys returns the keys (K) of a hashmap of (K, V) pairs"
-                      (is (equals-ignore-order? (-> (f/parallelize-pairs c [#sparkling/tuple["key1" 11]
+                      (is (equals-ignore-order? (-> (s/parallelize-pairs c [#sparkling/tuple["key1" 11]
                                                                             #sparkling/tuple["key1" 11]
                                                                             #sparkling/tuple["key2" 12]
                                                                             #sparkling/tuple["key2" 12]
                                                                             #sparkling/tuple["key3" 13]])
-                                                    (f/keys)
-                                                    (f/collect)
+                                                    (s/keys)
+                                                    (s/collect)
                                                     vec)
                                                 ["key1" "key1" "key2" "key2" "key3"])))
 
 
                     (testing
                       "foreach runs a function on each element of the RDD, returns nil; this is usually done for side effcts"
-                      (is (nil? (-> (f/parallelize c [1 2 3 4 5])
-                                    (f/foreach (fn [x] x))))))
+                      (is (nil? (-> (s/parallelize c [1 2 3 4 5])
+                                    (s/foreach (fn [x] x))))))
 
                     (testing
                       "foreach-partition runs a function on each partition iterator of RDD; basically for side effects like foreach"
-                      (is (nil? (-> (f/parallelize c [1 2 3 4 5])
-                                    (f/foreach-partition identity)))))
+                      (is (nil? (-> (s/parallelize c [1 2 3 4 5])
+                                    (s/foreach-partition identity)))))
 
                     (testing
                       "fold returns aggregate each partition, and then the results for all the partitions, using a given associative function and a neutral 'zero value'"
-                      (is (= (-> (f/parallelize c [1 2 3 4 5])
-                                 (f/fold 0 (fn [x y] (+ x y)))) 15)))
+                      (is (= (-> (s/parallelize c [1 2 3 4 5])
+                                 (s/fold 0 (fn [x y] (+ x y)))) 15)))
 
                     (testing
                       "first returns the first element of an RDD"
-                      (is (= (-> (f/parallelize c [1 2 3 4 5])
-                                 f/first) 1)))
+                      (is (= (-> (s/parallelize c [1 2 3 4 5])
+                                 s/first) 1)))
 
                     (testing
                       "count return the number of elements in an RDD"
-                      (is (= (-> (f/parallelize c [["a" 1] ["b" 2] ["c" 3] ["d" 4] ["e" 5]])
-                                 f/count) 5)))
+                      (is (= (-> (s/parallelize c [["a" 1] ["b" 2] ["c" 3] ["d" 4] ["e" 5]])
+                                 s/count) 5)))
 
                     (testing
                       "collect returns all elements of the RDD as an array at the driver program"
-                      (is (equals-ignore-order? (-> (f/parallelize c [[1] [2] [3] [4] [5]])
-                                                    f/collect
+                      (is (equals-ignore-order? (-> (s/parallelize c [[1] [2] [3] [4] [5]])
+                                                    s/collect
                                                     vec)
                                                 [[1] [2] [3] [4] [5]])))
 
                     (testing
                       "distinct returns distinct elements of an RDD"
-                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 1 3 4 5 4])
-                                                    f/distinct
-                                                    f/collect
+                      (is (equals-ignore-order? (-> (s/parallelize c [1 2 1 3 4 5 4])
+                                                    s/distinct
+                                                    s/collect
                                                     vec)
                                                 [1 2 3 4 5])))
 
                     (testing
                       "distinct returns distinct elements of an RDD with the given number of partitions"
-                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 1 3 4 5 4])
-                                                    (f/distinct 2)
-                                                    f/collect
+                      (is (equals-ignore-order? (-> (s/parallelize c [1 2 1 3 4 5 4])
+                                                    (s/distinct 2)
+                                                    s/collect
                                                     vec)
                                                 [1 2 3 4 5])))
 
                     (testing
                       "take returns an array with the first n elements of an RDD"
-                      (is (= (-> (f/parallelize c [1 2 3 4 5])
-                                 (f/take 3))
+                      (is (= (-> (s/parallelize c [1 2 3 4 5])
+                                 (s/take 3))
                              [1 2 3])))
 
                     (testing
                       "glom returns an RDD created by coalescing all elements within each partition into a list"
-                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 2)
-                                                    f/glom
-                                                    f/collect
+                      (is (equals-ignore-order? (-> (s/parallelize c [1 2 3 4 5 6 7 8 9 10] 2)
+                                                    s/glom
+                                                    s/collect
                                                     vec)
                                                 [[1 2 3 4 5] [6 7 8 9 10]]
                                                 )))
 
                     (testing
                       "cache persists this RDD with a default storage level (MEMORY_ONLY)"
-                      (let [cache (-> (f/parallelize c [1 2 3 4 5])
-                                      (f/cache))]
+                      (let [cache (-> (s/parallelize c [1 2 3 4 5])
+                                      (s/cache))]
                         (is (= (-> cache
-                                   f/collect) [1 2 3 4 5]))))
+                                   s/collect) [1 2 3 4 5]))))
 
                     (testing
                       "histogram uses bucketCount number of evenly-spaced buckets"
-                      (is (= (-> (f/parallelize c [1.0 2.2 2.6 3.3 3.5 3.7 4.4 4.8 5.5 6.0])
-                                 (f/histogram 5))
+                      (is (= (-> (s/parallelize c [1.0 2.2 2.6 3.3 3.5 3.7 4.4 4.8 5.5 6.0])
+                                 (s/histogram 5))
                              [[1.0 2.0 3.0 4.0 5.0 6.0] [1 2 3 2 2]])))
 
                     (testing
                       "histogram uses the provided buckets"
-                      (is (= (-> (f/parallelize c [1.0 2.2 2.6 3.3 3.5 3.7 4.4 4.8 5.5 6.0])
-                                 (f/histogram [1.0 4.0 6.0]))
+                      (is (= (-> (s/parallelize c [1.0 2.2 2.6 3.3 3.5 3.7 4.4 4.8 5.5 6.0])
+                                 (s/histogram [1.0 4.0 6.0]))
                              [6 4])))
                     )))
 
@@ -563,21 +560,21 @@
   (let [conf (-> (conf/spark-conf)
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))]
-    (f/with-context c conf
+    (s/with-context c conf
 
                     (testing
                       "partitions returns a vec of partitions for a given RDD"
-                      (is (= (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 2)
-                                 f/partitions
+                      (is (= (-> (s/parallelize c [1 2 3 4 5 6 7 8 9 10] 2)
+                                 s/partitions
                                  count) 2)))
 
                     (testing
                       "partition-by partitions a given RDD according to the partitioning-fn using a hash partitioner."
-                      (is (equals-ignore-order? (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
-                                                    (f/map-to-pair (fn [x] (f/tuple x x)))
-                                                    (f/partition-by (f/hash-partitioner 2))
-                                                    f/glom
-                                                    f/collect
+                      (is (equals-ignore-order? (-> (s/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
+                                                    (s/map-to-pair (fn [x] (s/tuple x x)))
+                                                    (s/partition-by (s/hash-partitioner 2))
+                                                    s/glom
+                                                    s/collect
                                                     vec)
                                                 [[#sparkling/tuple[2 2] #sparkling/tuple[4 4] #sparkling/tuple[6 6] #sparkling/tuple[8 8] #sparkling/tuple[10 10]]
                                                  [#sparkling/tuple[1 1] #sparkling/tuple[3 3] #sparkling/tuple[5 5] #sparkling/tuple[7 7] #sparkling/tuple[9 9]]])))
@@ -588,38 +585,38 @@
                     (testing
                       "partition-by returns an RDD with a hash partitioner."
                       (is #(some-instance? HashPartitioner %1)
-                          (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
-                              (f/map-to-pair (fn [x] (f/tuple x x)))
-                              (f/partition-by (f/hash-partitioner 2))
-                              (f/partitioner)
+                          (-> (s/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
+                              (s/map-to-pair (fn [x] (s/tuple x x)))
+                              (s/partition-by (s/hash-partitioner 2))
+                              (s/partitioner)
                               )))
 
 
                     (testing
                       "map-values keeps the hash partitioner."
                       (is #(some-instance? HashPartitioner %1)
-                          (-> (f/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
-                              (f/map-to-pair (fn [x] (f/tuple x x)))
-                              (f/partition-by (f/hash-partitioner 2))
-                              (f/map-values #(* %1 2))
-                              (f/partitioner)
+                          (-> (s/parallelize c [1 2 3 4 5 6 7 8 9 10] 1)
+                              (s/map-to-pair (fn [x] (s/tuple x x)))
+                              (s/partition-by (s/hash-partitioner 2))
+                              (s/map-values #(* %1 2))
+                              (s/partitioner)
                               )))
 
 
                     (testing
                       "partition-by partitions a given RDD according to the partitioning-fn using a hash partitioner."
                       (is (equals-ignore-order?
-                            (-> (f/parallelize-pairs c
+                            (-> (s/parallelize-pairs c
                                                      [#sparkling/tuple[{:a 1 :b 1} 11] ;; for me, (mod (hash 1) 2) and (mod (hash 3) 2) return 0 and 1 respectively, resulting in splitting the rdd in two partitions based upon :b
                                                       #sparkling/tuple[{:a 2 :b 1} 11]
                                                       #sparkling/tuple[{:a 3 :b 1} 12]
                                                       #sparkling/tuple[{:a 4 :b 3} 12]
                                                       #sparkling/tuple[{:a 5 :b 3} 13]] 1)
-                                (f/partition-by (f/hash-partitioner
+                                (s/partition-by (s/hash-partitioner
                                                   :b
                                                   2))
-                                f/glom
-                                f/collect
+                                s/glom
+                                s/collect
                                 vec)
                             [; this is partition 1:
                              [#sparkling/tuple[{:a 1 :b 1} 11]
@@ -632,10 +629,10 @@
                       )
 
 
-                    (let [b-partitioner (f/hash-partitioner
+                    (let [b-partitioner (s/hash-partitioner
                                           :b
                                           2)
-                          rdd (f/parallelize-pairs c
+                          rdd (s/parallelize-pairs c
                                                    [#sparkling/tuple[{:a 1 :b 1} {:a 1 :b 1 :c 1}]
                                                     #sparkling/tuple[{:a 2 :b 1} {:a 2 :b 1 :c 2}]
                                                     #sparkling/tuple[{:a 3 :b 1} {:a 3 :b 1 :c 3}]
@@ -643,17 +640,17 @@
                                                     #sparkling/tuple[{:a 5 :b 3} {:a 5 :b 3 :c 5}]] 1)
                           re-partitioned-rdd (->
                                                rdd
-                                               (f/partition-by b-partitioner)
-                                               (f/rekey-preserving-partitioning-without-check
-                                                 (fd/tuple-fn
-                                                   (fn [_ value] (f/tuple (select-keys value [:b :c]) value)))))]
+                                               (s/partition-by b-partitioner)
+                                               (s/rekey-preserving-partitioning-without-check
+                                                 (sd/tuple-fn
+                                                   (fn [_ value] (s/tuple (select-keys value [:b :c]) value)))))]
                       (testing
                         "rekey keeps the hash partitioner if told to"
-                        (is (= b-partitioner (f/partitioner re-partitioned-rdd))))
+                        (is (= b-partitioner (s/partitioner re-partitioned-rdd))))
 
                       (testing
                         "rekey does keep all elements"
-                        (is (= (f/collect re-partitioned-rdd)
+                        (is (= (s/collect re-partitioned-rdd)
 
                                [#sparkling/tuple[{:c 1 :b 1} {:a 1 :b 1 :c 1}]
                                 #sparkling/tuple[{:c 2 :b 1} {:a 2 :b 1 :c 2}]
@@ -666,8 +663,8 @@
 
                       (testing
                         "union concats two identical RDDs "
-                        (is (equals-ignore-order? (-> (f/partitioner-aware-union re-partitioned-rdd re-partitioned-rdd)
-                                                      f/collect
+                        (is (equals-ignore-order? (-> (s/partitioner-aware-union re-partitioned-rdd re-partitioned-rdd)
+                                                      s/collect
                                                       vec)
                                                   [#sparkling/tuple[{:c 1 :b 1} {:a 1 :b 1 :c 1}]
                                                    #sparkling/tuple[{:c 2 :b 1} {:a 2 :b 1 :c 2}]
@@ -684,12 +681,12 @@
 
                       (testing
                         "union keeps the hash partitioner if told to"
-                        (is (= b-partitioner (f/partitioner (f/partitioner-aware-union re-partitioned-rdd re-partitioned-rdd)))))
+                        (is (= b-partitioner (s/partitioner (s/partitioner-aware-union re-partitioned-rdd re-partitioned-rdd)))))
 
 
                       #_(testing
                         "union keeps the hash partitioner if told to"
-                        (is (= b-partitioner (f/partitioner
+                        (is (= b-partitioner (s/partitioner
                                                (org.apache.spark.api.java.JavaPairRDD/fromRDD
                                                (PartitionerAwareUnionRDD.
                                                               (.sc c)
@@ -704,12 +701,12 @@
 
                       #_(testing
                         "union concats more than two RDDs"
-                        (let [rdd1 (f/parallelize c [1 2 3 4])
-                              rdd2 (f/parallelize c [11 12 13])
-                              rdd3 (f/parallelize c [21 22 23])]
+                        (let [rdd1 (s/parallelize c [1 2 3 4])
+                              rdd2 (s/parallelize c [11 12 13])
+                              rdd3 (s/parallelize c [21 22 23])]
                           (is (equals-ignore-order?
-                                (-> (f/union rdd1 rdd2 rdd3)
-                                    f/collect
+                                (-> (s/union rdd1 rdd2 rdd3)
+                                    s/collect
                                     vec)
                                 [1 2 3 4 11 12 13 21 22 23]))))
 
@@ -722,7 +719,7 @@
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))
         kryo (ks/kryo-serializer)]
-    (f/with-context c conf
+    (s/with-context c conf
 
 
                     (testing
