@@ -48,14 +48,14 @@
 
           ;; stopword filtered RDD of [doc-id term term-freq doc-terms-count] tuples
           doc-term-seq (-> doc-data
-                           (s/flat-map-to-pair (sd/tuple-fn gen-docid-term-tuples))
+                           (s/flat-map-to-pair (sd/key-value-fn gen-docid-term-tuples))
                            (s-dbg/inspect "doc-term-seq")
                            s/cache)
 
           ;; RDD of term-frequency tuples: [term [doc-id tf]]
           ;; where tf is per document, that is, tf(term, document)
           tf-by-doc (-> doc-term-seq
-                        (s/map-to-pair (sd/tuple-fn (fn [doc-id [term term-freq doc-terms-count]]
+                        (s/map-to-pair (sd/key-value-fn (fn [doc-id [term term-freq doc-terms-count]]
                                      (s/tuple term [doc-id (double (/ term-freq doc-terms-count))]))))
                         (s-dbg/inspect "tf-by-doc")
                         s/cache)
@@ -65,16 +65,16 @@
 
           ;; idf of terms, that is, idf(term)
           idf-by-term (-> doc-term-seq
-                          (s/group-by (sd/tuple-fn (fn [_ [term _ _]] term)))
+                          (s/group-by (sd/key-value-fn (fn [_ [term _ _]] term)))
                           (s-dbg/inspect "in idf-by-term (1)")
-                          (s/map-to-pair (sd/tuple-fn (calc-idf num-docs)))
+                          (s/map-to-pair (sd/key-value-fn (calc-idf num-docs)))
                           (s-dbg/inspect "in idf-by-term (2)")
                           s/cache)
 
           ;; tf-idf of terms, that is, tf(term, document) x idf(term)
           tfidf-by-term (-> (s/join tf-by-doc idf-by-term)
                             (s-dbg/inspect "in tfidf-by-term (1)")
-                            (s/map (sd/tuple-value-fn (fn [term [doc-id tf] idf]
+                            (s/map (sd/key-val-val-fn (fn [term [doc-id tf] idf]
                                          [doc-id term (* tf idf)])))
                             (s-dbg/inspect "in tfidf-by-term (2)")
                             s/cache)

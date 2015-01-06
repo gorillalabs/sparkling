@@ -117,7 +117,7 @@
                       RDD through a pair function"
                       (is (equals-ignore-order? (-> (s/parallelize c ["a" "b" "c" "d"])
                                                     (s/map-to-pair (fn [x] (s/tuple x 1)))
-                                                    (s/map (sd/tuple-fn identity-vec))
+                                                    (s/map (sd/key-value-fn identity-vec))
                                                     s/collect
                                                     vec) [["a" 1] ["b" 1] ["c" 1] ["d" 1]])))
 
@@ -179,7 +179,7 @@
                                                            #sparkling/tuple["key6" 666]])
                             ]
                         (is (equals-ignore-order? (-> (s/cogroup rdd other1)
-                                                      (s/map (sd/cogroup-2-fn (fn [k v1 v2] [k [(vec$ v1) (vec$ v2)]])))
+                                                      (s/map (sd/key-seq-seq-fn (fn [k v1 v2] [k [(vec$ v1) (vec$ v2)]])))
                                                       s/collect
                                                       vec)
                                                   [["key1" [[1] [11]]]
@@ -211,7 +211,7 @@
                             ]
                         (is (equals-ignore-order?
                               (-> (s/cogroup rdd other1 other2)
-                                  (s/map (sd/cogroup-3-fn (fn [k v1 v2 v3] [k [(vec$ v1) (vec$ v2) (vec$ v3)]])))
+                                  (s/map (sd/key-seq-seq-seq-fn (fn [k v1 v2 v3] [k [(vec$ v1) (vec$ v2) (vec$ v3)]])))
                                   s/collect
                                   vec)
                               [["key1" [[1] [11] [111]]]
@@ -235,7 +235,7 @@
                                                           #sparkling/tuple["key4" [44]]])
                             ]
                         (is (equals-ignore-order? (-> (s/join LDATA RDATA)
-                                                      (s/map (sd/tuple-value-fn identity-vec))
+                                                      (s/map (sd/key-val-val-fn identity-vec))
                                                       s/collect
                                                       vec)
                                                   [["key3" [5] [33]]
@@ -253,7 +253,7 @@
                                                           #sparkling/tuple["key3" [33]]
                                                           #sparkling/tuple["key4" [44]]])]
                         (is (equals-ignore-order? (-> (s/left-outer-join LDATA RDATA)
-                                                      (s/map (sd/tuple-value-fn identity-vec :optional-second-value? true))
+                                                      (s/map (sd/key-val-val-fn identity-vec :optional-second-value? true))
                                                       s/collect
                                                       vec)
                                                   [["key3" [5] [33]]
@@ -642,7 +642,7 @@
                                                rdd
                                                (s/partition-by b-partitioner)
                                                (s/rekey-preserving-partitioning-without-check
-                                                 (sd/tuple-fn
+                                                 (sd/key-value-fn
                                                    (fn [_ value] (s/tuple (select-keys value [:b :c]) value)))))]
                       (testing
                         "rekey keeps the hash partitioner if told to"
