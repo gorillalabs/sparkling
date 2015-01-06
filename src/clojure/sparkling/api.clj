@@ -87,44 +87,6 @@
             (Tuple2. k v))
 
 
-(defn untuple [^Tuple2 t]
-            (let [v (transient [])]
-              (conj! v (._1 t))
-              (conj! v (._2 t))
-              (persistent! v)))
-
-(defn double-untuple [^Tuple2 t]
-            (let [[x ^Tuple2 t2] (untuple t)
-                  v (transient [])]
-              (conj! v x)
-              (conj! v (untuple t2))
-              (persistent! v)))
-
-(defn group-untuple [^Tuple2 t]
-            (let [v (transient [])]
-              (conj! v (._1 t))
-              (conj! v (into [] (._2 t)))
-              (persistent! v)))
-
-(defn- ftruthy?
-  [f]
-  (fn [x] (u/truthy? (f x))))
-
-(defn seq-value [[k v]]
-  [k (seq v)])
-
-(defn untuple-value [[k v]]
-  [k (untuple v)])
-
-(defn optional-second-value [[k [v1 v2]]]
-  [k [v1 (.orNull v2)]])
-
-(defn t-value [^Tuple2 tuple]
-  (._2 tuple))
-
-;; TODO: Use memfn more often to simplyfy code (and support more signature/usage patterns)
-
-
 
 ;; TODO: accumulators
 ;; http://spark.apache.org/docs/latest/programming-guide.html#accumulators
@@ -244,6 +206,10 @@
   `i` represents the index of partition."
   [rdd f]
   (.mapPartitionsWithIndex rdd (function2 f) true))
+
+(defn- ftruthy?
+  [f]
+  (fn [x] (u/truthy? (f x))))
 
 (defn filter
   "Returns a new RDD containing only the elements of `rdd` that satisfy a predicate `f`."
@@ -528,10 +494,9 @@
     (into [] counts)))
 
 (defmethod histogram false [rdd bucket-count]
-  (let [[buckets counts] (-> (JavaDoubleRDD/fromRDD (.rdd rdd))
-                             (.histogram bucket-count)
-                             untuple)]
-    [(into [] buckets) (into [] counts)]))
+  (let [^Tuple2 buckets-counts-tuple (-> (JavaDoubleRDD/fromRDD (.rdd rdd))
+                             (.histogram bucket-count))]
+    [(into [] (._1 buckets-counts-tuple)) (into [] (._2 buckets-counts-tuple))]))
 
 (defn partitioner [^JavaPairRDD rdd]
   (si/some-or-nil (.partitioner (.rdd rdd))))

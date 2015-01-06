@@ -14,7 +14,15 @@
                                      void-function]])
   (:import [org.apache.spark.streaming.api.java JavaStreamingContext JavaDStream]
            [org.apache.spark.streaming.kafka KafkaUtils]
-           [org.apache.spark.streaming Duration Time]))
+           [org.apache.spark.streaming Duration Time]
+           (scala Tuple2)))
+
+
+(defn untuple [^Tuple2 t]
+  (let [v (transient [])]
+    (conj! v (._1 t))
+    (conj! v (._2 t))
+    (persistent! v)))
 
 (defn duration [ms]
   (Duration. ms))
@@ -59,11 +67,11 @@
     (-> dstream
       (.mapToPair (pair-function identity))
       (.reduceByKey (function2 f))
-      (.map (function s/untuple)))
+      (.map (function untuple)))
     ;; if it's already JavaPairDStream, we're good
     (-> dstream
         (.reduceByKey (function2 f))
-        (.map (function s/untuple)))))
+        (.map (function untuple)))))
 
 (defn map-to-pair [dstream f]
   (.mapToPair dstream (pair-function f)))
@@ -96,7 +104,7 @@
   (-> dstream
       (.mapToPair (pair-function identity))
       (.groupByKeyAndWindow (duration window-length) (duration slide-interval))
-      (.map (function s/untuple))))
+      (.map (function untuple))))
 
 (defn reduce-by-window [dstream f f-inv window-length slide-interval]
   (.reduceByWindow dstream (function2 f) (function2 f-inv) (duration window-length) (duration slide-interval)))
@@ -105,7 +113,7 @@
   (-> dstream
       (.mapToPair (pair-function identity))
       (.reduceByKeyAndWindow (function2 f) (duration window-length) (duration slide-interval))
-      (.map (function s/untuple))))
+      (.map (function untuple))))
 
 
 ;; ## Actions

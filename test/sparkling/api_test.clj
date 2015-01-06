@@ -1,6 +1,6 @@
 (ns sparkling.api-test
   (:import [org.apache.spark HashPartitioner]
-           [scala Some]
+           [scala Some Tuple2]
            [org.apache.spark.api.java JavaSparkContext JavaRDD])
   (:use clojure.test)
   (:require [sparkling.api :as s]
@@ -15,17 +15,21 @@
   (= (frequencies c1) (frequencies c2)))
 
 
+(defn untuple [^Tuple2 t]
+  (let [v (transient [])]
+    (conj! v (._1 t))
+    (conj! v (._2 t))
+    (persistent! v)))
+
 (defn untuple-all [coll]
-  (map s/untuple coll))
+  (map untuple coll))
+
+
 
 (defn seq-values [coll]
-  (map s/seq-value coll))
-
-(defn untuple-values [coll]
-  (map s/untuple-value coll))
-
-(defn optional-second-values [coll]
-  (map s/optional-second-value coll))
+  (map (fn [[k v]]
+         [k (seq v)])
+       coll))
 
 (defn some-instance? [cls option]
   (and (instance? Some option) (instance? cls (.get option))))
@@ -87,18 +91,6 @@
 
     ))
 
-(deftest untupling
-
-  (testing
-    "untuple returns a 2 vector"
-    (let [tuple2 (scala.Tuple2. 1 "hi")]
-      (is (= (s/untuple tuple2) [1 "hi"]))))
-
-  (testing
-    "double untuple returns a vector with a key and a 2 vector value"
-    (let [double-tuple2 (scala.Tuple2. 1 (scala.Tuple2. 2 "hi"))]
-      (is (= (s/double-untuple double-tuple2) [1 [2 "hi"]])))))
-
 (deftest transformations
 
   (let [conf (-> (conf/spark-conf)
@@ -126,7 +118,7 @@
                       "key-by returns an RDD of (K,V) pairs from an RDD of V elements formed by passing each V through a function to get to K."
                       (is (equals-ignore-order? (-> (s/parallelize c [0 1 2 3 4])
                                                     (s/key-by even?)
-                                                    (s/map s/untuple)
+                                                    (s/map untuple)
                                                     s/collect
                                                     vec)
                                                 [[true 0] [false 1] [true 2] [false 3] [true 4]])))
@@ -356,7 +348,7 @@
                                                                       ["years ago"]])
                                                     (s/flat-map-to-pair (fn [x] (map (fn [y] (s/tuple y 1))
                                                                                        (clojure.string/split (first x) #" "))))
-                                                    (s/map s/untuple)
+                                                    (s/map untuple)
                                                     s/collect
                                                     vec)
                                                 [["Four" 1] ["score" 1] ["and" 1] ["seven" 1] ["years" 1] ["ago" 1]])))
