@@ -26,8 +26,8 @@ There is a [companion project](https://github.com/gorillalabs/sparkling-getting-
 
 Just clone that repo by executing
 
-  git clone https://github.com/gorillalabs/sparkling-getting-started.git
-  cd sparkling-getting-started
+    git clone https://github.com/gorillalabs/sparkling-getting-started.git
+    cd sparkling-getting-started
 
 
 in your shell.
