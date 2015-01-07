@@ -83,22 +83,30 @@ And then the dependency:
 
 Start up your REPL (in your favourite tool), you should see something like this:
 
-    Starting nREPL server...
-    Compiling sparkling.api
-    Compiling sparkling.function
-    Compiling sparkling.scalaInterop
-    Connecting to local nREPL server...
+    > lein do clean, repl
+
+    Compiling sparkling.example.tfidf
+    nREPL server started ...
+    REPL-y 0.3.1
     Clojure 1.6.0
-    nREPL server started on port XXXX on host 127.0.0.1
+        Docs: (doc function-name-here)
+              (find-doc "part-of-name-here")
+      Source: (source function-name-here)
+     Javadoc: (javadoc java-object-or-class-here)
+        Exit: Control+D or (exit) or (quit)
+     Results: Stored in vars *1, *2, *3, an exception in *e
+
+    sparkling.example.tfidf=>
+
 
 
 Require the sparkling namespaces you will need for this guide.
 
     (require '[sparkling.conf :as conf])
-    => nil
+    ;;  nil
 
     (require '[sparkling.api :as spark])
-    => nil
+    ;;  nil
 
 
 <a name="initializing">
@@ -113,11 +121,11 @@ Here we create a SparkConf object with the string `local` to run in local mode:
     (def c (-> (conf/spark-conf)
                (conf/master "local")
                (conf/app-name "sparkling-example")))
-    => #'user/c
+    ;;  #'sparkling.example.tfidf/c
 
 
     (def sc (spark/spark-context c))
-    => #'user/sc
+    ;;  #'sparkling.example.tfidf/sc
 
 
 
@@ -154,25 +162,25 @@ RDDs basically come in two flavours. Plain RDDs simply hold a collection of arbi
 Plain RDDs in Sparkling are created by calling the `parallelize` function on your Clojure data structure:
 
     (def data (spark/parallelize sc ["a" "b" "c" "d" "e"]))
-    => #'user/data
+    ;;  #'sparkling.example.tfidf/data
 
 Check out the contents of you newly created RDD:
 
     (spark/first data)
-    => "a"
+    ;;  "a"
 
 
 PairRDDs in Sparkling are created by calling the `parallelize-pairs` function on your Clojure data structure:
 
     (def data (spark/parallelize-pairs sc [ (spark/tuple "a" 1) (spark/tuple "b" 2) (spark/tuple "c" 3) (spark/tuple "d" 4) (spark/tuple "e" 5)]))
-    => #'user/data
+    ;;  #'sparkling.example.tfidf/data
 
 Once initialized, the distributed dataset or RDD can be operated on in parallel.
 
 An important parameter for parallel collections is the number of slices to cut the dataset into. Spark runs one task for each slice of the cluster. Normally, Spark tries to set the number of slices automatically based on your cluster. However, you can also set it manually in sparkling by passing it as a third parameter to parallelize:
 
     (def data (spark/parallelize sc [1 2 3 4 5] 4))
-    => #'user/data
+    ;;  #'sparkling.example.tfidf/data
 
 ### External Datasets
 
@@ -182,7 +190,7 @@ Text file RDDs can be created in sparkling using the `text-file` function under 
 The following example refers to the data.txt file at the current directory. Make sure to have one.
 
     (def data (spark/text-file sc "data.txt"))
-    => #'user/data
+    ;;  #'sparkling.example.tfidf/data
 
 <a name="rdd-operations">
 ## RDD Operations
@@ -201,8 +209,7 @@ To illustrate RDD basics in sparkling, consider the following simple application
     (-> (spark/text-file sc "data.txt")   ;; returns an unrealized lazy dataset
         (spark/map count)  ;; returns RDD array of length of lines
         (spark/reduce +)) ;; returns a value, should be 1406
-
-    => 1406
+    ;; > 1406
 
 
 The first line defines a base RDD from an external file. The dataset is not loaded into memory; it is merely a pointer to the file. The second line defines an RDD of the lengths of the lines as a result of the `map` transformation. Note, the lengths are not immediately computed due to laziness. Finally, we run `reduce` on the transformed RDD, which is an action, returning only a _value_ to the driver program.
@@ -240,31 +247,12 @@ When we evaluate this `map` transformation on the initial RDD, the result is ano
         (spark/map (fn [x] (* x x)))
         spark/collect)
 
-However, refering to a compiled namespace will do. First add `test_compiled.clj` containing
-
-    (ns test-compiled)
-
-    (defn square [x] (* x x))
-
-And in your REPL add
-
-    (compile 'test-compiled)
-    => test-compiled
-
-    (-> (spark/parallelize sc [1 2 3 4 5])
-        (spark/map test-compiled/square)
-        spark/collect)
-    ;; => [1 4 9 16 25]
-
-
-Not very handy sometimes, because you need to think to recompile stuff.
-
 We can also use `spark/first` or `spark/take` to return just a subset of the data.
 
     (-> (spark/parallelize sc [1 2 3 4 5])
         (spark/map test-compiled/square)
         (spark/take 2))
-    => [1 4]
+    ;; [1 4]
 
 * TODO: More work to be done from here *
 
