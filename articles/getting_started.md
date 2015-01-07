@@ -7,81 +7,35 @@ layout: article
 ## About this guide
 
 This guide combines an overview of Sparkling with a quick tutorial that helps you to get started with it.
-It should take about 10 minutes to read and study the provided code examples. This guide covers:
+It should take about 20 minutes to read and study the provided code examples. This guide covers:
 
- * Feature of Sparkling, why Sparkling was created
- * Clojure and Apache Spark version requirements
- * How to add Sparkling dependency to your project
+ * Cloning a base repository for starting to explore Sparkling
+ * Experience Sparkling / Spark by
+  * starting up a `local` SparkContext
+  * parallelizing data to a Spark Dataset
+  * reading data from a file into a Spark Dataset
+  * performing transformations on the Datasets
+  * calling acions on the Datasets.
+ * Walk through a more complete example to compute [Term Frequency, Inverse Document Frequency](http://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 
-
-This work is licensed under a <a rel="license"
-href="http://creativecommons.org/licenses/by/3.0/">Creative Commons
-Attribution 3.0 Unported License</a> (including images &
-stylesheets). The source is available [on
-Github](https://github.com/gorillalabs/sparkling/tree/gh-pages).
-
-
-
-
-## Sparkling Overview
-
-Sparkling is an idiomatic Clojure wrapper around Apache Spark Scala/Java API. It
-offers broad support of Spark transformations and actions, together with some additional things not available out of the box in other libraries, has minimal performance overhead and is well
-maintained. However, it does not cover SparkSQL or Spark Streaming at the moment.
-
-## Do I need a cluster? Do I need to install Apache Spark? Where do I start?
+## Do I need a cluster? Do I need to install Apache Spark?
 Apache Spark is a framework to run your code on a cluster. However, for tests and non-productive workload, you can run your code locally very easily. So, for your first steps, no further install is necessary, Sparkling comes batteries included.
 
-## Example project
-There is an example included in Sparkling, just check out [sparkling/example/tfidf.clj](https://github.com/gorillalabs/sparkling/blob/develop/example/sparkling/example/tfidf.clj).
+## Starting point
+There is a [companion project](https://github.com/gorillalabs/sparkling-getting-started) to this getting started guide. Just use this as a staring point to explore Sparkling, because it contains a project.clj for [Leiningen](http://leiningen.org/).
+
+Just clone that repo by executing
+
+  git clone https://github.com/gorillalabs/sparkling-getting-started.git
+  cd sparkling-getting-started
 
 
-## What Sparkling is not
+in your shell.
 
-With Sparkling, you still need to understand Apache Spark model of RDDs, transformations and actions, etc. Also, you should pay close attention to the way you model your data for optimized performance.
-This is up to you and not provided by Sparkling. We only provide you with Canvas and brushes. It's up to you to learn how to paint.
-
-
-## What version of Sparkling, Clojure, Spark does this guide cover?
-
- * This guide covers Sparkling 1.0.x (including preview releases).
- * Sparkling requires Clojure 1.6. The most recent stable release is highly
-recommended.
- *Sparkling targets Apache Spark 1.1.x. Other versions of Spark might work, but not necessarily. Please note that some
-features may be specific to recent Spark releases.
-
-
-## Adding Sparkling Dependency To Your Project
-
-Sparkling artifacts are [released to Clojars](https://clojars.org/gorillalabs/sparkling).
-
-### With Leiningen
-
-    [gorillalabs/sparkling "1.0.0-SNAPSHOT"]
-
-### With Maven
-
-Add Clojars repository definition to your `pom.xml`:
-
-     <repository>
-       <id>clojars.org</id>
-       <url>http://clojars.org/repo</url>
-     </repository>
-
-And then the dependency:
-
-    <dependency>
-      <groupId>gorillalabs</groupId>
-      <artifactId>sparkling</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-    </dependency>
-
-
-## TODO: Your project.clj
 
 ## Kick off you REPL
 
-Start up your REPL (in your favourite tool), you should see something like this:
+Start up your REPL (in your favourite tool), you should see something like this (after downloading required dependencies):
 
     > lein do clean, repl
 
@@ -128,25 +82,7 @@ Here we create a SparkConf object with the string `local` to run in local mode:
     ;;  #'sparkling.example.tfidf/sc
 
 
-
-*** TODO: Move to seperate guide ***
-*** TODO: Add yarn ***
-*** TODO: Add link to deployment section ***
-The `master` url string parameter can be one of the following formats:
-
-|  Master URL         | Meaning                                                                                                   |
-|---------------------|-----------------------------------------------------------------------------------------------------------|
-| `local`             | Use one worker thread to run Spark locally (no parallelism).                                              |
-| `local[N]`          | Use `N` worker threads to run Spark locally.                                                              |
-| `local[*]`          | Use the same number of threads as cores to run Spark locally. <br> _Only_ available for Spark 1.0.0+      |
-| `spark://HOST:PORT` | Connect to a [standalone Spark cluster](https://spark.apache.org/docs/0.9.1/spark-standalone.html) master.|
-| `mesos://HOST:PORT` | Connect to a [Mesos](https://spark.apache.org/docs/0.9.1/running-on-mesos.html) cluster.                  |
-
-
-
-Hard-coding the value of `master` and other configuration parameters can be avoided by passing the values to Spark when running `spark-submit` (Spark 1.0.0) or by allowing `spark-submit` to read these properties from a configuration file. See [Standalone Applications](#running-sparkling) for information on running sparkling applications and see Spark's [documentation](http://spark.apache.org/docs/latest/configuration.html) for more details about configuring Spark properties.
-
-Using any of the `local` parameters provides you with a standalone system, where you do not need to install other software besides your Clojure environment (like JDK, lein, etc.) So it's great for in-REPL-development, and unit testing.
+Using a `local` master provides you with a standalone system, where you do not need to install other software besides your Clojure environment (like JDK, lein, etc.) So it's great for in-REPL-development, and unit testing.
 
 <a name="rdds"/>
 
@@ -193,6 +129,7 @@ The following example refers to the data.txt file at the current directory. Make
     ;;  #'sparkling.example.tfidf/data
 
 <a name="rdd-operations">
+
 ## RDD Operations
 
 RDDs support two types of operations:
@@ -201,6 +138,7 @@ RDDs support two types of operations:
 * [_actions_](#rdd-actions), which return a value to the driver program after running a computation on the dataset
 
 <a name="basics">
+
 ### Basics
 
 To illustrate RDD basics in sparkling, consider the following simple application using this sample [`data.txt`](https://github.com/gorillalabs/sparkling/blob/develop/data.txt).
@@ -222,23 +160,11 @@ If we also wanted to reuse the resulting RDD of length of lines in later steps, 
 before the `reduce` action, which would cause the line-lengths RDD to be saved to memory after the first time it is realized. See [RDD Persistence](#rdd-persistence) for more on persisting and caching RDDs in sparkling.
 
 <a name="sparkling-functions">
+
 ### Passing Functions to sparkling
 
 Spark’s API relies heavily on passing functions in the driver program to run on the cluster. Flambo makes it easy and natural to define serializable Spark functions/operations and provides two ways to do this. So, in order for your functions to be available on the cluster,
-the namespaces containing them need to be (AOT-)compiled. That's usually no problem, because you should uberjar your project to deploy it to the Cluster anyhow (see below *** TODO: Add Link ***).
-
-
-
-
-
-
-
-
-
-
-
-
-
+the namespaces containing them need to be (AOT-)compiled. That's usually no problem, because you should uberjar your project to deploy it to the Cluster anyhow.
 
 
 When we evaluate this `map` transformation on the initial RDD, the result is another RDD. The result of this transformation can be seen using the `spark/collect` action to return all of the elements of the RDD. The following example will only work in an AOT-compiled environment. So, it will not work in your REPL:
@@ -249,54 +175,55 @@ When we evaluate this `map` transformation on the initial RDD, the result is ano
 
 We can also use `spark/first` or `spark/take` to return just a subset of the data.
 
-    (-> (spark/parallelize sc [1 2 3 4 5])
-        (spark/map test-compiled/square)
-        (spark/take 2))
-    ;; [1 4]
-
-* TODO: More work to be done from here *
 
 <a name="key-value-pairs">
 
 ### Working with Key-Value Pairs
 
-While most Spark operations work on RDDs containing any type of objects, a few special operations are only available on RDDs of key-value pairs. The most common ones are distributed "shuffle" operations, such as grouping or aggregating the elements by a key.
+Some transformation in Spark operate on Key-Value-Tuples, e.g. joins, reduce-by-key, etc. In sparkling, these operations are available on PairRDDs.
+You do not need to deal with the internal data structures of Apache Spark (like scala.Tuple2), if you use the functions from the `sparkling.destructuring` namespace.
 
-In sparkling, these operations are available on RDDs of (key, value) tuples. Flambo handles all of the transformations/serializations to/from `Tuple`, `Tuple2`, `JavaRDD`, `JavaPairRDD`, etc., so you only need to define the sequence of operations you'd like to perform on your data.
+So, first require that namespace
+
+    (require '[sparkling.destructuring :as s-de])
+
+We deal with strings, so require clojure.string also:
+
+    (require '[clojure.string :as s])
+
 
 The following code uses the `reduce-by-key` operation on key-value pairs to count how many times each word occurs in a file:
 
-```clojure
-(ns yourproject.some-namespace
-  (:require [sparkling.api :as spark]
-            [clojure.string :as s]))
 
-(-> (spark/text-file sc "data.txt")
-    (spark/flat-map (spark/fn [l] (s/split l #" ")))
-    (spark/map (spark/fn [w] [w 1]))
-    (spark/reduce-by-key (spark/fn [x y] (+ x y))))
-```
+    (-> (spark/text-file sc "data.txt")
+        (spark/flat-map (fn [l] (s/split l #" ")))
+        (spark/map-to-pair (fn [w] (spark/tuple w 1)))
+        (spark/reduce-by-key +)
+        (spark/map (s-de/key-value-fn (fn [k v] (str k " appears " v " times."))))
+        )
+    ;; #<JavaPairRDD org.apache.spark.api.java.JavaPairRDD@4c3c63f1>
+
+    (spark/take *1 3)
+    ;; ["created appears 1 times." "under appears 1 times." "this appears 4 times."]
 
 After the `reduce-by-key` operation, we can sort the pairs alphabetically using `spark/sort-by-key`. To collect the word counts as an array of objects in the repl or to write them to a filesysten, we can use the `spark/collect` action:
 
-```clojure
-(ns yourproject.some-namespace
-  (:require [sparkling.api :as spark]
-            [clojure.string :as s]))
-
-(-> (spark/text-file sc "data.txt")
-    (spark/flat-map (spark/fn [l] (s/split l #" ")))
-    (spark/map (spark/fn [w] [w 1]))
-    (spark/reduce-by-key (spark/fn [x y] (+ x y)))
-    spark/sort-by-key
-    spark/collect
-    clojure.pprint/pprint)
-```
+    (-> (spark/text-file sc "data.txt")
+        (spark/flat-map (fn [l] (s/split l #" ")))
+        (spark/map-to-pair (fn [w] (spark/tuple w 1)))
+        (spark/reduce-by-key +)
+        spark/sort-by-key
+        (spark/map (s-de/key-value-fn (fn [k v] [k v])))
+        spark/collect
+        clojure.pprint/pprint)
+    ;; [["" 4] ["But" 1] ["Four" 1] ["God" 1] ["It" 3] ["Liberty" 1] ["Now" 1] ["The" 2] ["We" 2] ["a" 7] ...
+    ;; nil
 
 <a name="rdd-transformations">
+
 ### RDD Transformations
 
-Flambo supports the following RDD transformations:
+Sparkling supports the following RDD transformations:
 
 * `map`: returns a new RDD formed by passing each element of the source through a function.
 * `map-to-pair`: returns a new `JavaPairRDD` of (K, V) pairs by applying a function to all elements of an RDD.
@@ -317,9 +244,10 @@ Flambo supports the following RDD transformations:
 * `flat-map-to-pair`: returns a new `JavaPairRDD` by first applying a function to all elements of the RDD, and then flattening the results.
 
 <a name="rdd-actions">
+
 ### RDD Actions
 
-Flambo supports the following RDD actions:
+Sparkling supports the following RDD actions:
 
 * `reduce`: aggregates the elements of an RDD using a function which takes two arguments and returns one. The function should be commutative and associative so that it can be computed correctly in parallel.
 * `count-by-key`: only available on RDDs of type (K, V). Returns a map of (K, Int) pairs with the count of each key.
@@ -334,68 +262,25 @@ Flambo supports the following RDD actions:
 * `cache`: persists an RDD with the default storage level ('MEMORY_ONLY').
 
 <a name="rdd-persistence">
+
 ## RDD Persistence
 
 Spark provides the ability to persist (or cache) a dataset in memory across operations. Spark’s cache is fault-tolerant – if any partition of an RDD is lost, it will automatically be recomputed using the transformations that originally created it. Caching is a key tool for iterative algorithms and fast interactive use. Like Spark, sparkling provides the functions `spark/persist` and `spark/cache` to persist RDDs. `spark/persist` sets the storage level of an RDD to persist its values across operations after the first time it is computed. Storage levels are available in the `sparkling.api/STORAGE-LEVELS` map. This can only be used to assign a new storage level if the RDD does not have a storage level set already. `cache` is a convenience function for using the default storage level, 'MEMORY_ONLY'.
 
-```clojure
-(ns yourproject.some-namespace
-  (:require [sparkling.api :as spark]))
 
-(let [line-lengths (-> (spark/text-file sc "data.txt")
-                       (spark/map (spark/fn [s] (count s)))
-                       spark/cache)]
-  (-> line-lengths
-      (spark/reduce (spark/fn [x y] (+ x y)))))
-```
+    (let [line-lengths (-> (spark/text-file sc "data.txt")
+                           (spark/map count)
+                           spark/cache)]
+      (-> line-lengths
+          (spark/reduce +)))
+    ;; 1406
 
-<a name="running-sparkling">
-## Standalone Applications
 
-To run your sparkling application as a standalone application using the Spark API, you'll need to package your application in an uberjar using `lein` and execute it with:
+## Further reading
+We will provide you with further guides, e.g. on deploying your project to a Spark Cluster in the future. So, please stay tuned and check [our guides section](/sparkling/articles/guides.html) from time to time.
 
-* `SPARK_CLASSPATH`, if running Spark 0.9.1
-* `./bin/spark-submit`, if running Spark 1.0.0
-
-```shell
-$ lein uberjar
-...
-
-$ SPARK_CLASSPATH=uberjar.jar spark-class com.some.class.with.main --flag1 arg1 --flag2 arg2
-...
-<output>
-
-$ spark-submit --class com.some.class.with.main uberjar.jar --flag1 arg1 --flag2 arg2
-...
-<output>
-```
-
-<a name="kryo">
-## Kryo
-
-Flambo requires that Spark is configured to use kryo for serialization. This is configured by default using system properties.
-
-If you need to register custom serializers, extend `sparkling.kryo.BaseFlamboRegistrator` and override its `register` method. Finally, configure your SparkContext to use your custom registrator by setting `spark.kryo.registrator` to your custom class.
-
-There is a convenience macro for creating registrators, `sparkling.kryo.defregistrator`. The namespace where a registrator is defined should be AOT compiled.
-
-Here is an Example (this won't work in your REPL):
-
-```clojure
-(ns yourproject.some-namespace
-  (:require [sparkling.kryo :as kryo])
-  (:import [flameprincess FlamePrincessHeat FlamePrincessHeatSerializer]))
-
-(kryo/defregistrator flameprincess [kryo]
-  (.register kryo FlamePrincessHeat (FlamePrincessHeatSerializer.)))
-
-(def c (-> (conf/spark-conf)
-       (conf/set "spark.kryo.registrator" flameprincess)))
-```
 
 <a name="acknowledgements">
 ## Acknowledgements
 
-Thanks to The Climate Corporation and their open source project [clj-spark](https://github.com/TheClimateCorporation/clj-spark) which served as the starting point for this project.
-
-Thanks to [Ben Black](https://github.com/b) for doing the work on the streaming api.
+Thanks to The Climate Corporation and their [clj-spark](https://github.com/TheClimateCorporation/clj-spark) project, and yieldbot and their [flambo project](https://github.com/yieldbot/flambo) which served as the starting point for this project.
