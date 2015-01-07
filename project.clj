@@ -64,7 +64,7 @@
             :java-source-paths ["src/java"]
             :codox {:defaults                  {:doc/format :markdown}
                     :include                   [sparkling.api sparkling.conf sparkling.kryo sparkling.broadcast sparkling.debug sparkling.destructuring]
-                    :output-dir                "doc/codox"
+                    :output-dir                "doc"
                     :src-dir-uri               "https://raw.githubusercontent.com/gorillalabs/sparkling/1.0.0/"
                     :src-linenum-anchor-prefix "L"}
             :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.6"]

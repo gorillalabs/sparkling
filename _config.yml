@@ -1,0 +1,9 @@
+source:      .
+destination: ./_site
+baseurl:     /sparkling
+plugins:     ./_plugins
+exclude: [project.clj, flambo.iml, LICENSE, bin, CNAME, Gemfile, Gemfile.lock, README.md, Dockerfile, fig.yml, data, dev-resources, src, target, test, tmp, README.md, Tutorial.md]
+permalink: /:title
+highlighter: pygments
+redcarpet:
+  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data"]
