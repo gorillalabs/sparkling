@@ -11,11 +11,11 @@ It should take about 20 minutes to read and study the provided code examples. Th
 
  * Cloning a base repository for starting to explore Sparkling
  * Experience Sparkling / Spark by
-  * starting up a `local` SparkContext
-  * parallelizing data to a Spark Dataset
-  * reading data from a file into a Spark Dataset
-  * performing transformations on the Datasets
-  * calling acions on the Datasets.
+   * starting up a `local` SparkContext
+   * parallelizing data to a Spark Dataset
+   * reading data from a file into a Spark Dataset
+   * performing transformations on the Datasets
+   * calling acions on the Datasets.
  * Walk through a more complete example to compute [Term Frequency, Inverse Document Frequency](http://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 
 ## Do I need a cluster? Do I need to install Apache Spark?
@@ -281,6 +281,7 @@ We will provide you with further guides, e.g. on deploying your project to a Spa
 
 
 <a name="acknowledgements">
+
 ## Acknowledgements
 
 Thanks to The Climate Corporation and their [clj-spark](https://github.com/TheClimateCorporation/clj-spark) project, and yieldbot and their [flambo project](https://github.com/yieldbot/flambo) which served as the starting point for this project.
