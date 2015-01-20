@@ -10,27 +10,33 @@ import clojure.lang.RT;
 import clojure.lang.Var;
 
 public class Utils {
-  
-  static final Var require = RT.var("clojure.core", "require");
-  static final Var symbol = RT.var("clojure.core", "symbol");
-  
-  private Utils() {}
-  
-  public static void requireNamespace(String namespace) {
-    require.invoke(symbol.invoke(namespace));
-  }
-  
-  public static void writeIFn(ObjectOutputStream out, IFn f) throws IOException {
-    out.writeObject(f.getClass().getName());
-    out.writeObject(f);
-  }
-  
-  public static IFn readIFn(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    String clazz = (String) in.readObject();
-    String namespace = clazz.split("\\$")[0];
-    
-    requireNamespace(namespace);
-    
-    return (IFn) in.readObject();
-  }
+
+    static final Var require = RT.var("clojure.core", "require");
+    static final Var symbol = RT.var("clojure.core", "symbol");
+
+    private Utils() {
+    }
+
+    public static void requireNamespace(String namespace) {
+        try {
+            require.invoke(symbol.invoke(namespace));
+        } catch (Exception e) {
+            // silently catch Exception.
+            // TODO: Log warning!
+        }
+    }
+
+    public static void writeIFn(ObjectOutputStream out, IFn f) throws IOException {
+        out.writeObject(f.getClass().getName());
+        out.writeObject(f);
+    }
+
+    public static IFn readIFn(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        String clazz = (String) in.readObject();
+        String namespace = clazz.split("\\$")[0];
+
+        requireNamespace(namespace);
+
+        return (IFn) in.readObject();
+    }
 }
