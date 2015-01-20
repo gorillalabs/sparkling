@@ -40,7 +40,7 @@
 ;; sparkling WILL NOT WORK without enabling kryo serialization in spark!
 ;;
 (System/setProperty "spark.serializer" "org.apache.spark.serializer.KryoSerializer")
-(System/setProperty "spark.kryo.registrator" "sparkling.kryo.BaseFlamboRegistrator")
+(System/setProperty "spark.kryo.registrator" "sparkling.serialization.BaseRegistrator")
 
 (def STORAGE-LEVELS {:memory-only           StorageLevels/MEMORY_ONLY
                      :memory-only-ser       StorageLevels/MEMORY_ONLY_SER

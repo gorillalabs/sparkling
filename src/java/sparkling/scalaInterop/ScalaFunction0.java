@@ -1,7 +1,7 @@
 package sparkling.scalaInterop;
 
-import clojure.lang.AFunction;
-import sparkling.kryo.Utils;
+import clojure.lang.IFn;
+import sparkling.serialization.Utils;
 import scala.Function0;
 import scala.runtime.AbstractFunction0;
 
@@ -12,20 +12,20 @@ import java.io.Serializable;
 
 public class ScalaFunction0 extends AbstractFunction0 implements Function0, Serializable {
 
-  private AFunction f;
+  private IFn f;
 
   public ScalaFunction0() {}
 
-  public ScalaFunction0(AFunction func) {
+  public ScalaFunction0(IFn func) {
     f = func;
   }
 
   private void writeObject(ObjectOutputStream out) throws IOException {
-    Utils.writeAFunction(out, f);
+    Utils.writeIFn(out, f);
   }
   
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    f = Utils.readAFunction(in);
+    f = Utils.readIFn(in);
   }
 
     @Override

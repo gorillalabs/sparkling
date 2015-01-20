@@ -1,13 +1,13 @@
-package sparkling.kryo;
+package sparkling.serialization;
 
 import java.lang.ClassNotFoundException;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 
+import clojure.lang.IFn;
 import clojure.lang.RT;
 import clojure.lang.Var;
-import clojure.lang.AFunction;
 
 public class Utils {
   
@@ -20,17 +20,17 @@ public class Utils {
     require.invoke(symbol.invoke(namespace));
   }
   
-  public static void writeAFunction(ObjectOutputStream out, AFunction f) throws IOException {
+  public static void writeIFn(ObjectOutputStream out, IFn f) throws IOException {
     out.writeObject(f.getClass().getName());
     out.writeObject(f);
   }
   
-  public static AFunction readAFunction(ObjectInputStream in) throws IOException, ClassNotFoundException {
+  public static IFn readIFn(ObjectInputStream in) throws IOException, ClassNotFoundException {
     String clazz = (String) in.readObject();
     String namespace = clazz.split("\\$")[0];
     
     requireNamespace(namespace);
     
-    return (AFunction) in.readObject();
+    return (IFn) in.readObject();
   }
 }
