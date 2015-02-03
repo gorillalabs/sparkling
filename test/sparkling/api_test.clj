@@ -3,7 +3,8 @@
            [scala Some Tuple2]
            [org.apache.spark.api.java JavaSparkContext JavaRDD])
   (:use clojure.test)
-  (:require [sparkling.api :as s]
+  (:require [clojure.set]
+    [sparkling.api :as s]
             [sparkling.conf :as conf]
             [sparkling.scalaInterop :as si]
             ;; this is to have the reader macro sparkling/tuple defined
@@ -275,20 +276,17 @@
                                   vec)
                               [1 2 3 4 11 12 13 21 22 23]))))
 
-                    (letfn [(within-1 [test-value given-value]
-                                   (<= (dec given-value) test-value (inc given-value)))]
                     (testing
                       "sample returns a fraction of the RDD, with/without replacement,
                       using a given random number generator seed"
-                      (is (within-1
-                            (-> (s/parallelize c [0 1 2 3 4 5 6 7 8 9 10 11])
+                      (is (clojure.set/subset?
+                            (apply hash-set
+                                   (-> (s/parallelize c [0 1 2 3 4 5 6 7 8 9 10 11])
                                 (s/sample false 0.5 2)
                                 s/collect
-                                vec
-                                count
-                                )
-                            6
-                            ))))
+                                ))
+                            #{0 1 2 3 4 5 6 7 8 9 10 11}
+                            )))
 
                     (testing
                       "combine-by-key returns an RDD by combining the elements for each key using a custom
