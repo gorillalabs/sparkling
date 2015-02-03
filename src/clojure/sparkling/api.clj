@@ -425,10 +425,6 @@
   [javaRdd]
   (into [] (.partitions (.rdd javaRdd))))
 
-(defn partitions
-  "Returns a vector of partitions for a given JavaRDD"
-  [javaRdd]
-  (into [] (.partitions (.rdd javaRdd))))
 
 
 (defn hash-partitioner
