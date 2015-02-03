@@ -4,4 +4,4 @@ jdk:
   - openjdk7
   - oraclejdk7
   - oraclejdk8
-script: "lein with-profile +jenkins,+test test-out junit report.xml"
+script: "lein all do clean, test"

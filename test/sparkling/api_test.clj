@@ -275,16 +275,20 @@
                                   vec)
                               [1 2 3 4 11 12 13 21 22 23]))))
 
+                    (letfn [(within-1 [test-value given-value]
+                                   (<= (dec given-value) test-value (inc given-value)))]
                     (testing
                       "sample returns a fraction of the RDD, with/without replacement,
                       using a given random number generator seed"
-                      (is (#(<= 1 %1 2)
-                            (-> (s/parallelize c [0 1 2 3 4 5 6 7 8 9])
-                                (s/sample false 0.1 2)
+                      (is (within-1
+                            (-> (s/parallelize c [0 1 2 3 4 5 6 7 8 9 10 11])
+                                (s/sample false 0.5 2)
                                 s/collect
                                 vec
-                                count)
-                            )))
+                                count
+                                )
+                            6
+                            ))))
 
                     (testing
                       "combine-by-key returns an RDD by combining the elements for each key using a custom
