@@ -54,7 +54,8 @@
                                              ]}
 
                        :test               {:resource-paths ["dev-resources" "data"]
-                                            :aot            [sparkling.api
+                                            :aot            [sparkling.core
+                                                             sparkling.api
                                                              sparkling.function
                                                              sparkling.scalaInterop
                                                              sparkling.destructuring
