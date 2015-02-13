@@ -163,7 +163,7 @@ before the `reduce` action, which would cause the line-lengths RDD to be saved t
 
 ### Passing Functions to sparkling
 
-Spark’s API relies heavily on passing functions in the driver program to run on the cluster. Flambo makes it easy and natural to define serializable Spark functions/operations and provides two ways to do this. So, in order for your functions to be available on the cluster,
+Spark’s API relies heavily on passing functions in the driver program to run on the cluster. Sparkling makes it easy and natural to define serializable Spark functions/operations and provides two ways to do this. So, in order for your functions to be available on the cluster,
 the namespaces containing them need to be (AOT-)compiled. That's usually no problem, because you should uberjar your project to deploy it to the Cluster anyhow.
 
 
