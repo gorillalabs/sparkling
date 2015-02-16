@@ -29,17 +29,14 @@
 
 
 
+;; this is not working right now:
 (defn save-avro-file
-  [^JavaSparkContext sc ^JavaPairRDD rdd schema path]
+  [^JavaSparkContext sc rdd schema path]
   (let [conf (.hadoopConfiguration sc)
         job (Job. conf)]
     (AvroSerialization/setDataModelClass conf ClojureData)
     (AvroJob/setOutputKeySchema job schema)
-    #_(-> rdd
-        (s/map key-only)                                    ;; TODO not quite right!!
-
-        )
-    (.saveAsNewAPIHadoopFile rdd
+    (.saveAsNewAPIHadoopFile (s/map-to-pair rdd (fn [x] (s/tuple x nil)))
                              path
                              Object
                              NullWritable
