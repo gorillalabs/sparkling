@@ -1,4 +1,4 @@
-(defproject gorillalabs/sparkling "1.0.1-SNAPSHOT"
+(defproject gorillalabs/sparkling "1.1.0-SNAPSHOT"
             :description "A Clojure Library for Apache Spark"
             :url "https://github.com/chrisbetz/sparkling"
             :license {:name "Eclipse Public License"
@@ -31,22 +31,23 @@
                        :jenkins            {:plugins [[lein-test-out "0.3.1"]]
                                             }
                        :default            [:base :system :user :spark-1.2.1 :hadoop-2.6.0 :avro-1.7.7-hadoop2 :provided :dev]
-                       :avro-1.7.7-hadoop2 {:dependencies [[org.apache.avro/avro "1.7.7" :exclusions [org.codehaus.jackson/jackson-mapper-asl org.codehaus.jackson/jackson-core-asl]]
+
+                       :avro-1.7.7-hadoop2 ^:leaky {:dependencies [[org.apache.avro/avro "1.7.7" :exclusions [org.codehaus.jackson/jackson-mapper-asl org.codehaus.jackson/jackson-core-asl]]
                                                            [org.apache.avro/avro-mapred "1.7.7" :classifier "hadoop2" :exclusions [io.netty/netty commons-lang com.thoughtworks.paranamer/paranamer org.slf4j/slf4j-log4j12 org.mortbay.jetty/servlet-api org.codehaus.jackson/jackson-mapper-asl org.codehaus.jackson/jackson-core-asl]]
                                                            [com.damballa/parkour "0.6.1" :exclusions [org.codehaus.jackson/jackson-mapper-asl org.codehaus.jackson/jackson-core-asl]]
                                                            [com.damballa/abracad "0.4.11" :exclusions [org.apache.avro/avro]]]}
-                       :spark-1.1.0        {:dependencies
+                       :spark-1.1.0        ^:leaky {:dependencies
                                             [[org.apache.spark/spark-core_2.10 "1.1.0" :exclusions [commons-io com.thoughtworks.paranamer/paranamer]]
                                              #_[org.apache.spark/spark-streaming_2.10 "1.1.0" :exclusions [com.thoughtworks.paranamer/paranamer com.fasterxml.jackson.core/jackson-databind]]
                                              #_[org.apache.spark/spark-streaming-kafka_2.10 "1.1.0" :exclusions [com.thoughtworks.paranamer/paranamer com.fasterxml.jackson.core/jackson-databind]]
                                              #_[org.apache.spark/spark-sql_2.10 "1.1.0" :exclusions [com.thoughtworks.paranamer/paranamer org.scala-lang/scala-compiler com.fasterxml.jackson.core/jackson-databind]]
                                              ]}
 
-                       :hadoop-2.6.0       {:dependencies
+                       :hadoop-2.6.0       ^:leaky {:dependencies
                                             [[org.apache.hadoop/hadoop-client "2.6.0" :exclusions [org.apache.curator/curator-recipes io.netty/netty org.apache.curator/curator-framework com.google.guava/guava commons-codec commons-net org.slf4j/slf4j-api org.apache.zookeeper/zookeeper]]
                                              [org.apache.hadoop/hadoop-hdfs "2.6.0" :exclusions [io.netty/netty com.google.guava/guava]]]}
 
-                       :spark-1.2.1        {:dependencies
+                       :spark-1.2.1        ^:leaky {:dependencies
                                             [[org.apache.spark/spark-core_2.10 "1.2.1" :exclusions [commons-net commons-io com.thoughtworks.paranamer/paranamer]]
                                              #_[org.apache.spark/spark-streaming_2.10 "1.2.1" :exclusions [com.thoughtworks.paranamer/paranamer com.fasterxml.jackson.core/jackson-databind]]
                                              #_[org.apache.spark/spark-streaming-kafka_2.10 "1.2.1" :exclusions [com.thoughtworks.paranamer/paranamer com.fasterxml.jackson.core/jackson-databind]]
@@ -68,7 +69,6 @@
                                                              sparkling.rdd.hadoopAvro-test
                                                              sparkling.rdd.jdbc-test
                                                              ]}
-                       :uberjar            {:aot :all}
                        }
             :source-paths ["src/clojure"]
             :java-source-paths ["src/java"]
