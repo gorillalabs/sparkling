@@ -59,7 +59,7 @@ Require the sparkling namespaces you will need for this guide.
     (require '[sparkling.conf :as conf])
     ;;  nil
 
-    (require '[sparkling.api :as spark])
+    (require '[sparkling.core :as spark])
     ;;  nil
 
 
@@ -122,7 +122,7 @@ An important parameter for parallel collections is the number of slices to cut t
 
 Spark can create RDDs from any storage source supported by Hadoop, including the local file system, HDFS, Cassandra, HBase, Amazon S3, etc. Spark supports text files, SequenceFiles, and any other Hadoop InputFormat.
 
-Text file RDDs can be created in sparkling using the `text-file` function under the `sparkling.api` namespace. This function takes a URI for the file (either a local path on the machine, or a `hdfs://...`, `s3n://...`, etc URI) and reads it as a collection of lines. Note, `text-file` supports S3 and HDFS globs.
+Text file RDDs can be created in sparkling using the `text-file` function under the `sparkling.core` namespace. This function takes a URI for the file (either a local path on the machine, or a `hdfs://...`, `s3n://...`, etc URI) and reads it as a collection of lines. Note, `text-file` supports S3 and HDFS globs.
 The following example refers to the data.txt file at the current directory. Make sure to have one.
 
     (def data (spark/text-file sc "data.txt"))
@@ -144,9 +144,9 @@ RDDs support two types of operations:
 To illustrate RDD basics in sparkling, consider the following simple application using this sample [`data.txt`](https://github.com/gorillalabs/sparkling/blob/develop/data.txt).
 
 
-    (-> (spark/text-file sc "data.txt")   ;; returns an unrealized lazy dataset
-        (spark/map count)  ;; returns RDD array of length of lines
-        (spark/reduce +)) ;; returns a value, should be 1406
+    (->> (spark/text-file sc "data.txt")   ;; returns an unrealized lazy dataset
+         (spark/map count)  ;; returns RDD array of length of lines
+         (spark/reduce +)) ;; returns a value, should be 1406
     ;; > 1406
 
 
@@ -169,9 +169,9 @@ the namespaces containing them need to be (AOT-)compiled. That's usually no prob
 
 When we evaluate this `map` transformation on the initial RDD, the result is another RDD. The result of this transformation can be seen using the `spark/collect` action to return all of the elements of the RDD. The following example will only work in an AOT-compiled environment. So, it will not work in your REPL:
 
-    (-> (spark/parallelize sc [1 2 3 4 5])
-        (spark/map (fn [x] (* x x)))
-        spark/collect)
+    (->> (spark/parallelize sc [1 2 3 4 5])
+         (spark/map (fn [x] (* x x)))
+         spark/collect)
 
 We can also use `spark/first` or `spark/take` to return just a subset of the data.
 
@@ -195,27 +195,27 @@ We deal with strings, so require clojure.string also:
 The following code uses the `reduce-by-key` operation on key-value pairs to count how many times each word occurs in a file:
 
 
-    (-> (spark/text-file sc "data.txt")
-        (spark/flat-map (fn [l] (s/split l #" ")))
-        (spark/map-to-pair (fn [w] (spark/tuple w 1)))
-        (spark/reduce-by-key +)
-        (spark/map (s-de/key-value-fn (fn [k v] (str k " appears " v " times."))))
-        )
+    (->> (spark/text-file sc "data.txt")
+         (spark/flat-map (fn [l] (s/split l #" ")))
+         (spark/map-to-pair (fn [w] (spark/tuple w 1)))
+         (spark/reduce-by-key +)
+         (spark/map (s-de/key-value-fn (fn [k v] (str k " appears " v " times."))))
+         )
     ;; #<JavaPairRDD org.apache.spark.api.java.JavaPairRDD@4c3c63f1>
 
-    (spark/take *1 3)
+    (spark/take  3 *1)
     ;; ["created appears 1 times." "under appears 1 times." "this appears 4 times."]
 
 After the `reduce-by-key` operation, we can sort the pairs alphabetically using `spark/sort-by-key`. To collect the word counts as an array of objects in the repl or to write them to a filesysten, we can use the `spark/collect` action:
 
-    (-> (spark/text-file sc "data.txt")
-        (spark/flat-map (fn [l] (s/split l #" ")))
-        (spark/map-to-pair (fn [w] (spark/tuple w 1)))
-        (spark/reduce-by-key +)
-        spark/sort-by-key
-        (spark/map (s-de/key-value-fn (fn [k v] [k v])))
-        spark/collect
-        clojure.pprint/pprint)
+    (->> (spark/text-file sc "data.txt")
+         (spark/flat-map (fn [l] (s/split l #" ")))
+         (spark/map-to-pair (fn [w] (spark/tuple w 1)))
+         (spark/reduce-by-key +)
+         spark/sort-by-key
+         (spark/map (s-de/key-value-fn (fn [k v] [k v])))
+         spark/collect
+         clojure.pprint/pprint)
     ;; [["" 4] ["But" 1] ["Four" 1] ["God" 1] ["It" 3] ["Liberty" 1] ["Now" 1] ["The" 2] ["We" 2] ["a" 7] ...
     ;; nil
 
@@ -265,13 +265,13 @@ Sparkling supports the following RDD actions:
 
 ## RDD Persistence
 
-Spark provides the ability to persist (or cache) a dataset in memory across operations. Spark’s cache is fault-tolerant – if any partition of an RDD is lost, it will automatically be recomputed using the transformations that originally created it. Caching is a key tool for iterative algorithms and fast interactive use. Like Spark, sparkling provides the functions `spark/persist` and `spark/cache` to persist RDDs. `spark/persist` sets the storage level of an RDD to persist its values across operations after the first time it is computed. Storage levels are available in the `sparkling.api/STORAGE-LEVELS` map. This can only be used to assign a new storage level if the RDD does not have a storage level set already. `cache` is a convenience function for using the default storage level, 'MEMORY_ONLY'.
+Spark provides the ability to persist (or cache) a dataset in memory across operations. Spark’s cache is fault-tolerant – if any partition of an RDD is lost, it will automatically be recomputed using the transformations that originally created it. Caching is a key tool for iterative algorithms and fast interactive use. Like Spark, sparkling provides the functions `spark/persist` and `spark/cache` to persist RDDs. `spark/persist` sets the storage level of an RDD to persist its values across operations after the first time it is computed. Storage levels are available in the `sparkling.core/STORAGE-LEVELS` map. This can only be used to assign a new storage level if the RDD does not have a storage level set already. `cache` is a convenience function for using the default storage level, 'MEMORY_ONLY'.
 
 
-    (let [line-lengths (-> (spark/text-file sc "data.txt")
-                           (spark/map count)
-                           spark/cache)]
-      (-> line-lengths
+    (let [line-lengths (->> (spark/text-file sc "data.txt")
+                            (spark/map count)
+                            spark/cache)]
+      (->> line-lengths
           (spark/reduce +)))
     ;; 1406
 

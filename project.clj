@@ -20,7 +20,7 @@
                                                              [criterium "0.4.3"]]
                                             :plugins        [[lein-marginalia "0.8.0"]
                                                              [lein-ancient "0.5.4"]
-                                                             [codox "0.8.9"]
+                                                             [codox "0.8.10"]
                                                              [lein-release "1.0.5"]
                                                              [lein-pprint "1.1.1"]]
                                             :resource-paths ["data"]
@@ -73,9 +73,9 @@
             :source-paths ["src/clojure"]
             :java-source-paths ["src/java"]
             :codox {:defaults                  {:doc/format :markdown}
-                    :include                   [sparkling.api sparkling.conf sparkling.kryo sparkling.broadcast sparkling.debug sparkling.destructuring]
+                    :include                   [sparkling.core sparkling.conf sparkling.kryo sparkling.broadcast sparkling.debug sparkling.destructuring]
                     :output-dir                "doc"
-                    :src-dir-uri               "https://raw.githubusercontent.com/gorillalabs/sparkling/1.0.0/"
+                    :src-dir-uri               "https://raw.githubusercontent.com/gorillalabs/sparkling/1.1.0/"
                     :src-linenum-anchor-prefix "L"}
             :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.6"]
             :jvm-opts ^:replace ["-server" "-Xmx1g"]
@@ -85,5 +85,3 @@
 
 ;; test with
 ;;     lein do clean, with-profile +spark-1.1.0 test
-
-
