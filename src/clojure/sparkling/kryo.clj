@@ -1,8 +1,7 @@
 ;; ## Utilities and macros for dealing with kryo
 ;;
 (ns sparkling.kryo
-  (:import [org.apache.spark.serializer KryoRegistrator]
-           [org.apache.spark SparkEnv]
+  (:import [org.apache.spark SparkEnv]
            [org.apache.spark.serializer SerializerInstance]
            [java.nio ByteBuffer]
            [scala.reflect ClassTag$]))
@@ -33,13 +32,13 @@
   This macro must be called from a namespace that is AOT compiled. This is not typically
   an issue since application jars are packaged as uberjars.
 
-  Note that we are extending `BaseFlamboRegistrator` and not spark's `KryoRegistrator`."
+  Note that we are extending `BaseRegistrator` and not spark's `KryoRegistrator`."
   [name & register-impl]
   (let [prefix (gensym)
         classname (str *ns* ".registrator." name)]
     `(do
        (gen-class :name ~classname
-                  :extends sparkling.kryo.BaseFlamboRegistrator
+                  :extends sparkling.serialization.BaseRegistrator
                   :prefix ~prefix)
        (defn ~(symbol (str prefix "register"))
          ~@register-impl)

@@ -2,8 +2,13 @@
   (:require [sparkling.rdd.hadoopAvro :refer :all]
             [sparkling.api :as s]
             [sparkling.conf :as conf]
+            [abracad.avro :as avro]
+            [clojure.java.io]
             [clojure.test :refer :all]))
 
+(defn test-schema "Loads a schema" []
+  (with-open [schema-stream (clojure.java.io/input-stream "data/avro/twitter.avsc")]
+    (avro/parse-schema schema-stream)))
 
 ;; Thanks to Michael G. Noll (https://github.com/miguno)
 ;; I copied his avro test files from https://github.com/miguno/avro-hadoop-starter
@@ -27,4 +32,19 @@
                               {:username "Immortal", :tweet "En Taro Adun!", :timestamp 1366176283}
                               {:username "VoidRay", :tweet "There is no greater void than the one between your ears.", :timestamp 1366176300}
                               {:username "DarkTemplar", :tweet "I strike from the shadows!", :timestamp 1366184681}]
-                             ))))))
+                             )))
+
+                    #_(testing
+                      "load stuff from hadoop using AVRO"
+                      (is (=
+                            (do
+                            (save-avro-file c (s/parallelize c [
+                                                                  {:username "miguno", :tweet "Rock: Nerf paper, scissors is fine.", :timestamp 1366150681}
+                                                                  {:username "BlizzardCS", :tweet "Works as intended.  Terran is IMBA.", :timestamp 1366154481}
+                                                                  ]) (test-schema) "data/avro/test-out.avro")
+                            (s/collect (load-avro-file c "data/avro/test-out.avro")))
+                            [
+                             {:username "miguno", :tweet "Rock: Nerf paper, scissors is fine.", :timestamp 1366150681}
+                             {:username "BlizzardCS", :tweet "Works as intended.  Terran is IMBA.", :timestamp 1366154481}
+                             ])))
+                    )))
