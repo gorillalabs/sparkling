@@ -9,18 +9,19 @@ layout: article
 This guide combines an overview of Sparkling with a quick tutorial that helps you to get started with it.
 It should take about 20 minutes to read and study the provided code examples. This guide covers:
 
- * Cloning a base repository for starting to explore Sparkling
+ * [Cloning a base repository for starting to explore Sparkling](#start)
  * Experience Sparkling / Spark by
-   * starting up a `local` SparkContext
-   * parallelizing data to a Spark Dataset
-   * reading data from a file into a Spark Dataset
-   * performing transformations on the Datasets
-   * calling acions on the Datasets.
- * Walk through a more complete example to compute [Term Frequency, Inverse Document Frequency](http://en.wikipedia.org/wiki/Tf%E2%80%93idf).
+   * [get going in the REPL](#REPL)
+   * [starting up a `local` SparkContext](#initializing)
+   * [parallelizing data to a Spark Dataset](#rdds)
+   * [reading data from a file into a Spark Dataset](#external)
+   * [performing transformations on the Datasets](#rdd-operations)
+   * [working with key-value-pairs](#keyvalue)
+   * [calling actions on the Datasets.](#rdd-actions)
 
 
 
-## Starting point
+## <a name="start"/>Starting point
 There is a [companion project](https://github.com/gorillalabs/sparkling-getting-started) to this getting started guide. Just use this as a staring point to explore Sparkling, because it contains a ready-made project.clj for [Leiningen](http://leiningen.org/). There's no need to install Apache Spark, or even to run a cluster of any kind. Just get going on your notebook.
 
 Clone that repo by executing
@@ -32,11 +33,11 @@ Clone that repo by executing
 in your shell.
 
 
-## Kick off you REPL
+## <a name="REPL"/>Kick off you REPL
 
 Start up your REPL (in your favourite tool), you should see something like this (after downloading required dependencies):
 
-    > lein do clean, repl
+    $ lein do clean, repl
 
     Compiling sparkling.example.tfidf
     nREPL server started ...
@@ -62,9 +63,9 @@ Require the sparkling namespaces you will need for this guide.
     ;;  nil
 
 
-<a name="initializing">
 
-## Initializing Sparkling
+
+## <a name="initializing"/>Initializing Sparkling
 
 The first step is to create a Spark configuration object, SparkConf, which contains information about your application. This is used to construct a SparkContext object which tells Spark how to access a cluster.
 
@@ -83,14 +84,14 @@ Here we create a SparkConf object with the string `local` to run in local mode:
 
 Using a `local` master provides you with a standalone system, where you do not need to install other software besides your Clojure environment (like JDK, lein, etc.) So it's great for in-REPL-development, and unit testing.
 
-<a name="rdds"/>
 
-## Resilient Distributed Datasets
+
+## <a name="rdds"/>Resilient Distributed Datasets
 
 The main abstraction Spark provides is a _resilient distributed dataset_, RDD, which is a fault-tolerant collection of elements partitioned across the nodes of the cluster that can be operated on in parallel. There are two ways to create RDDs: _parallelizing_ / _parallelizing-pairs_ an existing collection in your driver program, or referencing a dataset in an external storage system, such as a shared filesystem, HDFS, HBase, or any data source offering a Hadoop InputFormat, or even JDBC.
 
 ### RDDs and PairRDDs
-RDDs basically come in two flavours. Plain RDDs simply hold a collection of arbitrary objects. PairRDDs provide a key-value-collection, but unlike a Map it can contain multiple instances of a single key. Internally, PairRDDs are constructed as collections of Scala Tuple2 objects, but Sparkling provides clojuresque ways to access these.
+RDDs basically come in two flavors. Plain RDDs simply hold a collection of arbitrary objects. PairRDDs provide a key-value-collection, but unlike a Map it can contain multiple instances of a single key. Internally, PairRDDs are constructed as collections of Scala Tuple2 objects, but Sparkling provides clojuresque ways to access these.
 
 ### Parallelized Collections
 
@@ -117,7 +118,7 @@ An important parameter for parallel collections is the number of slices to cut t
     (def data (spark/parallelize sc [1 2 3 4 5] 4))
     ;;  #'sparkling.example.tfidf/data
 
-### External Datasets
+### <a name="external"/>External Datasets
 
 Spark can create RDDs from any storage source supported by Hadoop, including the local file system, HDFS, Cassandra, HBase, Amazon S3, etc. Spark supports text files, SequenceFiles, and any other Hadoop InputFormat.
 
@@ -127,18 +128,17 @@ The following example refers to the data.txt file at the current directory. Make
     (def data (spark/text-file sc "data.txt"))
     ;;  #'sparkling.example.tfidf/data
 
-<a name="rdd-operations">
 
-## RDD Operations
+## <a name="rdd-operations"/>RDD Operations
 
 RDDs support two types of operations:
 
 * [_transformations_](#rdd-transformations), which create a new dataset from an existing one
 * [_actions_](#rdd-actions), which return a value to the driver program after running a computation on the dataset
 
-<a name="basics">
 
-### Basics
+
+### <a name="basics"/>Basics
 
 To illustrate RDD basics in sparkling, consider the following simple application using this sample [`data.txt`](https://github.com/gorillalabs/sparkling/blob/develop/data.txt).
 
@@ -158,9 +158,8 @@ If we also wanted to reuse the resulting RDD of length of lines in later steps, 
 
 before the `reduce` action, which would cause the line-lengths RDD to be saved to memory after the first time it is realized. See [RDD Persistence](#rdd-persistence) for more on persisting and caching RDDs in sparkling.
 
-<a name="sparkling-functions">
 
-### Passing Functions to sparkling
+### <a name="sparkling-functions"/>Passing Functions to sparkling
 
 Spark’s API relies heavily on passing functions in the driver program to run on the cluster. Sparkling makes it easy and natural to define serializable Spark functions/operations and provides two ways to do this. So, in order for your functions to be available on the cluster,
 the namespaces containing them need to be (AOT-)compiled. That's usually no problem, because you should uberjar your project to deploy it to the Cluster anyhow.
@@ -175,9 +174,9 @@ When we evaluate this `map` transformation on the initial RDD, the result is ano
 We can also use `spark/first` or `spark/take` to return just a subset of the data.
 
 
-<a name="key-value-pairs">
 
-### Working with Key-Value Pairs
+
+### <a name="keyvalue"/> Working with Key-Value Pairs
 
 Some transformation in Spark operate on Key-Value-Tuples, e.g. joins, reduce-by-key, etc. In sparkling, these operations are available on PairRDDs.
 You do not need to deal with the internal data structures of Apache Spark (like scala.Tuple2), if you use the functions from the `sparkling.destructuring` namespace.
@@ -218,9 +217,9 @@ After the `reduce-by-key` operation, we can sort the pairs alphabetically using 
     ;; [["" 4] ["But" 1] ["Four" 1] ["God" 1] ["It" 3] ["Liberty" 1] ["Now" 1] ["The" 2] ["We" 2] ["a" 7] ...
     ;; nil
 
-<a name="rdd-transformations">
 
-### RDD Transformations
+
+### <a name="rdd-transformations"/>RDD Transformations
 
 Sparkling supports the following RDD transformations:
 
@@ -242,9 +241,9 @@ Sparkling supports the following RDD transformations:
 * `group-by-key`: groups the values for each key in an RDD into a single sequence.
 * `flat-map-to-pair`: returns a new `JavaPairRDD` by first applying a function to all elements of the RDD, and then flattening the results.
 
-<a name="rdd-actions">
 
-### RDD Actions
+
+### <a name="rdd-actions"/>RDD Actions
 
 Sparkling supports the following RDD actions:
 
@@ -260,9 +259,9 @@ Sparkling supports the following RDD actions:
 * `glom`: returns an RDD created by coalescing all elements of the source RDD within each partition into a list.
 * `cache`: persists an RDD with the default storage level ('MEMORY_ONLY').
 
-<a name="rdd-persistence">
 
-## RDD Persistence
+
+## <a name="rdd-persistence"/>RDD Persistence
 
 Spark provides the ability to persist (or cache) a dataset in memory across operations. Spark’s cache is fault-tolerant – if any partition of an RDD is lost, it will automatically be recomputed using the transformations that originally created it. Caching is a key tool for iterative algorithms and fast interactive use. Like Spark, sparkling provides the functions `spark/persist` and `spark/cache` to persist RDDs. `spark/persist` sets the storage level of an RDD to persist its values across operations after the first time it is computed. Storage levels are available in the `sparkling.core/STORAGE-LEVELS` map. This can only be used to assign a new storage level if the RDD does not have a storage level set already. `cache` is a convenience function for using the default storage level, 'MEMORY_ONLY'.
 
@@ -275,11 +274,11 @@ Spark provides the ability to persist (or cache) a dataset in memory across oper
     ;; 1406
 
 
-## Further reading
+## <a name="reading"/>Further reading
 We will provide you with further guides, e.g. on deploying your project to a Spark Cluster in the future. So, please stay tuned and check [our guides section](/sparkling/articles/guides.html) from time to time.
 
 
-## Next steps?
+## <a name="next"/>Next steps?
 
 Star / watch the Sparkling Github Repo to keep up to date.
 
