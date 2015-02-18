@@ -1,7 +1,7 @@
 ---
-title: Getting Started with Sparkling
+title: "Getting Started with Sparkling"
 layout: article
-description: Tutorial for writing Spark jobs in Clojure: cloning a getting-started-repo, starting the REPL, working with datasets.
+description: "Tutorial for writing Spark jobs in Clojure: cloning a getting-started-repo, starting the REPL, working with datasets."
 ---
 
 
