@@ -1,6 +1,7 @@
 source:      .
 destination: ./_site
 baseurl:     /sparkling
+gems: [jekyll-sitemap]
 plugins:     ./_plugins
 exclude: [Gemfile,Gemfile.lock,LICENSE,README.md,Tutorial.md,bin,data,dev-resources,doc,pom.xml,pom.xml.asc,project.clj,sparkling.iml,src,target,test,tmp]
 permalink: /:title

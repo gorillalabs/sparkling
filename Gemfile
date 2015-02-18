@@ -8,3 +8,4 @@ gem "jekyll", "~> 2.5.3"
 gem "iconv"
 gem "albino"
 gem "therubyracer"
+gem 'jekyll-sitemap', '~> 0.8.0'
