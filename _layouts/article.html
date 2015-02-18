@@ -3,7 +3,7 @@
   <head>
     <title>{{page.title}}</title>
     <meta content='width=device-width, initial-scale=1.0' name='viewport' />
-    <meta content='Sparkling, A Clojure library for Apache Spark' name='description' />
+    {% if page.description %}<meta name="description" content="{{ page.description }}">{% endif %}
     <meta content='Dr. Christian Betz' name='author' />
     <link href='/sparkling/assets/stylesheets/bootstrap.css' media='screen' rel='stylesheet' type='text/css' />
     <link href='/sparkling/assets/stylesheets/bootstrap-responsive.css' media='screen' rel='stylesheet' type='text/css' />

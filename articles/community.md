@@ -1,6 +1,7 @@
 ---
 title: "Sparkling: Community"
 layout: article
+description: Sparkling Community Links.
 ---
 
 ## News & Announcements on Twitter

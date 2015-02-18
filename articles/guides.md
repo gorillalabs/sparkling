@@ -1,6 +1,7 @@
 ---
 title: "Sparkling: all documentation guides"
 layout: article
+description: "A list of guides to Sparkling, the Clojure API to Apache Spark"
 ---
 
 ## Guide list
