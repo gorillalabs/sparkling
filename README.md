@@ -36,8 +36,8 @@ This one is also used in the [getting started guide](http://gorillalabs.github.i
 
 # Acknowledgements
 
-Thanks to The Climate Corporation and their open source [clj-spark](https://github.com/TheClimateCorporation/clj-spark) project, and to
-Yieldbot for [yieldbot/flambo](https://github.com/yieldbot/flambo) which served as the starting point for this project.
+Thanks to The Climate Corporation and their open source clj-spark project, and to
+Yieldbot for yieldbot/flambo which served as the starting point for this project.
 
 # License
 

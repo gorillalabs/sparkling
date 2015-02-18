@@ -18,16 +18,15 @@ It should take about 20 minutes to read and study the provided code examples. Th
   * calling acions on the Datasets.
  * Walk through a more complete example to compute [Term Frequency, Inverse Document Frequency](http://en.wikipedia.org/wiki/Tf%E2%80%93idf).
 
-## Do I need a cluster? Do I need to install Apache Spark?
-Apache Spark is a framework to run your code on a cluster. However, for tests and non-productive workload, you can run your code locally very easily. So, for your first steps, no further install is necessary, Sparkling comes batteries included.
+
 
 ## Starting point
-There is a [companion project](https://github.com/gorillalabs/sparkling-getting-started) to this getting started guide. Just use this as a staring point to explore Sparkling, because it contains a project.clj for [Leiningen](http://leiningen.org/).
+There is a [companion project](https://github.com/gorillalabs/sparkling-getting-started) to this getting started guide. Just use this as a staring point to explore Sparkling, because it contains a ready-made project.clj for [Leiningen](http://leiningen.org/). There's no need to install Apache Spark, or even to run a cluster of any kind. Just get going on your notebook.
 
-Just clone that repo by executing
+Clone that repo by executing
 
-  git clone https://github.com/gorillalabs/sparkling-getting-started.git
-  cd sparkling-getting-started
+    git clone https://github.com/gorillalabs/sparkling-getting-started.git
+    cd sparkling-getting-started
 
 
 in your shell.
@@ -280,7 +279,7 @@ Spark provides the ability to persist (or cache) a dataset in memory across oper
 We will provide you with further guides, e.g. on deploying your project to a Spark Cluster in the future. So, please stay tuned and check [our guides section](/sparkling/articles/guides.html) from time to time.
 
 
-<a name="acknowledgements">
-## Acknowledgements
-
-Thanks to The Climate Corporation and their [clj-spark](https://github.com/TheClimateCorporation/clj-spark) project, and yieldbot and their [flambo project](https://github.com/yieldbot/flambo) which served as the starting point for this project.
+## Next steps?
+Star / watch the Sparkling Github Repo to keep up to date.
+<iframe src="https://ghbtns.com/github-btn.html?user=gorillalabs&repo=sparkling&type=star&count=true&size=large" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
+<iframe src="https://ghbtns.com/github-btn.html?user=gorillalabs&repo=sparkling&type=watch&count=true&size=large&v=2" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
