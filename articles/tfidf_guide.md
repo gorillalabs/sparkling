@@ -91,7 +91,7 @@ To check whether everything is fine run `lein test`, the result should look like
 
 Now we can start working on our problem. Open `src/tf_idf/core.clj` in Light Table and turn it into an InstaREPL (using Ctrl+Space to open the Command palette, type "insta" and hit "enter"). You will see a little "live" tag in the upper right corner of you editor. Now delete the `foo` function definition and add a require statement to the namespace and our own functions, so the file looks like this:
 
-```Clojure
+``` Clojure
 (ns tf-idf.core
   (:require [clojure.string :as string]))
 
@@ -108,7 +108,7 @@ These functions provide a basic domain model for our problem.
 
 As we're in instarepl: just add
 
-```Clojure
+``` Clojure
 (remove-stopwords (terms "a quick brown fox jumps"))
 ```
 and see the functionality explode ;)
@@ -120,7 +120,7 @@ Ok, it's not quit big data right now, but a big pro for using Sparkling (or Spar
 
 Open `test/tf_idf/core_test.clj` in Light Table and replace the existing `a-test` with this:
 
-```Clojure
+``` Clojure
 (deftest domain-functions-test
   (testing "domain functions"
     (is (= ["quick" "brown" "fox" "jumps"]
@@ -130,7 +130,7 @@ Open `test/tf_idf/core_test.clj` in Light Table and replace the existing `a-test
 
 I added a keybinding to my Light Table to execute tests on keystroke. You might want to have that also, because it makes things a lot easier here: Just open your keybindings (`Ctrl+space` to open the Commands, type `key`, select 'Settings: User keymaps') and add these lines inside the vector:
 
-```Clojure
+``` Clojure
 [:editor "pmeta-t" (:eval.custom
                          "(clojure.test/run-all-tests
                             (re-pattern
@@ -143,7 +143,7 @@ Upon saving the `user.keymap` file, keybindings are reloaded and back in the `co
 For all others, just use
 
 
-```zsh
+``` zsh
 lein test
 ```
 
@@ -157,7 +157,7 @@ For our next step we need to deal with some Spark internals: Spark uses Scalas `
 
 First, require `sparkling.core` namespace, so our namespace definition looks like this:
 
-```Clojure
+``` Clojure
 (ns tf-idf.core
   (:require [clojure.string :as string]
             [sparkling.core :as spark]
@@ -166,7 +166,7 @@ First, require `sparkling.core` namespace, so our namespace definition looks lik
 
 Second, add another function
 
-```Clojure
+``` Clojure
 (defn docid->term-tuples
   "Returns a stopword filtered seq of tuples of doc-id,[term term-frequency doc-terms-count]"
   [doc-id content]
@@ -179,13 +179,13 @@ Second, add another function
 ```
 
 This function can be tested in the InstaREPL by adding the following line at the end of `core.clj`:
-```Clojure
+``` Clojure
 (docid->term-tuples "doc1" "A quick brown fox")
 ```
 
 The InstaREPL unfolds the evaluation and shows as result
 
-```Clojure
+``` Clojure
 (#sparkling/tuple ["doc1" ["quick" 1 3]] #sparkling/tuple ["doc1" ["brown" 1 3]] #sparkling/tuple ["doc1" ["fox" 1 3]])
 ```
 
