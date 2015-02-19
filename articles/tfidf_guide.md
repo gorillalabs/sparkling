@@ -54,7 +54,7 @@ Now, open that project in your IDE of choice. Personally, I use IntelliJ/Cursive
 
 The file should now look like this:
 
-```clojure
+``` clojure
 (defproject tf-idf "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
