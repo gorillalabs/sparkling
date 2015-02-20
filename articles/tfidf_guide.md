@@ -40,8 +40,11 @@ and its `idf` weight:
 
 Make sure you have [Leiningen](http://leiningen.org/) installed, I'm currently using version 2.5.1.
 
-    ➜  tmp  lein version
-    Leiningen 2.5.1 on Java 1.7.0_60 Java HotSpot(TM) 64-Bit Server VM
+{% highlight bash session %}
+➜  tmp  lein version
+  Leiningen 2.5.1 on Java 1.7.0_60 Java HotSpot(TM) 64-Bit Server VM
+{% endhighlight %}
+
 
 Now, create a new project named "tf-idf".
 
@@ -54,7 +57,7 @@ Now, open that project in your IDE of choice. Personally, I use IntelliJ/Cursive
 
 The file should now look like this:
 
-``` clojure
+{% highlight clojure %}
 (defproject tf-idf "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -62,7 +65,7 @@ The file should now look like this:
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [gorillalabs/sparkling "1.1.0"]])
-```
+{% endhighlight %}
 
 To check whether everything is fine run `lein test`, the result should look like this:
 
