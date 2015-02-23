@@ -31,9 +31,7 @@
 
 
                            [org.apache.avro/avro "1.7.7" :scope "provided"
-                            :exclusions [com.thoughtworks.paranamer/paranamer
-                                         ;org.codehaus.jackson/jackson-mapper-asl org.codehaus.jackson/jackson-core-asl org.xerial.snappy/snappy-java]
-                                         ]]
+                            :exclusions [com.thoughtworks.paranamer/paranamer]]
                            [org.apache.avro/avro-mapred "1.7.7" :scope "provided" :classifier "hadoop2"
                             :exclusions [org.mortbay.jetty/jetty-util
                                          org.mortbay.jetty/jetty
@@ -56,26 +54,22 @@
                        :jenkins            {:plugins [[lein-test-out "0.3.1"]]
                                             }
 
-                       :avro-1.7.7-hadoop2 {:dependencies [[org.apache.avro/avro "1.7.7" :exclusions [org.codehaus.jackson/jackson-mapper-asl org.codehaus.jackson/jackson-core-asl org.xerial.snappy/snappy-java]]
-                                                           [org.apache.avro/avro-mapred "1.7.7" :classifier "hadoop2" :exclusions [io.netty/netty commons-lang com.thoughtworks.paranamer/paranamer org.slf4j/slf4j-log4j12 org.mortbay.jetty/servlet-api org.codehaus.jackson/jackson-mapper-asl org.codehaus.jackson/jackson-core-asl org.mortbay.jetty/jetty-util org.mortbay.jetty/jetty]]
-                                                           ]}
                        :spark-1.1.0        {:dependencies
-                                            [[org.apache.spark/spark-core_2.10 "1.1.0" :exclusions [commons-io com.thoughtworks.paranamer/paranamer]]
-                                             #_[org.apache.spark/spark-streaming_2.10 "1.1.0" :exclusions [com.thoughtworks.paranamer/paranamer com.fasterxml.jackson.core/jackson-databind]]
-                                             #_[org.apache.spark/spark-streaming-kafka_2.10 "1.1.0" :exclusions [com.thoughtworks.paranamer/paranamer com.fasterxml.jackson.core/jackson-databind]]
-                                             #_[org.apache.spark/spark-sql_2.10 "1.1.0" :exclusions [com.thoughtworks.paranamer/paranamer org.scala-lang/scala-compiler com.fasterxml.jackson.core/jackson-databind]]
+                                            [[org.apache.spark/spark-core_2.10 "1.1.0"]
                                              ]}
 
                        :hadoop-2.6.0       ^{:pom-scope :provided} {:dependencies
-                                                                    [[org.apache.hadoop/hadoop-client "2.6.0" :exclusions [org.apache.curator/curator-recipes io.netty/netty org.apache.curator/curator-framework com.google.guava/guava commons-codec commons-net org.slf4j/slf4j-api org.apache.zookeeper/zookeeper]]
-                                                                     [org.apache.hadoop/hadoop-hdfs "2.6.0" :exclusions [io.netty/netty com.google.guava/guava]]]}
+                                                                    [[org.apache.hadoop/hadoop-client "2.6.0"
+                                                                      :exclusions [commons-codec org.apache.curator/curator-recipes org.slf4j/slf4j-api com.google.guava/guava io.netty/netty org.apache.curator/curator-framework org.apache.zookeeper/zookeeper]]
+                                                                     [org.apache.hadoop/hadoop-hdfs "2.6.0" :exclusions [com.google.guava/guava io.netty/netty]]]}
 
                        :spark-1.2.1        ^{:pom-scope :provided} {:dependencies
-                                                                    [[org.apache.spark/spark-core_2.10 "1.2.1" :exclusions [commons-net commons-codec commons-io com.thoughtworks.paranamer/paranamer]]
-                                                                     #_[org.apache.spark/spark-streaming_2.10 "1.2.1" :exclusions [com.thoughtworks.paranamer/paranamer com.fasterxml.jackson.core/jackson-databind]]
-                                                                     #_[org.apache.spark/spark-streaming-kafka_2.10 "1.2.1" :exclusions [com.thoughtworks.paranamer/paranamer com.fasterxml.jackson.core/jackson-databind]]
-                                                                     #_[org.apache.spark/spark-sql_2.10 "1.2.1" :exclusions [com.thoughtworks.paranamer/paranamer org.scala-lang/scala-compiler com.fasterxml.jackson.core/jackson-databind]]
-                                                                     ]}
+                                                                    [[org.apache.spark/spark-core_2.10 "1.2.1" :scope "provided"
+                                                                      :exclusions [commons-net commons-codec commons-io]
+                                                                      ]
+                                                                     [commons-net "3.1"]
+                                                                     [commons-codec "1.4"]
+                                                                     [commons-io "2.4"]]}
 
                        :test               {:resource-paths ["dev-resources" "data"]
                                             :aot            [sparkling.core
