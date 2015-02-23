@@ -17,6 +17,10 @@ This one is also used in the [getting started guide](http://gorillalabs.github.i
 
 # Release Notes
 
+### 1.1.1 - cleaned dependencies
+ * No more spilling of unwanted stuff in your application. You only need to refer to sparkling to get a proper environment with Spark 1.2.1.
+   In order to deploy to a cluster with Spark pre-installed, you need to set Spark dependency to provided in your project, though.
+
 ### 1.1.0 - Added a more clojuresque API
  * Use sparkling.core instead of sparkling.api for parameter orders similar to Clojure. Easier currying using partial.
  * Made it possible to use Keywords as Functions by serializing IFn instead of AFunction.
