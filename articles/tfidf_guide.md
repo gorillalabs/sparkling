@@ -4,6 +4,7 @@ layout: article
 description: "Tutorial showing a complete sample project using Gorillalabs Sparkling to compute Term Frequency / Inverse Document Frequency"
 ---
 
+# Fully working tutorial project
 
 ## About this guide
 
