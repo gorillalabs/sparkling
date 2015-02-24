@@ -299,7 +299,7 @@ Second, add this to `core.clj`:
 {% endhighlight %}
 
 
-Test this in your command line using 'lein run' and you should see something like this:
+Test this in your command line using `lein run` and you should see something like this:
 
 
 {% highlight text %}
@@ -318,6 +318,7 @@ Compiling tf-idf.core
 
 As your program exits, the services are also teared down, so going to the Spark WebUI under http://localhost:4040 is pretty pointless right now. You won't find anything.
 
+Remember: As Spark requires to have functions compiled, you need to AOT-compile the namespaces with functions used in spark transformations. This is done when running `lein run`, but it's not done in your REPL automatically. Strange errors? Do `lein do clean, run` and make sure nothing broke when you clean your stuff first.
 
 ##<a name="spark-tests"/> Tests for your Spark units
 
