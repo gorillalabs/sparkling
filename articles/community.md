@@ -17,6 +17,9 @@ on Twitter.
 If you find a bug, poor default, missing feature or find any part of the API inconvenient, please [file an issue](https://github.com/gorillalabs/sparkling/issues) on Github.
 If possible, try to explain what behavior you expected and why. Bonus points for contributing failing test cases.
 
+## Questions and Discussion
+
+There is also a google group [sparkling-users](https://groups.google.com/forum/#!forum/sparkling-users) where you can ask questions or discuss ways of using sparkling.
 
 ## Contributing
 
