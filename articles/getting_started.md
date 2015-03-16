@@ -232,6 +232,7 @@ Sparkling supports the following RDD transformations:
 * `filter`: returns a new RDD containing only the elements of the source RDD that satisfy a predicate function.
 * `join`: when called on an RDD of type (K, V) and (K, W), returns a dataset of (K, (V, W)) pairs with all pairs of elements for each key.
 * `left-outer-join`: performs a left outer join of a pair of RDDs. For each element (K, V) in the first RDD, the resulting RDD will either contain all pairs (K, (V, W)) for W in second RDD, or the pair (K, (V, nil)) if no elements in the second RDD have key K.
+* `cogroup`: groups data from different RDDs based upon their key. Can be called with two or three RDDs, results in an RDD (K, (V, W)) or (K, (V, W, X)).
 * `sample`: returns a 'fraction' sample of an RDD, with or without replacement, using a random number generator 'seed'.
 * `combine-by-key`: combines the elements for each key using a custom set of aggregation functions. Turns an RDD of (K, V) pairs into a result of type (K, C), for a 'combined type' C. Note that V and C can be different -- for example, one might group an RDD of type (Int, Int) into an RDD of type (Int, List[Int]). Users must provide three functions:
     - createCombiner, which turns a V into a C (e.g., creates a one-element list)
