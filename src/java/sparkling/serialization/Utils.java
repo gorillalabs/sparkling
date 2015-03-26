@@ -8,8 +8,11 @@ import java.io.ObjectInputStream;
 import clojure.lang.IFn;
 import clojure.lang.RT;
 import clojure.lang.Var;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Utils {
+    final static Logger logger = LoggerFactory.getLogger(Utils.class);
 
     static final Var require = RT.var("clojure.core", "require");
     static final Var symbol = RT.var("clojure.core", "symbol");
@@ -21,22 +24,33 @@ public class Utils {
         try {
             require.invoke(symbol.invoke(namespace));
         } catch (Exception e) {
-            // silently catch Exception.
-            // TODO: Log warning!
+            logger.warn ("Error deserializing function (require " + namespace +")" ,e);
         }
     }
 
     public static void writeIFn(ObjectOutputStream out, IFn f) throws IOException {
-        out.writeObject(f.getClass().getName());
-        out.writeObject(f);
+        try {
+            logger.debug("Serializing " + f );
+            out.writeObject(f.getClass().getName());
+            out.writeObject(f);
+        } catch (Exception e) {
+            logger.warn("Error serializing object",e);
+        }
     }
 
     public static IFn readIFn(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        String clazz = (String) in.readObject();
-        String namespace = clazz.split("\\$")[0];
+        try {
+            String clazz = (String) in.readObject();
+            String namespace = clazz.split("\\$")[0];
 
-        requireNamespace(namespace);
+            requireNamespace(namespace);
 
-        return (IFn) in.readObject();
+            IFn f = (IFn) in.readObject();
+            logger.debug("Deserializing " + f );
+            return f;
+        } catch (Exception e) {
+            logger.warn("Error deserializing object",e);
+        }
+        return null;
     }
 }

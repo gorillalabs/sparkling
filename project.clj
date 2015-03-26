@@ -7,6 +7,7 @@
                   :url  "https://github.com/gorillalabs/sparkling"}
             :dependencies [[org.clojure/clojure "1.6.0" :scope "provided"]
                            [org.clojure/tools.logging "0.3.1"]
+                           [org.slf4j/slf4j-api "1.7.5" :scope "provided"]
                            [com.twitter/carbonite "1.4.0"
                             :exclusions [com.twitter/chill-java com.esotericsoftware.kryo/kryo]]
                            [com.twitter/chill_2.10 "0.5.2"
