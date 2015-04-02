@@ -86,6 +86,7 @@
                                                              sparkling.conf-test
                                                              sparkling.rdd.hadoopAvro-test
                                                              sparkling.rdd.jdbc-test
+                                                             sparkling.accumulator-test
                                                              ]}
                        }
             :source-paths ["src/clojure"]
