@@ -31,11 +31,6 @@ happily accepted!"
            [scala.reflect ClassTag$]))
 
 
-;; TODO: accumulators
-;; http://spark.apache.org/docs/latest/programming-guide.html#accumulators
-;; but, in a separate namespace (sparkling.accumulator)
-
-
 ;; sparkling makes extensive use of kryo to serialize and deserialize clojure functions
 ;; and data structures. Here we ensure that these properties are set so they are inhereted
 ;; into any `SparkConf` objects that are created.
