@@ -22,7 +22,7 @@
                           (getMetaData []
                             (proxy [ResultSetMetaData] []
                               (getColumnCount [] 1)
-                              (getColumnLabel [index] "id-column")
+                              (getColumnLabel [index] "id_column")
                               ))
                           (getObject [index]
                             (first @data)
@@ -41,9 +41,11 @@
                  (conf/master "local[*]")
                  (conf/app-name "jdbc-test"))]
     (s/with-context c conf
-                    (testing
-                        "load stuff from jdbc"
-                      (is (= (s/collect (load-jdbc c get-connection "query" 0 10 1))
-                             [{:id-column 1} {:id-column 2} {:id-column 3} {:id-column 4} {:id-column 5} {:id-column 6} {:id-column 7} {:id-column 8} {:id-column 9} {:id-column 10}]
-                             )
-                          )))))
+      (testing
+          "load stuff from jdbc"
+        (are [actual expected] (= actual expected)
+             (s/collect (load-jdbc c get-connection "query" 0 10 1))
+             [{:id-column 1} {:id-column 2} {:id-column 3} {:id-column 4} {:id-column 5} {:id-column 6} {:id-column 7} {:id-column 8} {:id-column 9} {:id-column 10}]
+             
+             (s/collect (load-jdbc c get-connection "query" 0 10 1 keyword))
+             [{:id_column 1} {:id_column 2} {:id_column 3} {:id_column 4} {:id_column 5} {:id_column 6} {:id_column 7} {:id_column 8} {:id_column 9} {:id_column 10}])))))

@@ -44,29 +44,37 @@
 
 (def clojurify (comp keyword mangle))
 
-(defn get-columns [^ResultSetMetaData meta]
-  (let [column-count (.getColumnCount meta)]
-    (seq-from-countable column-count (fn [^long idx] (clojurify (.getColumnLabel meta idx))))))
+(defn get-columns
+  ([^ResultSetMetaData meta]
+   (get-columns meta clojurify))
+  ([^ResultSetMetaData meta result-set-fn]
+   (let [column-count (.getColumnCount meta)]
+     (seq-from-countable column-count (fn [^long idx] (result-set-fn (.getColumnLabel meta idx)))))))
 
-(defn result-set-to-object-array [^ResultSet result-set]
-              #_(JdbcRDD/resultSetToObjectArray result-set) ;; TODO: Returning only an array of the value is about half the time (8sec instead of 16sec) for viewsclicks data!
+(defn result-set-to-object-array
+  ([^ResultSet result-set]
+   (result-set-to-object-array result-set clojurify))
+  ([^ResultSet result-set result-set-fn]
+   #_(JdbcRDD/resultSetToObjectArray result-set) ;; TODO: Returning only an array of the value is about half the time (8sec instead of 16sec) for viewsclicks data!
+   (let [^ResultSetMetaData meta (.getMetaData result-set)]
+     (zipmap (get-columns meta result-set-fn)
+             (seq-from-countable (.getColumnCount meta) (fn [^long idx] (.getObject result-set idx)))))))
 
-              (let [^ResultSetMetaData meta (.getMetaData result-set)]
-                (zipmap (get-columns meta)
-                        (seq-from-countable (.getColumnCount meta) (fn [^long idx] (.getObject result-set idx))))))
-
-(defn load-jdbc [^JavaSparkContext sc get-connection query min max partitions] ;; TODO: Think about pushing name mangling to the interface of this function!
-  (info "Defining a jdbc-rdd:" query min max partitions)
-  (JavaRDD/fromRDD
+(defn load-jdbc
+  ([^JavaSparkContext sc get-connection query min max partitions]
+   (load-jdbc sc get-connection query min max partitions clojurify))
+  ([^JavaSparkContext sc get-connection query min max partitions result-set-fn]
+   (info "Defining a jdbc-rdd:" query min max partitions)
+   (JavaRDD/fromRDD
     (JdbcRDD. (.sc sc)
               (scala/function0 get-connection)
               query
               (long min)
               (long max)
               (int partitions)
-              (scala/function1 result-set-to-object-array)
+              (scala/function1 #(result-set-to-object-array % result-set-fn))
               OBJECT-CLASS-TAG)
-    OBJECT-CLASS-TAG))
+    OBJECT-CLASS-TAG)))
 
 
 ;; (= #inst "2014-09-01T22:00:00.000-00:00" (.parse (java.text.SimpleDateFormat. "yyyy-MM-dd") "2014-09-02"))
