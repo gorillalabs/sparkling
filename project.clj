@@ -21,23 +21,19 @@
                            ;[org.scala-lang/scala-library "2.10.4" :scope "provided"]
                            [com.esotericsoftware.kryo/kryo "2.24.0" :scope "provided"]
                            ;[commons-codec "1.10" :scope "provided"]
-
-
-                           [org.apache.spark/spark-core_2.10 "1.2.1" :scope "provided"
-                            :exclusions [commons-net commons-codec commons-io]]
                            [commons-net "3.1"]
                            [commons-codec "1.4"]
                            [commons-io "2.4"]
 
-
                            [org.apache.avro/avro "1.7.7" :scope "provided"
-                            :exclusions [com.thoughtworks.paranamer/paranamer]]
+                            :exclusions [com.thoughtworks.paranamer/paranamer ]]
                            [org.apache.avro/avro-mapred "1.7.7" :scope "provided" :classifier "hadoop2"
-                            :exclusions [org.mortbay.jetty/jetty-util
+                            :exclusions [io.netty/netty
+                                         org.mortbay.jetty/jetty-util
                                          org.mortbay.jetty/jetty
                                          org.mortbay.jetty/servlet-api]]]
 
-            :aliases {"all" ["with-profile" "dev:dev,spark-1.1.0,hadoop-2.6.0:dev,spark-1.2.1,hadoop-2.6.0"]
+            :aliases {"all" ["with-profile" "dev,provided:dev,spark-1.1.0,hadoop-2.6.0:dev,spark-1.2.1,hadoop-2.6.0"]
                       }
             :profiles {:dev                {:dependencies   [[criterium "0.4.3"]]
                                             :plugins        [[lein-dotenv "RELEASE"]
@@ -86,6 +82,8 @@
                                                              sparkling.rdd.hadoopAvro-test
                                                              sparkling.rdd.jdbc-test
                                                              ]}
+                       :provided {:dependencies [[org.apache.spark/spark-core_2.10 "1.2.1" :scope "provided"
+                                                  :exclusions [commons-net commons-codec commons-io]]]}
                        }
             :source-paths ["src/clojure"]
             :java-source-paths ["src/java"]
