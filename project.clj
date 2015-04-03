@@ -25,7 +25,6 @@
                            [commons-codec "1.4"]
                            [commons-io "2.4"]
 
-
                            [org.apache.avro/avro "1.7.7" :scope "provided"
                             :exclusions [com.thoughtworks.paranamer/paranamer ]]
                            [org.apache.avro/avro-mapred "1.7.7" :scope "provided" :classifier "hadoop2"
@@ -34,7 +33,7 @@
                                          org.mortbay.jetty/jetty
                                          org.mortbay.jetty/servlet-api]]]
 
-            :aliases {"all" ["with-profile" "dev:dev,spark-1.1.0,hadoop-2.6.0:dev,spark-1.2.1,hadoop-2.6.0"]
+            :aliases {"all" ["with-profile" "dev,provided:dev,spark-1.1.0,hadoop-2.6.0:dev,spark-1.2.1,hadoop-2.6.0"]
                       }
             :profiles {:dev                {:dependencies   [[criterium "0.4.3"]]
                                             :plugins        [[lein-dotenv "RELEASE"]
