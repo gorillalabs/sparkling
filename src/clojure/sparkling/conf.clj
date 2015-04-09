@@ -79,3 +79,17 @@
 (defn to-string
   [conf]
   (.toDebugString conf))
+
+(defn set-sparkling-registrator
+  "Sets the kryo registrator to the one provided by Sparkling.
+  Make sure to require sparkling.serialization namespace in your code, as otherwise the sparkling.serialization.Registrator class will not be available under special circumstances (REPL, dependency checkout in leiningen)...
+
+  If you need to add your own registrations either create your own registrator or extend the Sparkling registrator with something like
+  (extend-type sparkling.serialization.Registrator
+             sparkling.serialization/RegistrationProtocol
+             (register-classes [#^KryoRegistrator _ #^Kryo kryo]
+             ;; register your classes here!
+             ))
+  "
+  [conf]
+  (set conf "spark.kryo.registrator" "sparkling.serialization.Registrator"))

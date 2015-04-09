@@ -39,9 +39,10 @@ public class Utils {
     }
 
     public static IFn readIFn(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        String clazz = "", namespace = "";
         try {
-            String clazz = (String) in.readObject();
-            String namespace = clazz.split("\\$")[0];
+            clazz = (String) in.readObject();
+            namespace = clazz.split("\\$")[0];
 
             requireNamespace(namespace);
 
@@ -49,7 +50,7 @@ public class Utils {
             logger.debug("Deserializing " + f );
             return f;
         } catch (Exception e) {
-            logger.warn("Error deserializing object",e);
+            logger.warn("Error deserializing object (clazz: " + clazz + ", namespace: " + namespace + ")" ,e);
         }
         return null;
     }

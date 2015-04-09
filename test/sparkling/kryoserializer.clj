@@ -1,12 +1,12 @@
 (ns sparkling.kryoserializer
-  (:import [com.esotericsoftware.kryo Kryo]
-           [sparkling.serialization BaseRegistrator]
-           [org.apache.spark.serializer KryoRegistrator])
-  (:require [carbonite.buffer :as buffer]))
+  (:require [carbonite.buffer :as buffer]
+            [sparkling.serialization])
+  (:import [org.apache.spark.serializer KryoSerializer]
+           )
+  )
 
-(defn kryo-serializer [& {:keys [^KryoRegistrator registrator] :or {registrator (BaseRegistrator.)}}]
-  (let [kryo (Kryo.)]
-    (.registerClasses registrator kryo)
+(defn kryo-serializer [conf]
+  (let [kryo (.newKryo (KryoSerializer. conf))]
     kryo))
 
 (defn round-trip [registry o]

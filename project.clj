@@ -1,4 +1,4 @@
-(defproject gorillalabs/sparkling "1.1.2-SNAPSHOT"
+(defproject gorillalabs/sparkling "1.2.0-SNAPSHOT"
             :description "A Clojure Library for Apache Spark"
             :url "https://github.com/chrisbetz/sparkling"
             :license {:name "Eclipse Public License"
@@ -8,6 +8,7 @@
             :dependencies [[org.clojure/clojure "1.6.0" :scope "provided"]
                            [org.clojure/tools.logging "0.3.1"]
                            [org.slf4j/slf4j-api "1.7.5" :scope "provided"]
+                           [clj-time "0.8.0"]
                            [com.twitter/carbonite "1.4.0"
                             :exclusions [com.twitter/chill-java com.esotericsoftware.kryo/kryo]]
                            [com.twitter/chill_2.10 "0.5.2"
