@@ -7,6 +7,9 @@ import org.objenesis.strategy.StdInstantiatorStrategy;
 import scala.Tuple2;
 import com.twitter.chill.Tuple2Serializer;
 
+/**
+ * @deprecated Use sparkling.serialization instead! See sparkling.serialization-test.
+ */
 public class BaseRegistrator implements KryoRegistrator {
 
     protected void register(Kryo kryo) {

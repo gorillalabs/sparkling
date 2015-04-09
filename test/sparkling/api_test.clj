@@ -4,11 +4,12 @@
            [org.apache.spark.api.java JavaSparkContext JavaRDD])
   (:use clojure.test)
   (:require [clojure.set]
-    [sparkling.api :as s]
+            [sparkling.api :as s]
             [sparkling.conf :as conf]
             [sparkling.scalaInterop :as si]
-            ;; this is to have the reader macro sparkling/tuple defined
+    ;; this is to have the reader macro sparkling/tuple defined
             [sparkling.destructuring :as sd]
+            [sparkling.serialization :as ser]
             [sparkling.kryoserializer :as ks]
             ))
 
@@ -37,13 +38,15 @@
 
 
 (defn identity-vec [& args]
-              (vec args))
+  (vec args))
 
 (defn vec$ [x]
   (when x (vec x)))
 
 (deftest spark-context
   (let [conf (-> (conf/spark-conf)
+                 (conf/set-sparkling-registrator)
+                 (conf/set "spark.kryo.registrationRequired" "true")
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))]
     (s/with-context c conf
@@ -60,41 +63,47 @@
                       (is (= (-> (s/parallelize c [1 2 3 4 5]) s/collect vec) [1 2 3 4 5]))))))
 
 (deftest serializable-functions
+  (let [conf (-> (conf/spark-conf)
+                 (conf/set-sparkling-registrator)
+                 (conf/set "spark.kryo.registrationRequired" "false")
+                 (conf/master "local[*]")
+                 (conf/app-name "api-test"))
+        kryo (ks/kryo-serializer conf)                    ; ((ks/round-trip kryo (s/comp (partial * 2) inc)) 1)
+          myfn (fn [x] (* 2 x))]
+      #_(testing
+        "inline op returns a serializable fn"
+        (type myfn) => :serializable.fn/serializable-fn)
 
-  (let [kryo (ks/kryo-serializer)                           ; ((ks/round-trip kryo (s/comp (partial * 2) inc)) 1)
-        myfn (fn [x] (* 2 x))]
-    #_(testing
-      "inline op returns a serializable fn"
-      (type myfn) => :serializable.fn/serializable-fn)
+      (testing
+        "we can serialize and deserialize it to a function"
+        (is (fn? (ks/round-trip kryo myfn))))
 
-    (testing
-      "we can serialize and deserialize it to a function"
-      (is (fn? (ks/round-trip kryo myfn))))
+      (testing (is (= 6
+                      ((ks/round-trip kryo myfn) 3))))
 
-    (testing (is (= 6
-                    ((ks/round-trip kryo myfn) 3))))
+      #_(testing
+        "it round-trips back to a serializable fn"
+        (type (-> myfn serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
 
-    #_(testing
-      "it round-trips back to a serializable fn"
-      (type (-> myfn serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
+      #_(testing :comp
+            "it round-trips back to a serializable fn (comp)"
+            (type (-> (s/comp myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
 
-    #_(testing :comp
-          "it round-trips back to a serializable fn (comp)"
-          (type (-> (s/comp myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
+      #_(testing :comp
+            "it round-trips back to a serializable fn (comp)"
+            (type (-> (s/comp myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
 
-    #_(testing :comp
-          "it round-trips back to a serializable fn (comp)"
-          (type (-> (s/comp myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
+      #_(testing :comp ;; this won't work due to a limitation in serializable-fn
+            "it round-trips back to a serializable fn (comp)"
+            (type (-> (s/comp myfn myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
 
-    #_(testing :comp ;; this won't work due to a limitation in serializable-fn
-          "it round-trips back to a serializable fn (comp)"
-          (type (-> (s/comp myfn myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
-
-    ))
+      ))
 
 (deftest transformations
 
   (let [conf (-> (conf/spark-conf)
+                 (conf/set-sparkling-registrator)
+                 (conf/set "spark.kryo.registrationRequired" "true")
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))]
     (s/with-context c conf
@@ -282,9 +291,9 @@
                       (is (clojure.set/subset?
                             (apply hash-set
                                    (-> (s/parallelize c [0 1 2 3 4 5 6 7 8 9 10 11])
-                                (s/sample false 0.5 2)
-                                s/collect
-                                ))
+                                       (s/sample false 0.5 2)
+                                       s/collect
+                                       ))
                             #{0 1 2 3 4 5 6 7 8 9 10 11}
                             )))
 
@@ -349,7 +358,7 @@
                       (is (equals-ignore-order? (-> (s/parallelize c [["Four score and seven"]
                                                                       ["years ago"]])
                                                     (s/flat-map-to-pair (fn [x] (map (fn [y] (s/tuple y 1))
-                                                                                       (clojure.string/split (first x) #" "))))
+                                                                                     (clojure.string/split (first x) #" "))))
                                                     (s/map untuple)
                                                     s/collect
                                                     vec)
@@ -410,6 +419,8 @@
 (deftest actions
 
   (let [conf (-> (conf/spark-conf)
+                 (conf/set-sparkling-registrator)
+                 (conf/set "spark.kryo.registrationRequired" "true")
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))]
     (s/with-context c conf
@@ -552,6 +563,8 @@
   partitioning
 
   (let [conf (-> (conf/spark-conf)
+                 (conf/set-sparkling-registrator)
+                 (conf/set "spark.kryo.registrationRequired" "true")
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))]
     (s/with-context c conf
@@ -710,11 +723,12 @@
   other-stuff
 
   (let [conf (-> (conf/spark-conf)
+                 (conf/set-sparkling-registrator)
+                 (conf/set "spark.kryo.registrationRequired" "false")
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))
-        kryo (ks/kryo-serializer)]
+        kryo (ks/kryo-serializer conf)]
     (s/with-context c conf
-
 
                     (testing
                       "roundtrip composed fns"
