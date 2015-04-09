@@ -5,13 +5,14 @@
   (:import [com.twitter.chill Tuple2Serializer Tuple3Serializer]
            [org.objenesis.strategy StdInstantiatorStrategy]
            [org.apache.spark.serializer KryoRegistrator]
-           [scala Tuple2 Tuple3]
+           [scala Tuple2 Tuple3 None$]
            [com.esotericsoftware.kryo Kryo Serializer KryoSerializable]
            [scala.collection.mutable WrappedArray$ofRef ArrayBuffer]
            [java.util ArrayList Currency EnumSet List]
            [clojure.lang RT$DefaultComparator MethodImplCache AFunction]
            [org.apache.spark.util.collection CompactBuffer]
-           [sparkling.serialization AbstractSerializableWrappedIFn]))
+           [sparkling.serialization AbstractSerializableWrappedIFn]
+           [scala.collection.immutable Nil$]))
 
 (def register-class (memfn #^Kryo register #^Class clazz))
 (def register-class-with-id (memfn #^Kryo register #^Class clazz id))
@@ -61,6 +62,7 @@
   (register kryo BigInteger)
   (register kryo ArrayList)
   (register kryo Class)
+  (register kryo Object)
   (register-array-type kryo Object)
   (register-array-type kryo String)
   (register-array-type kryo List)
@@ -92,11 +94,20 @@
   (register kryo ArrayBuffer)
   (register-array-type kryo ArrayBuffer)
   (register kryo scala.reflect.ClassTag$$anon$1)
+  (register kryo scala.reflect.ManifestFactory$$anon$2)
+  (register kryo None$)
+  (register kryo Nil$)
+  (register kryo scala.reflect.ManifestFactory$$anon$10)
   )
 
 (defn register-spark [^Kryo kryo]
   (register-array-type kryo CompactBuffer)
-  )
+  (register kryo org.apache.spark.util.collection.OpenHashMap$mcJ$sp)
+  (register kryo org.apache.spark.util.collection.OpenHashSet)
+  (register kryo org.apache.spark.util.collection.OpenHashSet$Hasher)
+  (register kryo org.apache.spark.util.collection.BitSet)
+  (register kryo org.apache.spark.util.collection.OpenHashMap$$anonfun$1)
+  (register kryo org.apache.spark.util.collection.OpenHashMap$$anonfun$2))
 
 
 
