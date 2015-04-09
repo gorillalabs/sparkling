@@ -20,10 +20,10 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 public class ClojureAvroInputFormat<K, V>
         extends FileInputFormat<K, V> {
     private static class Vars {
-        private static final String NS = "parkour.conf";
-        private static final Var configuration = RT.var(NS, "configuration");
+        private static final String PARKOUR_CONF_NS = "parkour.conf";
+        private static final Var configuration = RT.var(PARKOUR_CONF_NS, "configuration");
         static {
-            RT.var("clojure.core", "require").invoke(Symbol.intern(NS));
+            RT.var("clojure.core", "require").invoke(Symbol.intern(PARKOUR_CONF_NS));
         }
     }
 
