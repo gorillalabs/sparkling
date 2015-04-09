@@ -215,10 +215,13 @@ happily accepted!"
   [f zero-value rdd]
   (.fold rdd zero-value (function2 f)))
 
+(defn tuple-by [f]
+  (fn [x] (tuple (f x) x)))
+
 (defn key-by
   "Creates tuples of the elements in this RDD by applying `f`."
   [f ^JavaRDD rdd ]
-  (map-to-pair (fn [x] (tuple (f x) x)) rdd))
+  (map-to-pair (tuple-by f) rdd))
 
 (defn keys
   "Return an RDD with the keys of each tuple."
