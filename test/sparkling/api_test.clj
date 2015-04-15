@@ -11,7 +11,7 @@
             [sparkling.destructuring :as sd]
             [sparkling.serialization :as ser]
             [sparkling.kryoserializer :as ks]
-            ))
+            [sparkling.testutils.records.domain :as domain]))
 
 (defn equals-ignore-order? [c1 c2]
   (= (frequencies c1) (frequencies c2)))
@@ -68,36 +68,36 @@
                  (conf/set "spark.kryo.registrationRequired" "false")
                  (conf/master "local[*]")
                  (conf/app-name "api-test"))
-        kryo (ks/kryo-serializer conf)                    ; ((ks/round-trip kryo (s/comp (partial * 2) inc)) 1)
-          myfn (fn [x] (* 2 x))]
-      #_(testing
-        "inline op returns a serializable fn"
-        (type myfn) => :serializable.fn/serializable-fn)
+        kryo (ks/kryo-serializer conf)                      ; ((ks/round-trip kryo (s/comp (partial * 2) inc)) 1)
+        myfn (fn [x] (* 2 x))]
+    #_(testing
+      "inline op returns a serializable fn"
+      (type myfn) => :serializable.fn/serializable-fn)
 
-      (testing
-        "we can serialize and deserialize it to a function"
-        (is (fn? (ks/round-trip kryo myfn))))
+    (testing
+      "we can serialize and deserialize it to a function"
+      (is (fn? (ks/round-trip kryo myfn))))
 
-      (testing (is (= 6
-                      ((ks/round-trip kryo myfn) 3))))
+    (testing (is (= 6
+                    ((ks/round-trip kryo myfn) 3))))
 
-      #_(testing
-        "it round-trips back to a serializable fn"
-        (type (-> myfn serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
+    #_(testing
+      "it round-trips back to a serializable fn"
+      (type (-> myfn serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
 
-      #_(testing :comp
-            "it round-trips back to a serializable fn (comp)"
-            (type (-> (s/comp myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
+    #_(testing :comp
+          "it round-trips back to a serializable fn (comp)"
+          (type (-> (s/comp myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
 
-      #_(testing :comp
-            "it round-trips back to a serializable fn (comp)"
-            (type (-> (s/comp myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
+    #_(testing :comp
+          "it round-trips back to a serializable fn (comp)"
+          (type (-> (s/comp myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
 
-      #_(testing :comp ;; this won't work due to a limitation in serializable-fn
-            "it round-trips back to a serializable fn (comp)"
-            (type (-> (s/comp myfn myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
+    #_(testing :comp ;; this won't work due to a limitation in serializable-fn
+          "it round-trips back to a serializable fn (comp)"
+          (type (-> (s/comp myfn myfn myfn myfn myfn) serializable.fn/serialize serializable.fn/deserialize)) => :serializable.fn/serializable-fn)
 
-      ))
+    ))
 
 (deftest transformations
 
@@ -691,6 +691,9 @@
                         (is (= b-partitioner (s/partitioner (s/partitioner-aware-union re-partitioned-rdd re-partitioned-rdd)))))
 
 
+
+
+
                       #_(testing
                         "union keeps the hash partitioner if told to"
                         (is (= b-partitioner (s/partitioner
@@ -717,7 +720,98 @@
                                     vec)
                                 [1 2 3 4 11 12 13 21 22 23]))))
 
-                      ))))
+                      )
+
+                    )))
+
+
+
+(deftest record-partitioner
+
+  (let [conf (-> (conf/spark-conf)
+                 (conf/set "spark.kryo.registrator" "sparkling.testutils.records.registrator.Registrator")
+                 (conf/master "local[*]")
+                 (conf/app-name "hadoop-record-test"))]
+    (s/with-context c conf
+
+                    (let [time-partitioner (s/hash-partitioner
+                                             :timestamp
+                                             2)
+                          tweets [(domain/map->tweet {:username "miguno", :tweet "Rock: Nerf paper, scissors is fine.", :timestamp 1366150681})
+                                  (domain/map->tweet {:username "BlizzardCS", :tweet "Works as intended.  Terran is IMBA.", :timestamp 1366154481})
+                                  (domain/map->tweet {:username "DarkTemplar", :tweet "From the shadows I come!", :timestamp 1366154681})
+                                  (domain/map->tweet {:username "VoidRay", :tweet "Prismatic core online!", :timestamp 1366160000})
+                                  (domain/map->tweet {:username "VoidRay", :tweet "Fire at will, commander.", :timestamp 1366160010})
+                                  (domain/map->tweet {:username "DarkTemplar", :tweet "I am the blade of Shakuras!", :timestamp 1366174681})
+                                  (domain/map->tweet {:username "Immortal", :tweet "I return to serve!", :timestamp 1366175681})
+                                  (domain/map->tweet {:username "Immortal", :tweet "En Taro Adun!", :timestamp 1366176283})
+                                  (domain/map->tweet {:username "VoidRay", :tweet "There is no greater void than the one between your ears.", :timestamp 1366176300})
+                                  (domain/map->tweet {:username "DarkTemplar", :tweet "I strike from the shadows!", :timestamp 1366184681})]
+                          rdd (-> (s/parallelize c
+                                                 tweets 1)
+                                  (s/map-to-pair (fn [tweet] (s/tuple tweet tweet)))
+                                  )
+
+                          partitioned-rdd (->
+                                            rdd
+                                            (s/partition-by time-partitioner)
+                                            )]
+                      (testing
+                        "rekey keeps the hash partitioner if told to"
+                        (is (= time-partitioner (s/partitioner partitioned-rdd))))
+
+                      (testing
+                        "rekey does keep all elements"
+                        (is (equals-ignore-order?
+                              (s/collect (s/values partitioned-rdd))
+                               tweets
+                               )))))))
+
+
+
+(defn test-fn [x] (domain/time x))
+
+(deftest protocol-partitioner
+
+  (let [conf (-> (conf/spark-conf)
+                 (conf/set "spark.kryo.registrator" "sparkling.testutils.records.registrator.Registrator")
+                 (conf/master "local[*]")
+                 (conf/app-name "hadoop-record-test"))]
+    (s/with-context c conf
+
+                    (let [time-partitioner (s/hash-partitioner
+                                             test-fn
+                                             2)
+                          tweets [(domain/map->tweet {:username "miguno", :tweet "Rock: Nerf paper, scissors is fine.", :timestamp 1366150681})
+                                  (domain/map->tweet {:username "BlizzardCS", :tweet "Works as intended.  Terran is IMBA.", :timestamp 1366154481})
+                                  (domain/map->tweet {:username "DarkTemplar", :tweet "From the shadows I come!", :timestamp 1366154681})
+                                  (domain/map->tweet {:username "VoidRay", :tweet "Prismatic core online!", :timestamp 1366160000})
+                                  (domain/map->tweet {:username "VoidRay", :tweet "Fire at will, commander.", :timestamp 1366160010})
+                                  (domain/map->tweet {:username "DarkTemplar", :tweet "I am the blade of Shakuras!", :timestamp 1366174681})
+                                  (domain/map->tweet {:username "Immortal", :tweet "I return to serve!", :timestamp 1366175681})
+                                  (domain/map->tweet {:username "Immortal", :tweet "En Taro Adun!", :timestamp 1366176283})
+                                  (domain/map->tweet {:username "VoidRay", :tweet "There is no greater void than the one between your ears.", :timestamp 1366176300})
+                                  (domain/map->tweet {:username "DarkTemplar", :tweet "I strike from the shadows!", :timestamp 1366184681})]
+                          rdd (-> (s/parallelize c
+                                                 tweets 1)
+                                  (s/map-to-pair (fn [tweet] (s/tuple tweet tweet)))
+                                  )
+
+                          partitioned-rdd (->
+                                            rdd
+                                            (s/partition-by time-partitioner)
+                                            )]
+                      (testing
+                        "rekey keeps the hash partitioner if told to"
+                        (is (= time-partitioner (s/partitioner partitioned-rdd))))
+
+                      (testing
+                        "rekey does keep all elements"
+                        (is (equals-ignore-order?
+                              (s/collect (s/values partitioned-rdd))
+                              tweets
+                              )))))))
+
 
 (deftest
   other-stuff
@@ -735,3 +829,6 @@
                       (is (= ((ks/round-trip kryo (comp (partial * 2) inc)) 1) 4))
                       )
                     )))
+
+
+

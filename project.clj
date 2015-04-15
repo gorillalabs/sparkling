@@ -82,11 +82,11 @@
                                                              sparkling.debug
                                                              sparkling.rdd.hadoopAvro
                                                              sparkling.rdd.jdbc
+                                                             sparkling.testutils.records.domain
+                                                             sparkling.testutils.records.registrator
                                                              sparkling.api-test
                                                              sparkling.function-test
                                                              sparkling.conf-test
-                                                             sparkling.rdd.domain
-                                                             sparkling.rdd.registrator
                                                              sparkling.rdd.hadoopAvro-test
                                                              sparkling.rdd.jdbc-test
                                                              sparkling.accumulator-test

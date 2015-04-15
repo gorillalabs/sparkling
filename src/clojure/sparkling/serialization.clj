@@ -116,6 +116,7 @@
 
 
 (defn register-base-classes [kryo]
+  (log/info "Registering base classes for kryo")
   (carbonite/default-registry kryo)
   (carbonite/register-serializers kryo (serializer/sorted-collections))
   (carbonite/register-serializers kryo (serializer/joda-serializers))
@@ -140,12 +141,15 @@
   (#^void registerClasses [#^KryoRegistrator this #^Kryo kryo]
     (try
       (.setInstantiatorStrategy kryo (StdInstantiatorStrategy.))
+      (require 'clojure.tools.logging)
+      (require 'carbonite.api)
+      (require 'sparkling.serializers)
       ; (.setRegistrationRequired kryo true)
       (register-base-classes kryo)
       (register-classes this kryo)                          ;; this is our extension point! extend-type this with the RegistrationProtocol to register your own classes.
 
       (catch Exception e
-        (RuntimeException. "Failed to register kryo!" e)))))
+        (throw (RuntimeException. "Failed to register kryo!" e))))))
 
 
 

@@ -1,2 +1,2 @@
-{com.miguno.avro/Tweet sparkling.rdd.domain/->tweet
+{com.miguno.avro/Tweet sparkling.testutils.records.domain/->tweet
  }

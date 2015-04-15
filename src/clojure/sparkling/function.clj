@@ -1,4 +1,5 @@
-(ns sparkling.function)
+(ns sparkling.function
+  )
 
 (defmacro gen-function
   [clazz wrapper-name]

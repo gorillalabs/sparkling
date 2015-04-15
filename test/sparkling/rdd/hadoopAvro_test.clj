@@ -1,12 +1,12 @@
 (ns sparkling.rdd.hadoopAvro-test
   (:require [sparkling.rdd.hadoopAvro :refer :all]
-            [sparkling.rdd.registrator]
+            [sparkling.testutils.records.registrator]
             [sparkling.api :as s]
             [sparkling.conf :as conf]
             [abracad.avro :as avro]
             [clojure.java.io]
             [clojure.test :refer :all]
-            [sparkling.rdd.domain :as domain]))
+            [sparkling.testutils.records.domain :as domain]))
 
 (defn test-schema "Loads a schema" []
   (with-open [schema-stream (clojure.java.io/input-stream "data/avro/twitter.avsc")]
@@ -18,13 +18,13 @@
 (deftest hadoopAvro
 
   (let [conf (-> (conf/spark-conf)
-                 (conf/set "spark.kryo.registrator" "sparkling.rdd.registrator.Registrator")
+                 (conf/set "spark.kryo.registrator" "sparkling.testutils.records.registrator.Registrator")
                  (conf/master "local[*]")
                  (conf/app-name "hadoop-avro-test"))]
     (s/with-context c conf
                     (testing
                         "load stuff from hadoop using AVRO"
-                      (is (= (s/collect (load-avro-file c "data/avro/twitter.avro" :requires ['sparkling.rdd.domain])) ;; the requires is not necessary here, as it will be required from the task-deserializer. However, in your cluster you might need it.
+                      (is (= (s/collect (load-avro-file c "data/avro/twitter.avro" :requires ['sparkling.testutils.records.domain])) ;; the requires is not necessary here, as it will be required from the task-deserializer. However, in your cluster you might need it.
                              [(domain/map->tweet {:username "miguno", :tweet "Rock: Nerf paper, scissors is fine.", :timestamp 1366150681})
                               (domain/map->tweet {:username "BlizzardCS", :tweet "Works as intended.  Terran is IMBA.", :timestamp 1366154481})
                               (domain/map->tweet {:username "DarkTemplar", :tweet "From the shadows I come!", :timestamp 1366154681})

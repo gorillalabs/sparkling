@@ -1,10 +1,8 @@
 ;; ## Utilities and macros for dealing with kryo
 ;;
 (ns sparkling.kryo
-  (:import [scala.reflect ClassTag$]))
+  )
 
-;; lol scala
-(def ^:no-doc OBJECT-CLASS-TAG (.apply ClassTag$/MODULE$ java.lang.Object))
 
 
 (defmacro defregistrator

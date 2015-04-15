@@ -11,15 +11,12 @@
   (:import [org.apache.spark SparkConf])
   (:refer-clojure :exclude (set get contains remove)))
 
-(defn spark-conf
-  []
-  (SparkConf.))
 
 (defn master
   ([conf]
-     (master conf "local[*]"))
+   (master conf "local[*]"))
   ([conf master]
-     (.setMaster conf master)))
+   (.setMaster conf master)))
 
 (defn app-name
   [conf name]
@@ -31,15 +28,15 @@
 
 (defn set
   ([conf key val]
-     (.set conf key val))
+   (.set conf key val))
   ([conf amap]
-     (loop [c conf
-            aseq (seq amap)]
-       (if aseq
-         (let [[k v] (first aseq)
-               c (set c k v)]
-           (recur c (next aseq)))
-         c))))
+   (loop [c conf
+          aseq (seq amap)]
+     (if aseq
+       (let [[k v] (first aseq)
+             c (set c k v)]
+         (recur c (next aseq)))
+       c))))
 
 (defn set-if-missing
   [conf key val]
@@ -47,15 +44,15 @@
 
 (defn set-executor-env
   ([conf key val]
-     (.setExecutorEnv conf key val))
+   (.setExecutorEnv conf key val))
   ([conf amap]
-     (loop [c conf
-            aseq (seq amap)]
-       (if aseq
-         (let [[k v] (first aseq)
-               c (set-executor-env c k v)]
-           (recur c (next aseq)))
-         c))))
+   (loop [c conf
+          aseq (seq amap)]
+     (if aseq
+       (let [[k v] (first aseq)
+             c (set-executor-env c k v)]
+         (recur c (next aseq)))
+       c))))
 
 (defn remove
   [conf key]
@@ -63,9 +60,9 @@
 
 (defn get
   ([conf key]
-     (.get conf key))
+   (.get conf key))
   ([conf key default]
-     (.get conf key default)))
+   (.get conf key default)))
 
 (defn get-all
   [conf]
@@ -93,3 +90,10 @@
   "
   [conf]
   (set conf "spark.kryo.registrator" "sparkling.serialization.Registrator"))
+
+(defn spark-conf
+  []
+  (-> (SparkConf.)
+      (set "spark.serializer" "org.apache.spark.serializer.KryoSerializer")
+      (set-sparkling-registrator)
+      ))
