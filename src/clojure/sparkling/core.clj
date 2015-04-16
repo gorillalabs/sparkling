@@ -9,6 +9,7 @@
 
   (:refer-clojure :exclude [map reduce first count take distinct filter group-by values partition-by keys])
   (:require [clojure.tools.logging :as log]
+            [sparkling.destructuring :as ds]
             [sparkling.function :refer [flat-map-function
                                         flat-map-function2
                                         function
@@ -356,9 +357,6 @@
     si/OBJECT-CLASS-TAG
     ))
 
-
-
-
 (defn join
   "When called on `rdd` of type (K, V) and (K, W), returns a dataset of
   (K, (V, W)) pairs with all pairs of elements for each key."
@@ -371,6 +369,35 @@
    or the pair (K, (V, nil)) if no elements in other have key K."
   [rdd other]
   (.leftOuterJoin rdd other))
+
+
+;; TODO: Add tests
+(defn key-by-fn "Wraps a function f to be called with the value v of a tuple from spark,
+so that the wrapped function returns a tuple [f(v),v]"
+  [f]
+  (fn [^Tuple2 t]
+    (let [v (ds/value t)]
+      (tuple (f v) v))))
+
+(declare rekey)
+
+;; TODO: Add tests
+(defn intersect-by-key
+  "Intersects rdd1 with rdd2 by key,
+  i.e. rdd1 is rekeyed by keyfn,
+  then joined to keep only those elements with keys in rdd2
+  and rekeyed again with keybackfn to bring back the original structure.
+
+  Remember, rekey is performed by partition,
+  thus keyfn and keybackfn and the original partitioning should work with the given partitioner."
+  [rdd1 keyfn keybackfn rdd2]
+  (->>
+    rdd1
+    (rekey (key-by-fn keyfn))
+    (join rdd2)
+    (map-values (ds/second-value-fn identity))
+    (rekey (key-by-fn keybackfn))))
+
 
 (defn cartesian
   "Creates the cartesian product of two RDDs returning an RDD of pairs"
