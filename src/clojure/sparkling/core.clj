@@ -114,17 +114,18 @@
   [spark-context filename]
   (.textFile spark-context filename))
 
-(defn parallelize
+(defn into-rdd
   "Distributes a local collection to form/return an RDD"
   ([spark-context lst] (.parallelize spark-context lst))
   ([spark-context num-slices lst] (.parallelize spark-context lst num-slices)))
 
-(defn parallelize-pairs
+(defn into-pair-rdd
   "Distributes a local collection to form/return an RDD"
   ([spark-context lst] (.parallelizePairs spark-context lst))
   ([spark-context num-slices lst] (.parallelizePairs spark-context lst num-slices)))
 
-
+(def parallelize into-rdd )
+(def parallelize-pairs into-pair-rdd)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
