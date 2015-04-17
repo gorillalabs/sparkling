@@ -34,7 +34,7 @@ public class Utils {
             out.writeObject(f.getClass().getName());
             out.writeObject(f);
         } catch (Exception e) {
-            logger.warn("Error serializing object",e);
+            logger.warn("Error serializing IFn " + f,e);
         }
     }
 
