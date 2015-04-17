@@ -132,10 +132,6 @@
 
   )
 
-(defprotocol RegistrationProtocol
-  (register-classes [#^KryoRegistrator registrator #^Kryo kryo]))
-
-
 (deftype Registrator []
   KryoRegistrator
   (#^void registerClasses [#^KryoRegistrator this #^Kryo kryo]
@@ -144,11 +140,17 @@
       (require 'clojure.tools.logging)
       (require 'carbonite.api)
       (require 'sparkling.serializers)
-      ; (.setRegistrationRequired kryo true)
       (register-base-classes kryo)
-      (register-classes this kryo)                          ;; this is our extension point! extend-type this with the RegistrationProtocol to register your own classes.
 
       (catch Exception e
+        (try
+          (log/warn (str "Error registering serializer" this) e)
+          (catch Exception e1
+            ;(binding [*out* *err*]
+              (println "Failed to not log properly the expetion " e " while registering classes from " this " to " kryo ".\nLogging failure was " e1 ".")
+            ;)
+            (.printStackTrace e)
+            ))
         (throw (RuntimeException. "Failed to register kryo!" e))))))
 
 
