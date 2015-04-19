@@ -116,6 +116,10 @@
 
 
 (defn register-base-classes [kryo]
+  (require 'clojure.tools.logging)
+  (require 'carbonite.api)
+  (require 'sparkling.serializers)
+
   (log/info "Registering base classes for kryo")
   (carbonite/default-registry kryo)
   (carbonite/register-serializers kryo (serializer/sorted-collections))
@@ -128,18 +132,13 @@
   (register-spark kryo)
 
   (register-array-type kryo KryoSerializable)
-  (register kryo sparkling.function.Function)
-
-  )
+  (register kryo sparkling.function.Function))
 
 (deftype Registrator []
   KryoRegistrator
   (#^void registerClasses [#^KryoRegistrator this #^Kryo kryo]
     (try
       (.setInstantiatorStrategy kryo (StdInstantiatorStrategy.))
-      (require 'clojure.tools.logging)
-      (require 'carbonite.api)
-      (require 'sparkling.serializers)
       (register-base-classes kryo)
 
       (catch Exception e
