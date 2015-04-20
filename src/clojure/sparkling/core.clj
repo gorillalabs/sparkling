@@ -221,7 +221,8 @@
   (.fold rdd zero-value (function2 f)))
 
 (defn tuple-by [f]
-  (fn [x] (tuple (f x) x)))
+  (fn tuple-by-fn [x]
+    (tuple (f x) x)))
 
 (defn key-by
   "Creates tuples of the elements in this RDD by applying `f`."
