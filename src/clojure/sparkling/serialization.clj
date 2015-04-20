@@ -120,7 +120,7 @@
   (require 'carbonite.api)
   (require 'sparkling.serializers)
 
-  (log/info "Registering base classes for kryo")
+  ;(log/info "Registering base classes for kryo")
   (carbonite/default-registry kryo)
   (carbonite/register-serializers kryo (serializer/sorted-collections))
   (carbonite/register-serializers kryo (serializer/joda-serializers))
@@ -146,7 +146,7 @@
           (log/warn (str "Error registering serializer" this) e)
           (catch Exception e1
             ;(binding [*out* *err*]
-              (println "Failed to not log properly the expetion " e " while registering classes from " this " to " kryo ".\nLogging failure was " e1 ".")
+            (println "Failed to not log properly the expetion " e " while registering classes from " this " to " kryo ".\nLogging failure was " e1 ".")
             ;)
             (.printStackTrace e)
             ))
