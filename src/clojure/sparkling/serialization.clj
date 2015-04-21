@@ -120,6 +120,7 @@
   (require 'carbonite.api)
   (require 'sparkling.core)
   (require 'sparkling.serializers)
+  (require 'sparkling.destructuring)
 
   ;(log/info "Registering base classes for kryo")
   (carbonite/default-registry kryo)
