@@ -17,6 +17,11 @@ This one is also used in the [getting started guide](http://gorillalabs.github.i
 
 # Release Notes
 
+### 1.2.1 - improved Kryo Registration, AVRO reader + new Accumulator feature
+ * feature: added accumulators (Thanks to [Oleg Smirnov](https://github.com/master) for that)
+ * change: overhaul of Kryo Registration: Deprecated defregistrator macro, added Registrator type (see sparkling.serialization), with basic support of required types.
+ * feature: added support for your own avro readers, making it possible to read types/records instead of maps. Major improvement on memory consumption.
+
 ### 1.1.1 - cleaned dependencies
  * No more spilling of unwanted stuff in your application. You only need to refer to sparkling to get a proper environment with Spark 1.2.1.
    In order to deploy to a cluster with Spark pre-installed, you need to set Spark dependency to provided in your project, though.
@@ -37,6 +42,10 @@ This one is also used in the [getting started guide](http://gorillalabs.github.i
   * JdbcRDD: Reading Data from your JDBC source.
   * Hadoop-Avro-Reader: Reading AVRO Files from HDFS
 
+
+# Contributing
+
+Feel free to fork the Sparkling repository, improve stuff and open up a pull request against our "develop" branch. However, we'll only add features with tests, so make sure everything is green ;)
 
 # Acknowledgements
 
