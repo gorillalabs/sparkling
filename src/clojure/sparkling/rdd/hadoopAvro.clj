@@ -1,15 +1,13 @@
 (ns sparkling.rdd.hadoopAvro
   (:require [sparkling.api :as s]
             [clojure.string :as string])
-  (:import                                                  ;; TODO: Clean imports
+  (:import
     [org.apache.hadoop.io NullWritable]
     [abracad.avro ClojureData]
     [sparkling.hadoop ClojureAvroInputFormat]
     [scala Tuple2]
-    [org.apache.spark.api.java JavaSparkContext JavaPairRDD]
-    [org.apache.avro.hadoop.io AvroSerialization]
-    [org.apache.avro.mapreduce AvroKeyOutputFormat AvroJob]
-    [org.apache.hadoop.mapreduce Job]))
+    [org.apache.spark.api.java JavaSparkContext]
+    [org.apache.avro.hadoop.io AvroSerialization]))
 
 
 

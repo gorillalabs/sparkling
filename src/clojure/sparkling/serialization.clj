@@ -9,9 +9,8 @@
            [com.esotericsoftware.kryo Kryo Serializer KryoSerializable]
            [scala.collection.mutable WrappedArray$ofRef ArrayBuffer]
            [java.util ArrayList Currency EnumSet List]
-           [clojure.lang RT$DefaultComparator MethodImplCache AFunction]
+           [clojure.lang RT$DefaultComparator MethodImplCache]
            [org.apache.spark.util.collection CompactBuffer]
-           [sparkling.serialization AbstractSerializableWrappedIFn]
            [scala.collection.immutable Nil$]))
 
 (def register-class (memfn #^Kryo register #^Class clazz))
