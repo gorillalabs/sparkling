@@ -1,6 +1,7 @@
 (ns sparkling.serialization
   (:require [clojure.tools.logging :as log]
             [carbonite.api :as carbonite]
+            [sparkling.core :as core]
             [sparkling.serializers :as serializer])
   (:import [com.twitter.chill Tuple2Serializer Tuple3Serializer]
            [org.objenesis.strategy StdInstantiatorStrategy]
@@ -117,6 +118,7 @@
 (defn register-base-classes [kryo]
   (require 'clojure.tools.logging)
   (require 'carbonite.api)
+  (require 'sparkling.core)
   (require 'sparkling.serializers)
 
   ;(log/info "Registering base classes for kryo")
