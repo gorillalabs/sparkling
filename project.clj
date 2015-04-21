@@ -85,6 +85,7 @@
                                                              sparkling.testutils.records.domain
                                                              sparkling.testutils.records.registrator
                                                              sparkling.api-test
+                                                             sparkling.core-test
                                                              sparkling.function-test
                                                              sparkling.conf-test
                                                              sparkling.rdd.hadoopAvro-test

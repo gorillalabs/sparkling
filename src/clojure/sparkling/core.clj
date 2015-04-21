@@ -373,7 +373,6 @@
   (.leftOuterJoin rdd other))
 
 
-;; TODO: Add tests
 (defn key-by-fn "Wraps a function f to be called with the value v of a tuple from spark,
 so that the wrapped function returns a tuple [f(v),v]"
   [f]
@@ -383,7 +382,6 @@ so that the wrapped function returns a tuple [f(v),v]"
 
 (declare rekey)
 
-;; TODO: Add tests
 (defn intersect-by-key
   "Intersects rdd1 with rdd2 by key,
   i.e. rdd1 is rekeyed by keyfn,
