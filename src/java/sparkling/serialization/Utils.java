@@ -22,9 +22,11 @@ public class Utils {
 
     public static void requireNamespace(String namespace) {
         try {
-            require.invoke(symbol.invoke(namespace));
+            if (!"clojure.lang.Keyword".equals(namespace)) { // Keyword is a special case.
+                require.invoke(symbol.invoke(namespace));
+            }
         } catch (Exception e) {
-            logger.warn ("Error deserializing function (require " + namespace +")" ,e);
+            logger.warn ("Error deserializing function (require " + namespace +")   " ,e);
         }
     }
 
