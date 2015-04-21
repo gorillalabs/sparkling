@@ -140,6 +140,8 @@
   (#^void registerClasses [#^KryoRegistrator this #^Kryo kryo]
     (try
       (.setInstantiatorStrategy kryo (StdInstantiatorStrategy.))
+      (require 'sparkling.serialization)
+      (require 'clojure.tools.logging)
       (register-base-classes kryo)
 
       (catch Exception e
