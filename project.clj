@@ -20,7 +20,7 @@
 
                            ]
 
-            :aliases {"all" ["with-profile" "dev,spark-1.1.0,hadoop-2.6.0:dev,spark-1.2.1,hadoop-2.6.0::dev,spark-1.3.1,hadoop-2.6.0"]
+            :aliases {"all" ["with-profile" "dev,spark-1.1.0,hadoop-2.6.0:dev,spark-1.2.1,hadoop-2.6.0:dev,spark-1.3.1,hadoop-2.6.0"]
                       }
             :profiles {:default      [:base :system :user :provided :spark-1.3.1 :dev]
                        :dev          {:dependencies   [[criterium "0.4.3"]]
