@@ -82,11 +82,18 @@
   Make sure to require sparkling.serialization namespace in your code, as otherwise the sparkling.serialization.Registrator class will not be available under special circumstances (REPL, dependency checkout in leiningen)...
 
   If you need to add your own registrations either create your own registrator or extend the Sparkling registrator with something like
-  (extend-type sparkling.serialization.Registrator
-             sparkling.serialization/RegistrationProtocol
-             (register-classes [#^KryoRegistrator _ #^Kryo kryo]
-             ;; register your classes here!
-             ))
+(deftype Registrator []
+  KryoRegistrator
+  (#^void registerClasses [#^KryoRegistrator this #^Kryo kryo]
+    (try
+      (.setInstantiatorStrategy kryo (StdInstantiatorStrategy.))
+      ; (.setRegistrationRequired kryo true)
+      (standard-registrator/register-base-classes kryo)
+      (standard-registrator/register kryo sparkling.testutils.records.domain.tweet :serializer tweet-serializer)
+      (standard-registrator/register-array-type kryo sparkling.testutils.records.domain.tweet)
+
+      (catch Exception e
+        (RuntimeException. \"Failed to register kryo!\" e)))))
   "
   [conf]
   (set conf "spark.kryo.registrator" "sparkling.serialization.Registrator"))
