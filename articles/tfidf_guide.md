@@ -64,8 +64,10 @@ The file should now look like this:
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [gorillalabs/sparkling "1.1.1"]
-                 [org.apache.spark/spark-core_2.10 "1.2.1"]])
+                 [gorillalabs/sparkling "1.2.1"]]
+  :aot [#".*" sparkling.serialization sparkling.destructuring]
+  :profiles {:provided {:dependencies [[org.apache.spark/spark-core_2.10 "1.3.1"]]}}
+  )
 {% endhighlight %}
 
 To check whether everything is fine run `lein test`, the result should look like this:
