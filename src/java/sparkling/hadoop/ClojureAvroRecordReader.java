@@ -9,7 +9,6 @@ import org.apache.avro.mapreduce.AvroRecordReaderBase;
 
 /**
  * Created by cbetz on 16.09.14.
- * This is copied over from
  */
 
 

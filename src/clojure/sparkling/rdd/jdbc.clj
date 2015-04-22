@@ -1,12 +1,9 @@
 (ns sparkling.rdd.jdbc
   (:require [clojure.tools.logging :refer :all]
-            [sparkling.scalaInterop :as scala :refer [function0 function1]])
+            [sparkling.scalaInterop :as scala :refer [function0 function1 OBJECT-CLASS-TAG]])
   (:import [java.sql ResultSet ResultSetMetaData]
            [org.apache.spark.rdd JdbcRDD]
-           [scala.reflect ClassTag$]
            [org.apache.spark.api.java JavaRDD JavaSparkContext]))
-
-(def ^:no-doc OBJECT-CLASS-TAG (.apply ClassTag$/MODULE$ java.lang.Object))
 
 
 (defn seq-from-countable [count value-fn]
@@ -65,8 +62,8 @@
               (long max)
               (int partitions)
               (scala/function1 result-set-to-object-array)
-              OBJECT-CLASS-TAG)
-    OBJECT-CLASS-TAG))
+              scala/OBJECT-CLASS-TAG)
+    scala/OBJECT-CLASS-TAG))
 
 
 ;; (= #inst "2014-09-01T22:00:00.000-00:00" (.parse (java.text.SimpleDateFormat. "yyyy-MM-dd") "2014-09-02"))

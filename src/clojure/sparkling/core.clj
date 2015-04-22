@@ -1,14 +1,15 @@
 (ns sparkling.core
-"This is the main entry point to sparkling, typically required like `[sparkling.core :as s]`.
+  "This is the main entry point to sparkling, typically required like `[sparkling.core :as s]`.
 
-By design, most operations in sparkling are built up via the thread-last macro `->>`.
-Thus, they work exactly like their clojure.core counterparts, making it easy to migrate Clojure-only code to Spark code.
+  By design, most operations in sparkling are built up via the thread-last macro `->>`.
+  Thus, they work exactly like their clojure.core counterparts, making it easy to migrate Clojure-only code to Spark code.
 
-If you find an RDD operation missing from the api that you'd like to use, pull requests are
-happily accepted!"
+  If you find an RDD operation missing from the api that you'd like to use, pull requests are
+  happily accepted!"
 
   (:refer-clojure :exclude [map reduce first count take distinct filter group-by values partition-by keys])
   (:require [clojure.tools.logging :as log]
+            [sparkling.destructuring :as ds]
             [sparkling.function :refer [flat-map-function
                                         flat-map-function2
                                         function
@@ -31,19 +32,14 @@ happily accepted!"
            [scala.reflect ClassTag$]))
 
 
-;; TODO: accumulators
-;; http://spark.apache.org/docs/latest/programming-guide.html#accumulators
-;; but, in a separate namespace (sparkling.accumulator)
-
-
 ;; sparkling makes extensive use of kryo to serialize and deserialize clojure functions
 ;; and data structures. Here we ensure that these properties are set so they are inhereted
 ;; into any `SparkConf` objects that are created.
 ;;
 ;; sparkling WILL NOT WORK without enabling kryo serialization in spark!
 ;;
-(System/setProperty "spark.serializer" "org.apache.spark.serializer.KryoSerializer")
-(System/setProperty "spark.kryo.registrator" "sparkling.serialization.BaseRegistrator")
+;(System/setProperty "spark.serializer" "org.apache.spark.serializer.KryoSerializer")
+;(System/setProperty "spark.kryo.registrator" "sparkling.serialization.BaseRegistrator")
 
 (def STORAGE-LEVELS {:memory-only           StorageLevels/MEMORY_ONLY
                      :memory-only-ser       StorageLevels/MEMORY_ONLY_SER
@@ -64,11 +60,14 @@ happily accepted!"
   "Creates a spark context that loads settings from given configuration object
    or system properties"
   ([conf]
-    (log/debug "JavaSparkContext" (conf/to-string conf))
-    (JavaSparkContext. conf))
+   (log/debug "JavaSparkContext" (conf/to-string conf))
+   (JavaSparkContext. conf))
   ([master app-name]
-    (log/debug "JavaSparkContext" master app-name)
-    (JavaSparkContext. master app-name)))
+   (log/debug "JavaSparkContext" master app-name)
+   (let [conf (-> (conf/spark-conf)
+                  (conf/master master)
+                  (conf/app-name app-name))]
+     (spark-context conf))))
 
 (defn local-spark-context
   [app-name]
@@ -115,17 +114,18 @@ happily accepted!"
   [spark-context filename]
   (.textFile spark-context filename))
 
-(defn parallelize
+(defn into-rdd
   "Distributes a local collection to form/return an RDD"
   ([spark-context lst] (.parallelize spark-context lst))
   ([spark-context num-slices lst] (.parallelize spark-context lst num-slices)))
 
-(defn parallelize-pairs
+(defn into-pair-rdd
   "Distributes a local collection to form/return an RDD"
   ([spark-context lst] (.parallelizePairs spark-context lst))
   ([spark-context num-slices lst] (.parallelizePairs spark-context lst num-slices)))
 
-
+(def parallelize into-rdd )
+(def parallelize-pairs into-pair-rdd)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -220,10 +220,14 @@ happily accepted!"
   [f zero-value rdd]
   (.fold rdd zero-value (function2 f)))
 
+(defn tuple-by [f]
+  (fn tuple-by-fn [x]
+    (tuple (f x) x)))
+
 (defn key-by
   "Creates tuples of the elements in this RDD by applying `f`."
-  [f ^JavaRDD rdd ]
-  (map-to-pair (fn [x] (tuple (f x) x)) rdd))
+  [f ^JavaRDD rdd]
+  (map-to-pair (tuple-by f) rdd))
 
 (defn keys
   "Return an RDD with the keys of each tuple."
@@ -240,16 +244,16 @@ happily accepted!"
 (defn group-by
   "Returns an RDD of items grouped by the return value of function `f`."
   ([f rdd]
-    (.groupBy rdd (function f)))
+   (.groupBy rdd (function f)))
   ([f n rdd]
-    (.groupBy rdd (function f) n)))
+   (.groupBy rdd (function f) n)))
 
 (defn group-by-key
   "Groups the values for each key in `rdd` into a single sequence."
   ([rdd]
-    (.groupByKey rdd))
+   (.groupByKey rdd))
   ([n rdd]
-    (.groupByKey rdd n)))
+   (.groupByKey rdd n)))
 
 (defn combine-by-key
   "Combines the elements for each key using a custom set of aggregation functions.
@@ -261,35 +265,35 @@ happily accepted!"
   -- conj-fn, to merge a V into a C (e.g., adds it to the end of a list)
   -- merge-fn, to combine two C's into a single one."
   ([seq-fn conj-fn merge-fn rdd]
-    (.combineByKey rdd
-                   (function seq-fn)
-                   (function2 conj-fn)
-                   (function2 merge-fn)))
+   (.combineByKey rdd
+                  (function seq-fn)
+                  (function2 conj-fn)
+                  (function2 merge-fn)))
   ([seq-fn conj-fn merge-fn n rdd]
-    (.combineByKey rdd
-                   (function seq-fn)
-                   (function2 conj-fn)
-                   (function2 merge-fn)
-                   n)))
+   (.combineByKey rdd
+                  (function seq-fn)
+                  (function2 conj-fn)
+                  (function2 merge-fn)
+                  n)))
 
 (defn sort-by-key
   "When called on `rdd` of (K, V) pairs where K implements ordered, returns a dataset of
    (K, V) pairs sorted by keys in ascending or descending order, as specified by the boolean
    ascending argument."
   ([rdd]
-    (sort-by-key compare true rdd))
+   (sort-by-key compare true rdd))
   ([x rdd]
     ;; RDD has a .sortByKey signature with just a Boolean arg, but it doesn't
     ;; seem to work when I try it, bool is ignored.
-    (if (instance? Boolean x)
-      (sort-by-key compare x rdd)
-      (sort-by-key x true rdd)))
+   (if (instance? Boolean x)
+     (sort-by-key compare x rdd)
+     (sort-by-key x true rdd)))
   ([compare-fn asc? rdd]
-    (.sortByKey rdd
-                (if (instance? Comparator compare-fn)
-                  compare-fn
-                  (comparator compare-fn))
-                (u/truthy? asc?))))
+   (.sortByKey rdd
+               (if (instance? Comparator compare-fn)
+                 compare-fn
+                 (comparator compare-fn))
+               (u/truthy? asc?))))
 
 (defn sample
   "Returns a `fraction` sample of `rdd`, with or without replacement,
@@ -304,44 +308,44 @@ happily accepted!"
         sampler
         preserve-partitioning?
         seed
-        k/OBJECT-CLASS-TAG
-        k/OBJECT-CLASS-TAG)
-      (JavaRDD/fromRDD k/OBJECT-CLASS-TAG)))
+        si/OBJECT-CLASS-TAG
+        si/OBJECT-CLASS-TAG)
+      (JavaRDD/fromRDD si/OBJECT-CLASS-TAG)))
 
 (defn coalesce
   "Decrease the number of partitions in `rdd` to `n`.
   Useful for running operations more efficiently after filtering down a large dataset."
   ([n rdd]
-    (.coalesce rdd n))
+   (.coalesce rdd n))
   ([n shuffle? rdd]
-    (.coalesce rdd n shuffle?)))
+   (.coalesce rdd n shuffle?)))
 
 
 (defn coalesce-max
   "Decrease the number of partitions in `rdd` to `n`.
   Useful for running operations more efficiently after filtering down a large dataset."
   ([n rdd]
-    (.coalesce rdd (min n (count-partitions rdd))))
+   (.coalesce rdd (min n (count-partitions rdd))))
   ([n shuffle? rdd]
-    (.coalesce rdd (min n (count-partitions rdd)) shuffle?)))
+   (.coalesce rdd (min n (count-partitions rdd)) shuffle?)))
 
 
 ;; functions on multiple rdds
 
 (defn cogroup
   ([^JavaPairRDD rdd ^JavaPairRDD other]
-    (.cogroup rdd other))
+   (.cogroup rdd other))
   ([^JavaPairRDD rdd ^JavaPairRDD other1 ^JavaPairRDD other2]
-    (.cogroup rdd
-              other1
-              other2)))
+   (.cogroup rdd
+             other1
+             other2)))
 
 (defn union
   "Build the union of two or more RDDs"
   ([rdd1 rdd2]
-    (.union rdd1 rdd2))
+   (.union rdd1 rdd2))
   ([rdd1 rdd2 & rdds]
-    (.union (JavaSparkContext/fromSparkContext (.context rdd1)) rdd1 (ArrayList. (conj rdds rdd2)))))
+   (.union (JavaSparkContext/fromSparkContext (.context rdd1)) rdd1 (ArrayList. (conj rdds rdd2)))))
 
 (defn partitioner-aware-union [pair-rdd1 pair-rdd2 & pair-rdds]
   ;; TODO: add check to make sure every rdd is a pair-rdd and has the same partitioner.
@@ -349,14 +353,11 @@ happily accepted!"
     (PartitionerAwareUnionRDD.
       (.context pair-rdd1)
       (JavaConversions/asScalaBuffer (into [] (clojure.core/map #(.rdd %1) (conj pair-rdds pair-rdd2 pair-rdd1))))
-      k/OBJECT-CLASS-TAG
+      si/OBJECT-CLASS-TAG
       )
-    k/OBJECT-CLASS-TAG
-    k/OBJECT-CLASS-TAG
+    si/OBJECT-CLASS-TAG
+    si/OBJECT-CLASS-TAG
     ))
-
-
-
 
 (defn join
   "When called on `rdd` of type (K, V) and (K, W), returns a dataset of
@@ -370,6 +371,33 @@ happily accepted!"
    or the pair (K, (V, nil)) if no elements in other have key K."
   [rdd other]
   (.leftOuterJoin rdd other))
+
+
+(defn key-by-fn "Wraps a function f to be called with the value v of a tuple from spark,
+so that the wrapped function returns a tuple [f(v),v]"
+  [f]
+  (fn [^Tuple2 t]
+    (let [v (ds/value t)]
+      (tuple (f v) v))))
+
+(declare rekey)
+
+(defn intersect-by-key
+  "Intersects rdd1 with rdd2 by key,
+  i.e. rdd1 is rekeyed by keyfn,
+  then joined to keep only those elements with keys in rdd2
+  and rekeyed again with keybackfn to bring back the original structure.
+
+  Remember, rekey is performed by partition,
+  thus keyfn and keybackfn and the original partitioning should work with the given partitioner."
+  [rdd1 keyfn keybackfn rdd2]
+  (->>
+    rdd1
+    (rekey (key-by-fn keyfn))
+    (join rdd2)
+    (map-values (ds/second-value-fn identity))
+    (rekey (key-by-fn keybackfn))))
+
 
 (defn cartesian
   "Creates the cartesian product of two RDDs returning an RDD of pairs"
@@ -419,9 +447,9 @@ happily accepted!"
 (defn distinct
   "Return a new RDD that contains the distinct elements of the source `rdd`."
   ([rdd]
-    (.distinct rdd))
+   (.distinct rdd))
   ([n rdd]
-    (.distinct rdd n)))
+   (.distinct rdd n)))
 
 (defn take
   "Return an array with the first n elements of `rdd`.
@@ -478,12 +506,12 @@ happily accepted!"
 
 (defn hash-partitioner
   ([n]
-    (HashPartitioner. n))
+   (HashPartitioner. n))
   ([subkey-fn n]
-    (proxy [HashPartitioner] [n]
-      (getPartition [key]
-        (let [subkey (subkey-fn key)]
-          (mod (hash subkey) n))))))
+   (proxy [HashPartitioner] [n]
+     (getPartition [key]
+       (let [subkey (subkey-fn key)]
+         (mod (hash subkey) n))))))
 
 (defn partition-by
   [^Partitioner partitioner ^JavaPairRDD rdd]
@@ -534,6 +562,6 @@ happily accepted!"
 
 (defn rdd-name
   ([name rdd]
-    (.setName rdd name))
+   (.setName rdd name))
   ([rdd]
-    (.name rdd)))
+   (.name rdd)))
