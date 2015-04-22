@@ -2,18 +2,42 @@
 
 Sparkling is a Clojure API for [Apache Spark](http://spark.apache.org/).
 
-Check out our site for information about [Gorillalabs Sparkling](http://gorillalabs.github.io/sparkling/) and a [getting started guide](http://gorillalabs.github.io/sparkling/articles/getting_started.html).
 
-[![Build Status](https://secure.travis-ci.org/gorillalabs/sparkling.png)](http://travis-ci.org/gorillalabs/sparkling)
+# Show me a small sample
+
+```
+(do
+  (require '[sparkling.conf :as conf])
+  (require '[sparkling.core :as spark])
+  (spark/with-context sc (-> (conf/spark-conf)              ; this creates a spark context from the given context
+                             (conf/app-name "sparkling-test")
+                             (conf/master "local"))
+                      (let [lines-rdd (spark/into-rdd sc ["This is a firest line"   ;; here we provide data from a clojure collection.
+                                                          "Testing spark"           ;; You could also read from a text file, or avro file.
+                                                          "and sparkling"           ;; You could even approach a JDBC datasource
+                                                          "Happy hacking!"])]
+                        (spark/collect                      ;; get every element from the filtered RDD
+                          (spark/filter                     ;; filter elements in the given RDD (lines-rdd)
+                            #(.contains % "spark")          ;; a pure clojure function as filter predicate
+                            lines-rdd)))))
+```
+
+
+#  Where to find more info
+Check out our site for information about [Gorillalabs Sparkling](http://gorillalabs.github.io/sparkling/)
+and a [getting started guide](http://gorillalabs.github.io/sparkling/articles/getting_started.html).
+
+# Sample Project repo available
+Just clone our [getting-started repo](https://github.com/gorillalabs/sparkling-getting-started) and get going right now.
+
 
 # Availabilty from Clojars
 Sparkling is available from Clojars. To use with Leiningen, add
 
 [![Clojars Project](http://clojars.org/gorillalabs/sparkling/latest-version.svg)](http://clojars.org/gorillalabs/sparkling) to your dependencies.
 
+[![Build Status](https://secure.travis-ci.org/gorillalabs/sparkling.png)](http://travis-ci.org/gorillalabs/sparkling)
 
-See [gorillalabs/sparkling-getting-started](https://github.com/gorillalabs/sparkling-getting-started) for an example project using Sparkling.
-This one is also used in the [getting started guide](http://gorillalabs.github.io/sparkling/articles/getting_started.html)
 
 # Release Notes
 
