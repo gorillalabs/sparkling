@@ -4,6 +4,7 @@ layout: article
 description: "Tutorial for writing Spark jobs in Clojure: cloning a getting-started-repo, starting the REPL, working with datasets."
 ---
 
+# Getting started
 
 ## About this guide
 

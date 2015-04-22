@@ -4,6 +4,7 @@ layout: article
 description: "Tutorial showing a complete sample project using Gorillalabs Sparkling to compute Term Frequency / Inverse Document Frequency"
 ---
 
+# Fully working tutorial project
 
 ## About this guide
 
@@ -18,14 +19,10 @@ The code for this guide can be found in the master branch of our ["getting start
  * [Dealing with with Scalas `Tuple2` from Apache Spark](#tuple)
  * [Going to the Spark Engine](#spark)
  * [Tests for your Spark units](#spark-tests)
-
-
- * [parallelizing data to a Spark Dataset](#rdds)
- * [reading data from a file into a Spark Dataset](#external)
- * [performing transformations on the Datasets](#rdd-operations)
- * [working with key-value-pairs](#keyvalue)
- * [calling actions on the Datasets.](#rdd-actions)
-
+ * [Destructuring Spark's objects using wrapper functions](#spark-destructuring)
+ * [Spark transformations for idf and tf computation](#spark-transformation)
+ * [Joining idf and tf information to get to tf-idf](#spark-joins)
+ * [Run your Spark Application](#run-application)
 
 ##<a name="tf-idf"/> What is tf-idf?
 
@@ -39,7 +36,7 @@ and its `idf` weight:
 
 ##<a name="new-project"/> Setting up a new project using lein
 
-Make sure you have [Leiningen](http://leiningen.org/) installed, I'm currently using version 2.5.1.
+Make sure you have [Leiningen](http://leiningen.org/) installed, I'm currently using version 2.5.1. And my working directory is `tmp`, as you can see from my shell prompt `➜  tmp `.
 
 {% highlight text %}
 ➜  tmp  lein version
@@ -56,7 +53,7 @@ The default template is intended for library projects, not applications.
 To see other templates (app, plugin, etc), try `lein help new`.
 {% endhighlight %}
 
-Now, open that project in your IDE of choice. Personally, I use IntelliJ/Cursive, but for the sake of this tutorial, let's use [Light Table](http://lighttable.com/), as a easy-going common denominator. We start by editing `project.clj`, adding a dependency to `[gorillalabs/sparkling 1.1.0]`.
+Now, open that project in your IDE of choice. Personally, I use IntelliJ/Cursive, but for the sake of this tutorial, let's use [Light Table](http://lighttable.com/), as a easy-going common denominator. We start by editing `project.clj`, adding a dependency to `[gorillalabs/sparkling 1.1.1]`.
 
 The file should now look like this:
 
@@ -67,7 +64,8 @@ The file should now look like this:
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [gorillalabs/sparkling "1.1.0"]])
+                 [gorillalabs/sparkling "1.1.1"]
+                 [org.apache.spark/spark-core_2.10 "1.2.1"]])
 {% endhighlight %}
 
 To check whether everything is fine run `lein test`, the result should look like this:
@@ -129,7 +127,7 @@ Open `test/tf_idf/core_test.clj` in Light Table and replace the existing `a-test
 
 {% highlight clojure %}
 (deftest domain-functions-test
-  (testing "domain functions"
+  (testing "tf functions"
     (is (= ["quick" "brown" "fox" "jumps"]
          (remove-stopwords (terms "A quick brown fox jumps"))
          ))))
@@ -178,21 +176,21 @@ First, require `sparkling.core` namespace, so our namespace definition looks lik
 Second, add another function
 
 {% highlight clojure %}
-(defn docid->term-tuples
-  "Returns a stopword filtered seq of tuples of doc-id,[term term-frequency doc-terms-count]"
+(defn term-count-from-doc
+  "Returns a stopword filtered seq of tuples of doc-id,[term term-count doc-terms-count]"
   [doc-id content]
   (let [terms (remove-stopwords
-                (terms content))
+               (terms content))
         doc-terms-count (count terms)
-        term-frequencies (frequencies terms)]
-    (map (fn [term] (spark/tuple doc-id [term (term-frequencies term) doc-terms-count]))
+        term-count (frequencies terms)]
+    (map (fn [term] (spark/tuple [doc-id term] [(term-count term) doc-terms-count]))
          (distinct terms))))
 {% endhighlight %}
 
 
 This function can be tested in the InstaREPL by adding the following line at the end of `core.clj`:
 {% highlight clojure %}
-(docid->term-tuples "doc1" "A quick brown fox")
+(term-count-from-doc "doc1" "A quick brown fox")
 {% endhighlight %}
 
 
@@ -203,13 +201,33 @@ The InstaREPL unfolds the evaluation and shows as result
 {% endhighlight %}
 
 
-So, doc1 has 1 appearance of "quick" from a total of 3 words. And yes, the count of words (doc-terms-count) is repeated in every term element.
+So, doc1 has 1 appearance of "quick" from a total of 3 words. And yes, the count of words (doc-terms-count) is repeated in every term element. This simplifies things by "wasting" some memory.
 
-As you can see, Sparkling brings its own tagged literal for the clojure reader to help you cope with `Tuple2` without interfering with Scala too much. `#sparkling/tuple` turns the following two-element vector into a `Tuple2` instance for you while reading. There's also a function for that: `sparkling.core/tuple`, referenced here with the namespace alias as `spark/tuple`.
+As you can see, Sparkling brings its own tagged literal for the clojure reader to help you cope with `Tuple2` without interfering with Scala too much. `#sparkling/tuple` turns the following two-element vector into a `Tuple2` instance for you while reading. There's also a function for that: `sparkling.core/tuple`, referenced here with the namespace alias as `spark/tuple`. Remember: The #sparkling/tuple tagged literal reads the rest of the expression as is, reading #sparkling.tuple[(int 3) :foo] will read a list (with elements `'int` and flaot 3) as key element. It will not evaluate the call to long you might have expected when writing this. Use the tuple function for this kind of stuff.
 
+
+As we now have everything necessary for the tf-part of our computation, we still need the idf thing. Just add those two functions:
+
+{% highlight clojure %}
+(defn idf [doc-count doc-count-for-term]
+  (Math/log (/ doc-count (+ 1.0 doc-count-for-term))))
+{% endhighlight %}
+
+
+And add a bunch of tests to your test namespace `core-test`. Just add the following testing-block to your existing deftest:
+
+{% highlight clojure %}
+(testing "idf functions"
+    (is (= -0.8109302162163288 (idf 4 8)))
+    (is (= -0.2231435513142097 (idf 4 4)))
+    (is (= 1.3862943611198906 (idf 4 0))))
+{% endhighlight %}
+
+Run `lein test` from the command line to make sure everything works.
 
 
 ## <a name="spark"/> Going to the Spark Engine
+
 We're ready to target the Spark engine to really process large amounts of data using a distributed system. .... Naaaa, we'll stay on a local Spark master for the moment, but that's ok for the sake of this guide: We're introducing the Spark Context and the RDDs required.
 
 To deal with an annoyance I stumbled over from time to time, especially in demos given without network connectivity, we start with a little hack: Spark binds to an IP found on your system, but that might not be the one you're interested in. Thus, we configure that IP using the environment variable SPARK_LOCAL_IP. Good luck, there's a leiningen plugin for that. Open you `project.clj` and insert this `:dev` profile:
@@ -218,7 +236,7 @@ To deal with an annoyance I stumbled over from time to time, especially in demos
 :profiles {:dev {:plugins [[lein-dotenv "RELEASE"]]}}
 {% endhighlight %}
 
-And, while we're on it, also add `:aot :all`. If you're not sure - you're project.clj file should look like this:
+And, while we're on it, also add `:aot :all` and a :main directive. If you're not sure - you're project.clj file should look like this:
 
 {% highlight clojure %}
 (defproject tf-idf "0.1.0-SNAPSHOT"
@@ -227,8 +245,10 @@ And, while we're on it, also add `:aot :all`. If you're not sure - you're projec
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [gorillalabs/sparkling "1.1.0"]]
+                 [gorillalabs/sparkling "1.1.1"]
+                 [org.apache.spark/spark-core_2.10 "1.2.1"]]
   :aot :all
+  :main tf-idf.core
   :profiles {:dev {:plugins [[lein-dotenv "RELEASE"]]}})
 {% endhighlight %}
 
@@ -250,7 +270,7 @@ Add the line
 (System/getenv "SPARK_LOCAL_IP")
 {% endhighlight %}
 
-to your `core.clj` file and evaluate. It should print "127.0.0.1".
+to your `core.clj` file and evaluate. It should show "127.0.0.1" right next to the expression.
 
 Now we're ready to create a Spark context.
 
@@ -259,7 +279,7 @@ First, require namespace `sparkling.conf`:
 (ns tf-idf.core
   (:require [clojure.string :as string]
             [sparkling.conf :as conf]
-            [sparkling.core :as spark))
+            [sparkling.core :as spark]))
 {% endhighlight %}
 
 
@@ -269,8 +289,7 @@ Second, add this to `core.clj`:
 (defn make-spark-context []
   (let [c (-> (conf/spark-conf)
               (conf/master "local[*]")
-              (conf/app-name "tfidf")
-              (conf/set "spark.akka.timeout" "300"))]
+              (conf/app-name "tfidf"))]
     (spark/spark-context c)))
 
 
@@ -278,202 +297,277 @@ Second, add this to `core.clj`:
   (let [sc (make-spark-context)]
     sc
     ))
-
-(-main)
 {% endhighlight %}
 
 
+Test this in your command line using `lein run` and you should see something like this:
 
 
+{% highlight text %}
+➜  tf-idf  lein run
+Compiling tf-idf.core
+...
+15/02/23 11:14:02 INFO Utils: Successfully started service 'sparkDriver' on port 60023.
+...
+15/02/23 11:14:03 INFO Utils: Successfully started service 'HTTP file server' on port 60027.
+15/02/23 11:14:04 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+15/02/23 11:14:04 INFO SparkUI: Started SparkUI at http://localhost:4040
+15/02/23 11:14:04 INFO Executor: Starting executor ID <driver> on host localhost
+...
+➜  tf-idf  
+{% endhighlight %}
 
+As your program exits, the services are also teared down, so going to the Spark WebUI under http://localhost:4040 is pretty pointless right now. You won't find anything.
 
+Remember: As Spark requires to have functions compiled, you need to AOT-compile the namespaces with functions used in spark transformations. This is done when running `lein run`, but it's not done in your REPL automatically. Strange errors? Do `lein do clean, run` and make sure nothing broke when you clean your stuff first.
 
+##<a name="spark-tests"/> Tests for your Spark units
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-## TO BE CONTINUED!
-
-
-
-
-
-
-
-
-
-
-
-
-<!--
-
-### Initializing Spark
-
-flambo applications require a `SparkContext` object which tells Spark how to access a cluster. The `SparkContext` object requires a `SparkConf` object that encapsulates information about the application. We first build a spark configuration, `c`, then pass it to the flambo `spark-context` function which returns the requisite context object, `sc`:
+From here on, we go test driven. So open up `core_test.clj` and insert this in your ns definition:
 
 {% highlight clojure %}
-user=> (def c (-> (conf/spark-conf)
-                  (conf/master master)
-                  (conf/app-name "tfidf")
-                  (conf/set "spark.akka.timeout" "300")
-                  (conf/set conf)
-                  (conf/set-executor-env env)))
-user=> (def sc (f/spark-context c))
+(:require [sparkling.core :as spark]
+          [sparkling.conf :as conf]
+          [sparkling.destructuring :as s-de])
 {% endhighlight %}
 
-
-`master` is a special "local" string that tells Spark to run our app in local mode. `master` can be a Spark, Mesos or YARN cluster URL, or any one of the special strings to run in local mode (see [README.md](https://github.com/yieldbot/flambo/blob/develop/README.md#initializing-flambo) for formatting details).
-
-The `app-name` flambo function is used to set the name of our application.
-
-As with most distributed computing systems, Spark has a [myriad of properties](http://spark.apache.org/docs/latest/configuration.html) that control most application settings. With flambo you can either `set` these properties directly on a _SparkConf_ object, e.g., `(conf/set "spark.akka.timeout" "300")`, or via a Clojure map, `(conf/set conf)`. We set an empty map, `(def conf {})`, for illustration.
-
-Similarly, we set the executor runtime enviroment properties either directly via key/value strings or by passing a Clojure map of key/value strings. `conf/set-executor-env` handles both.
-
-### Computing TF-IDF
-
-Our example will use the following corpus:
+as well as these functions (at the end of the file):
 
 {% highlight clojure %}
-user=> (def documents
-        [["doc1" "Four score and seven years ago our fathers brought forth on this continent a new nation"]
-         ["doc2" "conceived in Liberty and dedicated to the proposition that all men are created equal"]
-         ["doc3" "Now we are engaged in a great civil war testing whether that nation or any nation so"]
-         ["doc4" "conceived and so dedicated can long endure We are met on a great battlefield of that war"]])
+(defn make-test-context []
+  (-> (conf/spark-conf)
+      (conf/master "local")
+      (conf/app-name "tfidf-test")))
+
+(def documents-fixture
+  [(spark/tuple "doc1" "Four score and seven years ago our fathers brought forth on this continent a new nation")
+   (spark/tuple "doc2" "conceived in Liberty and dedicated to the proposition that all men are created equal")
+   (spark/tuple "doc3" "Now we are engaged in a great civil war testing whether that nation or any nation so")
+   (spark/tuple "doc4" "conceived and so dedicated can long endure We are met on a great battlefield of that war")])
 {% endhighlight %}
 
+Both prepare stuff for our test: `make-test-context` creates a local, single-threaded Spark Context to use in our tests and the `documents-fixture` provides a tuple-set of documents with id and body as key/value pairs.
 
-where `doc#` is a unique document id.
-
-We use the corpus and spark context to create a Spark [_resilient distributed dataset_](http://spark.apache.org/docs/latest/programming-guide.html#resilient-distributed-datasets-rdds) (RDD). There are two ways to create RDDs in flambo:
-
-* _parallelizing_ an existing Clojure collection, as we'll do now:
+Now, we need the total number or documents to compute idf, so we start working on a `document-count` function in a TDD fashion. We add some tests down here:
 
 {% highlight clojure %}
-user=> (def doc-data (f/parallelize sc documents))
+(deftest spark-functions-test
+  (spark/with-context c (make-test-context)
+    (testing "count the number of documents"
+      (is (= 4
+             (document-count
+              (spark/parallelize-pairs c documents-fixture))))
+      (is (= 0
+             (document-count
+              (spark/parallelize-pairs c [])))))
 {% endhighlight %}
 
+`lein test`ing that should result in an error, as we do not have a function document-count yet. So let's add it to `core.clj` just before the `-main` function:
 
-* [reading](https://github.com/yieldbot/flambo/blob/develop/README.md#external-datasets) a dataset from an external storage system
-
-We are now ready to start applying [_actions_](https://github.com/yieldbot/flambo/blob/develop/README.md#rdd-actions) and [_transformations_](https://github.com/yieldbot/flambo/blob/develop/README.md#rdd-transformations) to our RDD; this is where flambo truly shines (or rather burns bright). It utilizes the powerful abstractions available in Clojure to reason about data. You can use Clojure constructs such as the threading macro `->` to chain sequences of operations and transformations.  
-
-#### Term Frequency
-
-To compute the term freqencies, we need a dictionary of the terms in each document filtered by a set of [_stopwords_](https://github.com/yieldbot/flambo/blob/develop/test/flambo/example/tfidf.clj#L10). We pass the RDD, `doc-data`, of `[doc-id content]` tuples to the flambo `flat-map` transformation to get a new stopword filtered RDD of `[doc-id term term-frequency doc-terms-count]` tuples. This is the dictionary for our corpus.
-
-`flat-map` transforms the source RDD by passing each tuple through a function. It is similar to `map`, but the output is a collection of 0 or more items which is then flattened. We use the flambo named function macro `flambo.api/defsparkfn` to define our Clojure function `gen-docid-term-tuples`:
 
 {% highlight clojure %}
-user=> (defn gen-docid-term-tuples [doc-tuple]
-         (let [[doc-id content] doc-tuple
-               terms (filter #(not (contains? stopwords %))
-                             (clojure.string/split content #" "))
-               doc-terms-count (count terms)
-               term-frequencies (frequencies terms)]
-           (map (fn [term] [doc-id term (term-frequencies term) doc-terms-count])
-                (distinct terms))))
-user=> (def doc-term-seq (-> doc-data
-                             (f/flat-map gen-docid-term-tuples)
-                             f/cache))
+(defn document-count [documents]
+  (spark/count documents))
 {% endhighlight %}
 
+Now, `lein test` should run 2 tests with 6 assertions and report back that everything is fine.
 
-Notice how we use pure Clojure in our Spark function definition to operate on and transform input parameters. We're able to filter stopwords, determine the number of terms per document and the term-frequencies for each document, all from within Clojure. Once the Spark function returns, `flat-map` serializes the results back to an RDD for the next action and transformation.
+Congratulations, you wrote your first big data job using Sparkling, fully unit tested. ;) However, it just does nothing so far.
 
-This is the raison d'être for flambo. It handles all of the underlying serializations to and from the various Spark Java types, so you only need to define the sequence of operations you would like to perform on your data. That's powerful.
+##<a name="spark-destructuring"/> Destructuring Spark's objects using wrapper functions
 
-Having constructed our dictionary we `f/cache` (or _persist_) the dataset in memory for future actions.
+We now put the pieces together. From our RDD ([_resilient distributed dataset_](http://spark.apache.org/docs/latest/programming-guide.html#resilient-distributed-datasets-rdds)) of documents, we create another RDD using our `term-count-from-doc` function. We apply this function to every document using on of sparkling's map functions. As `term-count-from-doc` returns a collection of tuples for one document and we're interested in a collection of tuples over all documents, we're using `flat-map-to-pair`, stitching together all the different per-document collections to one for the whole corpus.
 
-Recall term-freqency is defined as a function of the document id and term, `tf(document, term)`. At this point we have an RDD of *raw* term frequencies, but we need normalized term frequencies. We use the flambo inline anonymous function macro, `fn`, to define an anonymous Clojure function to normalize the frequencies and `map` our `doc-term-seq` RDD of `[doc-id term term-freq doc-terms-count]` tuples to an RDD of key/value, `[term [doc-id tf]]`, tuples. This new tuple format of the term-frequency RDD will be later used to `join` the inverse-document-frequency RDD and compute the final tfidf weights.
+First, we create two small helper functions in our core_test.clj:
 
 {% highlight clojure %}
-user=> (def tf-by-doc (-> doc-term-seq
-                          (f/map (fn [[doc-id term term-freq doc-terms-count]]
-                                       [term [doc-id (double (/ term-freq doc-terms-count))]]))
-                          f/cache))
+(def tuple2vec (s-de/key-value-fn vector))
 {% endhighlight %}
 
-
-Notice, again how we were easily able to use Clojure's destructuring facilities on the arguments of our inline function to name parameters.
-
-As before, we cache the results for future actions.
-
-
-#### Inverse Document Frequency
-
-In order to compute the inverse document frequencies, we need the total number of documents:
+`tuple2vec` converts a Scala `Tuple2` instance returned from Spark to a vector using a wrapped version of the vector function. The `sparkling/destructuring` namespace contains a number of wrapper functions to destructure the different instances returned from Spark, depending on the situation. For example, a `(flat-)map-to-pair` function does return a `Tuple2` to store a key-value-pair. A join on two PairRDDs will return a `Tuple2` with another `Tuple2` as value, thus we need another wrapper function from `sparkling/destructuring` to wrap functions processing RDDs of that type.
 
 {% highlight clojure %}
-user=> (def num-docs (f/count doc-data))
+(defn first2vec [rdd]
+  (tuple2vec (spark/first rdd)))
 {% endhighlight %}
 
+`first2vec` picks the first element from an RDD and returns it as a vector.
 
-and the number of documents that contain each term. The following step maps over the distinct `[doc-id term term-freq doc-terms-count]` tuples to count the documents associated with each term. This is combined with the total document count to get an RDD of `[term idf]` tuples:
+
+Second, we add a test for this inside the `spark-functions-test`:
 
 {% highlight clojure %}
-user=> (defn calc-idf [doc-count]
-         (fn [[term tuple-seq]]
-           (let [df (count tuple-seq)]
-             [term (Math/log (/ doc-count (+ 1.0 df)))])))
-user=> (def idf-by-term (-> doc-term-seq
-                            (f/group-by (fn [[_ term _ _]] term))
-                            (f/map (calc-idf num-docs))
-                            f/cache))
+(testing "term-count-by-doc-term"
+  (is (= [["doc1" "four"] [1 11]]
+         (first2vec
+          (term-count-by-doc-term
+           (spark/parallelize-pairs c documents-fixture))))))
 {% endhighlight %}
 
+It's a bit oversimplifying to have this as the only test case, but it's enough to show how to test your sparkling code.
 
-#### TF-IDF
 
-Now that we have both a term-frequency RDD of `[term [doc-id tf]]` tuples and an inverse-document-frequency RDD of `[term idf]` tuples, we perform the aforementioned `join` on the "terms" producing a new RDD of `[term [[doc-id tf] idf]]` tuples. Then, we `map` an inline Spark function to compute the tf-idf weight of each term per document returning our final RDD of `[doc-id term tf-idf]` tuples:
+Now let's populate the `core.clj` to have your tests accepted:
+
+Add `[sparkling.destructuring :as s-de]` as required to the namespace definition, and add this function (before the `-main` function).
 
 {% highlight clojure %}
-user=> (def tfidf-by-term (-> (f/join tf-by-doc idf-by-term)
-                              (f/map (fn [[term [[doc-id tf] idf]]]
-                                           [doc-id term (* tf idf)]))
-                              f/cache))
+(defn term-count-by-doc-term [documents]
+  (->>
+   documents
+   (spark/flat-map-to-pair
+    (s-de/key-value-fn term-count-from-doc))
+   spark/cache))
 {% endhighlight %}
 
+Now your tests should be green again. Just check.
 
-We cache the RDD for future actions.
 
-Finally, to see the output of our example application we `collect` all the elements of our tf-idf RDD as a Clojure array, sort them by tf-idf weight, and for illustration print the top 10 to standard out:
+
+
+
+
+##<a name="spark-transformation"/> Spark transformations for idf and tf computation
+
+Next step is to compute idf. Remember, idf is defined like this:
+
+`idf(t) = ln(total number of documents in corpus / (1 + number of documents with term t))`
+
+We already have the total number of documents (`document-count`), thus we need the number of documents with term t for each term t in our corpus. Sounds like a PairRDD from term->document-count-for-term. We'll get this from our document-term-corpus like this:
+
+Let's add that function:
 
 {% highlight clojure %}
-user=> (->> tfidf-by-term
-            f/collect
-            ((partial sort-by last >))
-            (take 10)
-            clojure.pprint/pprint)
-(["doc2" "created" 0.09902102579427793]
- ["doc2" "men" 0.09902102579427793]
- ["doc2" "Liberty" 0.09902102579427793]
- ["doc2" "proposition" 0.09902102579427793]
- ["doc2" "equal" 0.09902102579427793]
- ["doc3" "civil" 0.07701635339554948]
- ["doc3" "Now" 0.07701635339554948]
- ["doc3" "testing" 0.07701635339554948]
- ["doc3" "engaged" 0.07701635339554948]
- ["doc3" "whether" 0.07701635339554948])
-user=>
+(defn document-count-by-term [document-term-count]
+  (->> document-term-count
+       (spark/map-to-pair (s-de/key-value-fn
+                           (fn [[_ term] [_ _]] (spark/tuple term 1))))
+       (spark/reduce-by-key +)))
+{% endhighlight %}
+
+This remaps the document-term-corpus to an rdd containing `term`,1-tuples, as each document/term-combination will appear only once in the document-term-corpus rdd. From there, we just need to count all documents per term.
+
+I'll skip tests for that for sake of brevity, but you shouldn't do that. Go on, write a test for that in `core_test.clj`. I'll wait for you right here!
+
+
+You're back again? That's fine!
+
+Let's go on to compute the `idf-by-term easily:
+
+{% highlight clojure %}
+(defn idf-by-term [doc-count doc-count-for-term-rdd]
+  (spark/map-values (partial idf doc-count) doc-count-for-term-rdd))
 {% endhighlight %}
 
 
-You can also save the results to a text file via the flambo `save-as-text-file` function, or an HDFS sequence file via `save-as-sequence-file`, but we'll leave those APIs for you to explore.
+We do the same for `tf`. Remember tf's definition? Neither do I. So let's repeat:
 
-### Conclusion
+`tf(t, d) = (number of times term t appears in document d) / (total number of terms in document d)`
 
-And that's it, we're done! We hope you found this tutorial of the flambo API useful and informative.
+Both numbers are in our term-count-from-doc-rdd for each document/term combination. So we map over this:
 
-flambo is being actively improved, so you can expect more features as Spark continues to grow and we continue to support it. We'd love to hear your feedback on flambo.
--->
+{% highlight clojure %}
+(defn tf-by-doc-term [document-term-count]
+  (spark/map-to-pair (s-de/key-value-fn
+                      (fn [[doc term] [term-count doc-terms-count]]
+                        (spark/tuple term [doc (/ term-count doc-terms-count)])))
+                     document-term-count))
+{% endhighlight %}
+
+
+
+##<a name="spark-joins"/> Joining idf and tf information to get to tf-idf
+
+To combine tf and idf, we need to join both RDDs. That's the reason we did return a `Tuple (term -> [doc tf])` from `tf-by-doc-term`, because Spark only joins over the same keys. So both `tf-by-doc-term` and `idf-by-term` need to be keyed by term.
+
+With this said, it's easy to develop `tf-idf-by-doc-term`: First we join, and then we map-to-pair to a new doc,term combination as key and the tf*idf as value.
+
+{% highlight clojure %}
+(defn tf-idf-by-doc-term [doc-count document-term-count term-idf]
+  (->> (spark/join (tf-by-doc-term document-term-count) term-idf)
+       (spark/map-to-pair (s-de/key-val-val-fn
+                   (fn [term [doc tf] idf]
+                     (spark/tuple [doc term] (* tf idf)))))))
+{% endhighlight %}
+
+Did you enjoy following? Did you write tests for the new code? You could do so now, if you like!
+
+Now, we just need to stich everything together like this:
+
+{% highlight clojure %}
+(defn tf-idf [corpus]
+  (let [doc-count (document-count corpus)
+        document-term-count (term-count-by-doc-term corpus)
+        term-idf (idf-by-term doc-count (document-count-by-term document-term-count))]
+      (tf-idf-by-doc-term doc-count document-term-count term-idf)))
+{% endhighlight %}
+
+
+##<a name="run-application"/> Run your Spark Application
+
+Now populate your `-main` function like this:
+
+{% highlight clojure %}
+(defn -main [& args]
+  (let [sc (make-spark-context)
+        documents
+        [(spark/tuple :doc1 "Four score and seven years ago our fathers brought forth on this continent a new nation")
+         (spark/tuple :doc2 "conceived in Liberty and dedicated to the proposition that all men are created equal")
+         (spark/tuple :doc3 "Now we are engaged in a great civil war testing whether that nation or any nation so")
+         (spark/tuple :doc4 "conceived and so dedicated can long endure We are met on a great battlefield of that war")]
+        corpus (spark/parallelize-pairs sc documents)
+        tf-idf (tf-idf corpus)]
+    (println (.toDebugString tf-idf))
+    (clojure.pprint/pprint (spark/collect tf-idf))
+    ))
+{% endhighlight %}
+
+There you are. `lein run` your project from the command line an you should see this:
+
+
+{% highlight text %}
+...
+15/02/24 12:45:42 INFO Utils: Successfully started service 'sparkDriver' on port 53108.
+...
+15/02/24 12:45:43 INFO Executor: Starting executor ID <driver> on host localhost
+...
+15/02/24 12:45:44 INFO SparkContext: Starting job: count at NativeMethodAccessorImpl.java:-2
+...
+15/02/24 12:45:45 INFO DAGScheduler: Job 0 finished: count at NativeMethodAccessorImpl.java:-2, took 0,850507 s
+...
+
+(4) MappedRDD[9] at mapToPair at NativeMethodAccessorImpl.java:-2 []
+ |  FlatMappedValuesRDD[8] at join at NativeMethodAccessorImpl.java:-2 []
+ |  MappedValuesRDD[7] at join at NativeMethodAccessorImpl.java:-2 []
+ |  CoGroupedRDD[6] at join at NativeMethodAccessorImpl.java:-2 []
+ +-(4) MappedRDD[5] at mapToPair at NativeMethodAccessorImpl.java:-2 []
+ |  |  FlatMappedRDD[1] at flatMapToPair at NativeMethodAccessorImpl.java:-2 []
+ |  |  ParallelCollectionRDD[0] at parallelizePairs at NativeMethodAccessorImpl.java:-2 []
+ |  MappedValuesRDD[4] at mapValues at NativeMethodAccessorImpl.java:-2 []
+ |  ShuffledRDD[3] at reduceByKey at NativeMethodAccessorImpl.java:-2 []
+ +-(4) MappedRDD[2] at mapToPair at NativeMethodAccessorImpl.java:-2 []
+    |  FlatMappedRDD[1] at flatMapToPair at NativeMethodAccessorImpl.java:-2 []
+    |  ParallelCollectionRDD[0] at parallelizePairs at NativeMethodAccessorImpl.java:-2 []
+
+...
+15/02/24 12:45:45 INFO SparkContext: Starting job: collect at NativeMethodAccessorImpl.java:-2
+...
+15/02/24 12:45:45 INFO DAGScheduler: Final stage: Stage 3(collect at NativeMethodAccessorImpl.java:-2)
+15/02/24 12:45:45 INFO DAGScheduler: Parents of final stage: List(Stage 1, Stage 2)
+15/02/24 12:45:45 INFO DAGScheduler: Missing parents: List(Stage 1, Stage 2)
+15/02/24 12:45:45 INFO DAGScheduler: Submitting Stage 1 (MappedRDD[5] at mapToPair at NativeMethodAccessorImpl.java:-2), which has no missing parents
+...
+15/02/24 12:45:45 INFO DAGScheduler: Submitting 4 missing tasks from Stage 1 (MappedRDD[5] at mapToPair at NativeMethodAccessorImpl.java:-2)
+...
+15/02/24 12:45:45 INFO Executor: Running task 0.0 in stage 1.0 (TID 4)
+...
+15/02/24 12:45:46 INFO DAGScheduler: Stage 3 (collect at NativeMethodAccessorImpl.java:-2) finished in 0,303 s
+15/02/24 12:45:46 INFO DAGScheduler: Job 1 finished: collect at NativeMethodAccessorImpl.java:-2, took 0,991440 s
+[#sparkling/tuple [[:doc2 "created"] 0.09902102579427793] #sparkling/tuple [[:doc4 "long"] 0.07701635339554948] #sparkling/tuple [[:doc4 "can"] 0.07701635339554948] #sparkling/tuple [[:doc2 "conceived"] 0.041097438921682994] #sparkling/tuple [[:doc4 "conceived"] 0.03196467471686454] #sparkling/tuple [[:doc2 "equal"] 0.09902102579427793] #sparkling/tuple [[:doc3 "war"] 0.03196467471686454] #sparkling/tuple [[:doc4 "war"] 0.03196467471686454] #sparkling/tuple [[:doc3 "testing"] 0.07701635339554948] #sparkling/tuple [[:doc1 "continent"] 0.06301338005090412] #sparkling/tuple [[:doc1 "new"] 0.06301338005090412] #sparkling/tuple [[:doc4 "met"] 0.07701635339554948] #sparkling/tuple [[:doc1 "ago"] 0.06301338005090412] #sparkling/tuple [[:doc1 "forth"] 0.06301338005090412] #sparkling/tuple [[:doc1 "brought"] 0.06301338005090412] #sparkling/tuple [[:doc1 "seven"] 0.06301338005090412] #sparkling/tuple [[:doc4 "endure"] 0.07701635339554948] #sparkling/tuple [[:doc3 "great"] 0.03196467471686454] #sparkling/tuple [[:doc4 "great"] 0.03196467471686454] #sparkling/tuple [[:doc3 "whether"] 0.07701635339554948] #sparkling/tuple [[:doc1 "score"] 0.06301338005090412] #sparkling/tuple [[:doc2 "men"] 0.09902102579427793] #sparkling/tuple [[:doc4 "battlefield"] 0.07701635339554948] #sparkling/tuple [[:doc2 "proposition"] 0.09902102579427793] #sparkling/tuple [[:doc1 "years"] 0.06301338005090412] #sparkling/tuple [[:doc3 "now"] 0.07701635339554948] #sparkling/tuple [[:doc1 "four"] 0.06301338005090412] #sparkling/tuple [[:doc3 "civil"] 0.07701635339554948] #sparkling/tuple [[:doc2 "liberty"] 0.09902102579427793] #sparkling/tuple [[:doc1 "nation"] 0.026152915677434625] #sparkling/tuple [[:doc3 "nation"] 0.06392934943372908] #sparkling/tuple [[:doc1 "fathers"] 0.06301338005090412] #sparkling/tuple [[:doc2 "dedicated"] 0.041097438921682994] #sparkling/tuple [[:doc4 "dedicated"] 0.03196467471686454] #sparkling/tuple [[:doc3 "engaged"] 0.07701635339554948]]
+
+{% endhighlight %}
+
+
+And that's how you develop your own Spark job using Sparkling. From here, you can go on deploy your stuff to the cluster or run it from a local driver against the cluster - but beware the traps lying around there. To get you going until I find time to write a separate guide on that topic remember to use [`spark-submit`](https://spark.apache.org/docs/latest/submitting-applications.html), and to read the docs on [running Spark on a cluster](https://spark.apache.org/docs/latest/cluster-overview.html).
+
+And you can checkout the whole source from our Github [getting-started project](https://github.com/gorillalabs/sparkling-getting-started/).

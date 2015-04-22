@@ -3,7 +3,9 @@
             [clojure.tools.logging :refer :all])
   )
 
-(defn inspect [rdd name]
+
+
+(defn inspect-rdd [name rdd]
   (let [cached (-> rdd
                    (s/cache )
                    (s/rdd-name  name))]
@@ -15,3 +17,7 @@
       (when-not (zero? c)
         (info "first items@" name ": " (s/first cached))))
     cached))
+
+
+(defn inspect [rdd name]
+  (inspect-rdd name rdd))

@@ -24,7 +24,7 @@ public abstract class AbstractSerializableWrappedIFn implements Serializable {
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {
-        writeIFn(out, f);
+            writeIFn(out, f);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {

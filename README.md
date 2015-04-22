@@ -2,20 +2,53 @@
 
 Sparkling is a Clojure API for [Apache Spark](http://spark.apache.org/).
 
-Check out our site for information about [Gorillalabs Sparkling](http://gorillalabs.github.io/sparkling/) and a [getting started guide](http://gorillalabs.github.io/sparkling/articles/getting_started.html).
 
-[![Build Status](https://secure.travis-ci.org/gorillalabs/sparkling.png)](http://travis-ci.org/gorillalabs/sparkling)
+# Show me a small sample
+
+```
+(do
+  (require '[sparkling.conf :as conf])
+  (require '[sparkling.core :as spark])
+  (spark/with-context sc (-> (conf/spark-conf)              ; this creates a spark context from the given context
+                             (conf/app-name "sparkling-test")
+                             (conf/master "local"))
+                      (let [lines-rdd (spark/into-rdd sc ["This is a firest line"   ;; here we provide data from a clojure collection.
+                                                          "Testing spark"           ;; You could also read from a text file, or avro file.
+                                                          "and sparkling"           ;; You could even approach a JDBC datasource
+                                                          "Happy hacking!"])]
+                        (spark/collect                      ;; get every element from the filtered RDD
+                          (spark/filter                     ;; filter elements in the given RDD (lines-rdd)
+                            #(.contains % "spark")          ;; a pure clojure function as filter predicate
+                            lines-rdd)))))
+```
+
+
+#  Where to find more info
+Check out our site for information about [Gorillalabs Sparkling](http://gorillalabs.github.io/sparkling/)
+and a [getting started guide](http://gorillalabs.github.io/sparkling/articles/getting_started.html).
+
+# Sample Project repo available
+Just clone our [getting-started repo](https://github.com/gorillalabs/sparkling-getting-started) and get going right now.
+
 
 # Availabilty from Clojars
 Sparkling is available from Clojars. To use with Leiningen, add
 
 [![Clojars Project](http://clojars.org/gorillalabs/sparkling/latest-version.svg)](http://clojars.org/gorillalabs/sparkling) to your dependencies.
 
+[![Build Status](https://secure.travis-ci.org/gorillalabs/sparkling.png)](http://travis-ci.org/gorillalabs/sparkling)
 
-See [gorillalabs/sparkling-getting-started](https://github.com/gorillalabs/sparkling-getting-started) for an example project using Sparkling.
-This one is also used in the [getting started guide](http://gorillalabs.github.io/sparkling/articles/getting_started.html)
 
 # Release Notes
+
+### 1.2.1 - improved Kryo Registration, AVRO reader + new Accumulator feature
+ * feature: added accumulators (Thanks to [Oleg Smirnov](https://github.com/master) for that)
+ * change: overhaul of Kryo Registration: Deprecated defregistrator macro, added Registrator type (see sparkling.serialization), with basic support of required types.
+ * feature: added support for your own avro readers, making it possible to read types/records instead of maps. Major improvement on memory consumption.
+
+### 1.1.1 - cleaned dependencies
+ * No more spilling of unwanted stuff in your application. You only need to refer to sparkling to get a proper environment with Spark 1.2.1.
+   In order to deploy to a cluster with Spark pre-installed, you need to set Spark dependency to provided in your project, though.
 
 ### 1.1.0 - Added a more clojuresque API
  * Use sparkling.core instead of sparkling.api for parameter orders similar to Clojure. Easier currying using partial.
@@ -33,6 +66,10 @@ This one is also used in the [getting started guide](http://gorillalabs.github.i
   * JdbcRDD: Reading Data from your JDBC source.
   * Hadoop-Avro-Reader: Reading AVRO Files from HDFS
 
+
+# Contributing
+
+Feel free to fork the Sparkling repository, improve stuff and open up a pull request against our "develop" branch. However, we'll only add features with tests, so make sure everything is green ;)
 
 # Acknowledgements
 
