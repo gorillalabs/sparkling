@@ -56,7 +56,12 @@
   (register kryo (Class/forName "[Z"))                      ;; boolean array
   )
 
-
+(defn register-optional [kryo classname]
+  (when-let [clazz (try (Class/forName classname)
+                        (catch Exception _
+                          ;ignore, because not finding this class is exactly what I'm up to!
+                          nil))]
+    (register kryo clazz)))
 
 (defn register-java-class-serializers [^Kryo kryo]
   (register kryo BigInteger)
