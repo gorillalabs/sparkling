@@ -21,7 +21,8 @@
             [sparkling.scalaInterop :as si]
             [sparkling.conf :as conf]
             [sparkling.utils :as u]
-            [sparkling.kryo :as k])
+            [sparkling.kryo :as k]
+            [sparkling.destructuring :as s-de])
   (:import [scala Tuple2]
            [java.util Comparator ArrayList]
            [org.apache.spark.api.java JavaSparkContext StorageLevels
@@ -52,36 +53,7 @@
                      :memory-and-disk-ser-2 StorageLevels/MEMORY_AND_DISK_SER_2
                      :disk-only-2           StorageLevels/DISK_ONLY_2})
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Spark Context handling
 
-(defn spark-context
-  "Creates a spark context that loads settings from given configuration object
-   or system properties"
-  ([conf]
-   (log/debug "JavaSparkContext" (conf/to-string conf))
-   (JavaSparkContext. conf))
-  ([master app-name]
-   (log/debug "JavaSparkContext" master app-name)
-   (let [conf (-> (conf/spark-conf)
-                  (conf/master master)
-                  (conf/app-name app-name))]
-     (spark-context conf))))
-
-(defn local-spark-context
-  [app-name]
-  (let [conf (-> (conf/spark-conf)
-                 (conf/master "local[*]")
-                 (conf/app-name app-name))]
-    (spark-context conf)))
-
-(defmacro with-context
-  [context-sym conf & body]
-  `(let [~context-sym (sparkling.core/spark-context ~conf)]
-     (try
-       ~@body
-       (finally (.stop ~context-sym)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -93,8 +65,7 @@
   (let [clazz (Class/forName (clojure.string/replace (str ns) #"-" "_"))]
     (JavaSparkContext/jarOfClass clazz)))
 
-(defn tuple [key value]
-  (Tuple2. key value))
+(def tuple s-de/tuple)
 
 (defn- ftruthy?
   [f]
@@ -556,7 +527,8 @@ so that the wrapped function returns a tuple [f(v),v]"
   (.persist rdd storage-level))
 
 
-(defn checkpoint [^JavaRDD rdd]
+;; Add documentation, make sure you have checkpoint-directory set. How?
+(defn checkpoint [rdd]
   (.checkpoint rdd))
 
 
@@ -565,3 +537,38 @@ so that the wrapped function returns a tuple [f(v),v]"
    (.setName rdd name))
   ([rdd]
    (.name rdd)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Spark Context handling
+
+(defn spark-context
+  "Creates a spark context that loads settings from given configuration object
+   or system properties"
+  ([conf]
+   (log/debug "JavaSparkContext" (conf/to-string conf))
+   (JavaSparkContext. conf))
+  ([master app-name]
+   (log/debug "JavaSparkContext" master app-name)
+   (let [conf (-> (conf/spark-conf)
+                  (conf/master master)
+                  (conf/app-name app-name))]
+     (spark-context conf))))
+
+(defn local-spark-context
+  [app-name]
+  (let [conf (-> (conf/spark-conf)
+                 (conf/master "local[*]")
+                 (conf/app-name app-name))]
+    (spark-context conf)))
+
+(def stop
+  (memfn #^JavaSparkContext stop))
+
+
+(defmacro with-context
+  [context-sym conf & body]
+  `(let [~context-sym (sparkling.core/spark-context ~conf)]
+     (try
+       ~@body
+       (finally (stop ~context-sym)))))

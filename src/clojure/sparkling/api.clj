@@ -19,7 +19,7 @@
   `(let [~context-sym (sparkling.core/spark-context ~conf)]
      (try
        ~@body
-       (finally (.stop ~context-sym)))))
+       (finally (sparkling.core/stop ~context-sym)))))
 
 (def tuple sc/tuple)
 
