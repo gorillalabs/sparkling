@@ -114,7 +114,7 @@
                                                                             #sparkling/tuple ["key2" 3]
                                                                             #sparkling/tuple ["key2" 4]
                                                                             #sparkling/tuple ["key3" 5]])
-                                                    (s/reduce-by-key (fn [x y] (+ x y)))
+                                                    (s/reduce-by-key +)
                                                     s/collect
                                                     untuple-all
                                                     vec)
@@ -402,7 +402,7 @@
                       "aggregates elements of RDD using a function that takes two arguments and returns one,
                       return type is a value"
                       (is (= (-> (s/parallelize c [1 2 3 4 5])
-                                 (s/reduce (fn [x y] (+ x y)))) 15)))
+                                 (s/reduce +)) 15)))
 
                     (testing
                       "count-by-key returns a hashmap of (K, int) pairs with the count of each key; only available on RDDs of type (K, V)"
@@ -461,7 +461,7 @@
                     (testing
                       "fold returns aggregate each partition, and then the results for all the partitions, using a given associative function and a neutral 'zero value'"
                       (is (= (-> (s/parallelize c [1 2 3 4 5])
-                                 (s/fold 0 (fn [x y] (+ x y)))) 15)))
+                                 (s/fold 0 +)) 15)))
 
                     (testing
                       "first returns the first element of an RDD"
