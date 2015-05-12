@@ -1,12 +1,17 @@
 (ns sparkling.destructuring
   "Contains wrapper-functions to destructure scala/spark data structures"
-  (:refer-clojure :exclude [key])
+  (:refer-clojure :exclude [key first second])
   (:import [scala Tuple2 Tuple3]
            [com.google.common.base Optional]))
 
+(defn tuple [key value]
+  (Tuple2. key value))
 
 (defn key [^Tuple2 tuple] (._1 tuple))
 (defn value [^Tuple2 tuple] (._2 tuple))
+(def first key)
+(def second value)
+
 
 (defn first-value-fn [f]
   "Wraps a function f so that when the wrapped function is called on a tuple2, f is called with the second element from that tuple."
