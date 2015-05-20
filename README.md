@@ -5,7 +5,7 @@ Sparkling is a Clojure API for [Apache Spark](http://spark.apache.org/).
 
 # Show me a small sample
 
-```
+```clojure
 (do
   (require '[sparkling.conf :as conf])
   (require '[sparkling.core :as spark])
@@ -32,7 +32,7 @@ Just clone our [getting-started repo](https://github.com/gorillalabs/sparkling-g
 
 But note: There's one thing you need to be aware of: Certain namespaces need to be AOT-compiled, e.g. because the classes are referenced in the startup process by name. I'm doing this in my project.clj using the ```:aot```directive like this
 
-```
+```clojure
             :aot [#".*" sparkling.serialization sparkling.destructuring]
 ```
 
