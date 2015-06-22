@@ -46,6 +46,9 @@ Sparkling is available from Clojars. To use with Leiningen, add
 
 # Release Notes
 
+### 1.2.2 - added ```whole-text-files``` in sparkling.core.
+ (thanks to [Jase Bell](https://github.com/jasebell))
+
 ### 1.2.1 - improved Kryo Registration, AVRO reader + new Accumulator feature
  * feature: added accumulators (Thanks to [Oleg Smirnov](https://github.com/master) for that)
  * change: overhaul of Kryo Registration: Deprecated defregistrator macro, added Registrator type (see sparkling.serialization), with basic support of required types. This introduced a breaking change (sorry!): You need to aot-compile (or require) sparkling.serialization to run stuff in the REPL.
