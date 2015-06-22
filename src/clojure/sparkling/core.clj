@@ -114,6 +114,15 @@
   [spark-context filename]
   (.textFile spark-context filename))
 
+(defn whole-text-files
+  "Read a directory of text files from HDFS, a local file system (available on all nodes),
+  or any Hadoop-supported file system URI. Each file is read as a single record and returned 
+  in a key-value pair, where the key is the path of each file, the value is the content of each file."
+  ([spark-context filename min-partitions]
+   (.wholeTextFiles spark-context filename min-partitions)) 
+  ([spark-context filename]
+   (whole-text-files spark-context filename 8)))
+
 (defn into-rdd
   "Distributes a local collection to form/return an RDD"
   ([spark-context lst] (.parallelize spark-context lst))
