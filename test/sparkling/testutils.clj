@@ -6,10 +6,10 @@
 
 
 (defn untuple [^Tuple2 t]
-  (let [v (transient [])]
-    (conj! v (._1 t))
-    (conj! v (._2 t))
-    (persistent! v)))
+  (persistent!
+    (conj!
+      (conj! (transient []) (._1 t))
+      (._2 t))))
 
 (defn untuple-all [coll]
   (map untuple coll))

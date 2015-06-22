@@ -1,7 +1,7 @@
 (ns sparkling.accumulator-test
   (:import [org.apache.spark Accumulator])
-  (:use clojure.test)
-  (:require [sparkling.api :as s]
+  (:require [clojure.test :refer :all]
+            [sparkling.api :as s]
             [sparkling.conf :as conf]
             [sparkling.accumulator :as ac]))
 

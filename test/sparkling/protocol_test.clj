@@ -37,10 +37,11 @@
 (deftest serialization1
   (testing "Serialization of function"
     (let [item identity]
-      (is item (-> item serialize deserialize)))))
+      (is (= (item 42) ((-> item serialize deserialize) 42)))))) ;; that's not a really good test, but there's no really good test to check identity of two functions...
 
 
 (deftest serialization4
   (testing "Serialization of protocol method"
-    (let [item tfn]
-      (is item (-> item serialize deserialize)))))
+    (let [tweet (tweet. "test" "testtweet" 12)
+          item tfn]
+      (is (= (item tweet) ((-> item serialize deserialize) tweet)))))) ;; that's not a really good test, but there's no really good test to check identity of two functions...

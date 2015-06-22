@@ -281,8 +281,9 @@
   [with-replacement? fraction seed rdd]
   (.sample rdd with-replacement? fraction seed))
 
-(defn partitionwise-sampled-rdd [sampler preserve-partitioning? seed rdd]
+(defn partitionwise-sampled-rdd
   "Creates a PartitionwiseSampledRRD from existing RDD and a sampler object"
+  [sampler preserve-partitioning? seed rdd]
   (-> (PartitionwiseSampledRDD.
         (.rdd rdd)
         sampler
@@ -332,7 +333,7 @@
   (JavaPairRDD/fromRDD
     (PartitionerAwareUnionRDD.
       (.context pair-rdd1)
-      (JavaConversions/asScalaBuffer (into [] (clojure.core/map #(.rdd %1) (conj pair-rdds pair-rdd2 pair-rdd1))))
+      (JavaConversions/asScalaBuffer (clojure.core/mapv #(.rdd %1) (conj pair-rdds pair-rdd2 pair-rdd1)))
       si/OBJECT-CLASS-TAG
       )
     si/OBJECT-CLASS-TAG
@@ -463,13 +464,13 @@ so that the wrapped function returns a tuple [f(v),v]"
 (defmethod histogram true [buckets rdd]
   (let [counts (-> (JavaDoubleRDD/fromRDD (.rdd rdd))
                    (.histogram (double-array buckets)))]
-    (into [] counts)))
+    (vec counts)))
 
 (defmethod histogram false
   [bucket-count rdd]
   (let [^Tuple2 buckets-counts-tuple (-> (JavaDoubleRDD/fromRDD (.rdd rdd))
                                          (.histogram bucket-count))]
-    [(into [] (._1 buckets-counts-tuple)) (into [] (._2 buckets-counts-tuple))]))
+    [(vec (._1 buckets-counts-tuple)) (vec (._2 buckets-counts-tuple))]))
 
 
 

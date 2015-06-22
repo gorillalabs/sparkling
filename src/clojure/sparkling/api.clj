@@ -41,8 +41,9 @@
 
 (def partitioner-aware-union sc/partitioner-aware-union)
 
-(defn partitionwise-sampled-rdd [rdd sampler preserve-partitioning? seed]
+(defn partitionwise-sampled-rdd
   "Creates a PartitionwiseSampledRRD from existing RDD and a sampler object"
+  [rdd sampler preserve-partitioning? seed]
   (sc/partitionwise-sampled-rdd sampler preserve-partitioning? seed rdd))
 
 ;; ## Transformations
