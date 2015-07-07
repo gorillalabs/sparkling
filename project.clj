@@ -1,6 +1,6 @@
 (defproject gorillalabs/sparkling "1.2.3-SNAPSHOT"
             :description "A Clojure Library for Apache Spark"
-            :url "https://github.com/chrisbetz/sparkling"
+            :url "https://gorillalabs.github.io/sparkling/"
             :license {:name "Eclipse Public License"
                       :url  "http://www.eclipse.org/legal/epl-v10.html"}
             :scm {:name "git"
