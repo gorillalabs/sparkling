@@ -46,6 +46,11 @@ Sparkling is available from Clojars. To use with Leiningen, add
 
 # Release Notes
 
+### 1.2.3 - more developer friendly
+ * added @/deref support for broadcasts Making it easier to work with broadcasts by using Clojure mechanisms.
+ * added RDD autonaming from fn metadata, eases navigation in SparkUI
+ 
+
 ### 1.2.2 - added ```whole-text-files``` in sparkling.core.
  (thanks to [Jase Bell](https://github.com/jasebell))
 

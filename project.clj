@@ -6,7 +6,7 @@
             :scm {:name "git"
                   :url  "https://github.com/gorillalabs/sparkling"}
             :dependencies [[org.clojure/tools.logging "0.3.1"]
-                           [org.clojure/clojure "1.6.0" :scope "provided"]
+                           [org.clojure/clojure "1.7.0" :scope "provided"]
                            [clj-time "0.9.0"]
                            [com.twitter/carbonite "1.4.0" :exclusions [com.twitter/chill-java]]
 
