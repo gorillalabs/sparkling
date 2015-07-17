@@ -497,6 +497,20 @@ so that the wrapped function returns a tuple [f(v),v]"
   "Returns all the elements of `rdd` as an array at the driver process."
   (memfn collect))
 
+(defn collect-map
+  "Retuns all elements of `pair-rdd` as a map at the driver process.
+  Attention: The resulting map will only have one entry per key.
+             Thus, if you have multiple tuples with the same key in the pair-rdd, the collection returned will not contain all elements!
+             The function itself will *not* issue a warning of any kind!"
+  [pair-rdd]
+  (persistent!
+    (clojure.core/reduce
+    (fn [coll ^Tuple2 t]
+      (assoc! coll (s-de/key t) (s-de/value t)))
+    (transient {})
+    (collect pair-rdd))))
+
+
 (defn distinct
   "Return a new RDD that contains the distinct elements of the source `rdd`."
   ([rdd]
