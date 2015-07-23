@@ -492,6 +492,9 @@ so that the wrapped function returns a tuple [f(v),v]"
   "Returns an RDD created by coalescing all elements of `rdd` within each partition into a list."
   (memfn glom))
 
+(defn lookup [pair-rdd key]
+  "Return the vector of values in the RDD for key `key`. Your key has to be serializable with the Java serializer (not Kryo like usual) to use this."
+  (vec (.lookup pair-rdd key)))
 
 (def collect
   "Returns all the elements of `rdd` as an array at the driver process."

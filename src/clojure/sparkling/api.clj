@@ -274,6 +274,11 @@
   "Persists `rdd` with the default storage level (`MEMORY_ONLY`)."
   sc/cache)
 
+(def lookup
+  "Return the vector of values in the RDD for key `key`. Your key has to be serializable with the Java serializer (not Kryo like usual) to use this."
+  sc/lookup)
+
+
 (def collect
   "Returns all the elements of `rdd` as an array at the driver process."
   sc/collect)
