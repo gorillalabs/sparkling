@@ -19,7 +19,7 @@
   `(let [~context-sym (sparkling.core/spark-context ~conf)]
      (try
        ~@body
-       (finally (.stop ~context-sym)))))
+       (finally (sparkling.core/stop ~context-sym)))))
 
 (def tuple sc/tuple)
 
@@ -41,8 +41,9 @@
 
 (def partitioner-aware-union sc/partitioner-aware-union)
 
-(defn partitionwise-sampled-rdd [rdd sampler preserve-partitioning? seed]
+(defn partitionwise-sampled-rdd
   "Creates a PartitionwiseSampledRRD from existing RDD and a sampler object"
+  [rdd sampler preserve-partitioning? seed]
   (sc/partitionwise-sampled-rdd sampler preserve-partitioning? seed rdd))
 
 ;; ## Transformations
@@ -273,9 +274,22 @@
   "Persists `rdd` with the default storage level (`MEMORY_ONLY`)."
   sc/cache)
 
+(def lookup
+  "Return the vector of values in the RDD for key `key`. Your key has to be serializable with the Java serializer (not Kryo like usual) to use this."
+  sc/lookup)
+
+
 (def collect
   "Returns all the elements of `rdd` as an array at the driver process."
   sc/collect)
+
+(def collect-map
+  "Retuns all elements of `pair-rdd` as a map at the driver process.
+  Attention: The resulting map will only have one entry per key.
+             Thus, if you have multiple tuples with the same key in the pair-rdd, the collection returned will not contain all elements!
+             The function itself will *not* issue a warning of any kind!"
+  sc/collect-map)
+
 
 (defn distinct
   "Return a new RDD that contains the distinct elements of the source `rdd`."

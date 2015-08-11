@@ -1,7 +1,7 @@
-(ns sparkling.api-test
+(ns sparkling.broadcast-test
   (:import [org.apache.spark.broadcast Broadcast])
-  (:use clojure.test)
-  (:require [sparkling.api :as s]
+  (:require [clojure.test :refer :all]
+            [sparkling.api :as s]
             [sparkling.conf :as conf]
             [sparkling.broadcast :as sb]
             ))
@@ -17,7 +17,7 @@
       c conf
       (testing
         "gives us a Broadcast Var"
-        (is (= (class Broadcast) (sb/broadcast c 'anything))))
+        (is (isa? (class (sb/broadcast c 'anything)) Broadcast)))
 
       (testing
         "creates a JavaRDD"

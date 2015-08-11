@@ -5,7 +5,7 @@ Sparkling is a Clojure API for [Apache Spark](http://spark.apache.org/).
 
 # Show me a small sample
 
-```
+```clojure
 (do
   (require '[sparkling.conf :as conf])
   (require '[sparkling.core :as spark])
@@ -30,6 +30,11 @@ and a [getting started guide](http://gorillalabs.github.io/sparkling/articles/ge
 # Sample Project repo available
 Just clone our [getting-started repo](https://github.com/gorillalabs/sparkling-getting-started) and get going right now.
 
+But note: There's one thing you need to be aware of: Certain namespaces need to be AOT-compiled, e.g. because the classes are referenced in the startup process by name. I'm doing this in my project.clj using the ```:aot```directive like this
+
+```clojure
+            :aot [#".*" sparkling.serialization sparkling.destructuring]
+```
 
 # Availabilty from Clojars
 Sparkling is available from Clojars. To use with Leiningen, add
@@ -41,9 +46,18 @@ Sparkling is available from Clojars. To use with Leiningen, add
 
 # Release Notes
 
+### 1.2.3 - more developer friendly
+ * added @/deref support for broadcasts Making it easier to work with broadcasts by using Clojure mechanisms. This is especially true for unit tests, as you could test without actual broadcasts, but with anything deref-able.
+ * added RDD autonaming from fn metadata, eases navigation in SparkUI
+ * added lookup functionality. Make sure the key to your Tuples is Serializable (Java serialization), as it will be serialized as part of your task definition, not only as part of your data. These are handled differently in Spark.
+ 
+
+### 1.2.2 - added ```whole-text-files``` in sparkling.core.
+ (thanks to [Jase Bell](https://github.com/jasebell))
+
 ### 1.2.1 - improved Kryo Registration, AVRO reader + new Accumulator feature
  * feature: added accumulators (Thanks to [Oleg Smirnov](https://github.com/master) for that)
- * change: overhaul of Kryo Registration: Deprecated defregistrator macro, added Registrator type (see sparkling.serialization), with basic support of required types.
+ * change: overhaul of Kryo Registration: Deprecated defregistrator macro, added Registrator type (see sparkling.serialization), with basic support of required types. This introduced a breaking change (sorry!): You need to aot-compile (or require) sparkling.serialization to run stuff in the REPL.
  * feature: added support for your own avro readers, making it possible to read types/records instead of maps. Major improvement on memory consumption.
 
 ### 1.1.1 - cleaned dependencies

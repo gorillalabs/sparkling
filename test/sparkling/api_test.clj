@@ -13,7 +13,7 @@
             [sparkling.kryoserializer :as ks]
             [sparkling.testutils.records.domain :as domain]
             [sparkling.testutils :refer :all]
-            ))
+            [sparkling.destructuring :as s-de]))
 
 
 
@@ -114,7 +114,7 @@
                                                                             #sparkling/tuple ["key2" 3]
                                                                             #sparkling/tuple ["key2" 4]
                                                                             #sparkling/tuple ["key3" 5]])
-                                                    (s/reduce-by-key (fn [x y] (+ x y)))
+                                                    (s/reduce-by-key +)
                                                     s/collect
                                                     untuple-all
                                                     vec)
@@ -349,6 +349,25 @@
                                                     vec)
                                                 [["key1" 1] ["key1" 2] ["key2" 3] ["key2" 4] ["key3" 5]])))
 
+
+                    (testing
+                      "map-partitions-to-pair"
+                      (is (equals-ignore-order? (-> (s/parallelize-pairs c [#sparkling/tuple["key1" [1 2]]
+                                                                            #sparkling/tuple["key2" [3 4]]
+                                                                            #sparkling/tuple["key3" [5]]])
+                                                    (s/map-partitions-to-pair
+                                                      (fn [it]
+                                                        (map
+                                                          #(s/tuple (first (s-de/value %1)) (rest (s-de/value %1)))
+                                                          (iterator-seq it)))
+                                                      :preserves-partitioning false)
+                                                    s/collect
+                                                    untuple-all
+                                                    vec
+                                                    )
+                                                [[1 [2]] [3 [4]] [5 []]])))
+
+
                     (testing
                       "map-partition"
                       (is (equals-ignore-order? (-> (s/parallelize c [0 1 2 3 4])
@@ -402,7 +421,7 @@
                       "aggregates elements of RDD using a function that takes two arguments and returns one,
                       return type is a value"
                       (is (= (-> (s/parallelize c [1 2 3 4 5])
-                                 (s/reduce (fn [x y] (+ x y)))) 15)))
+                                 (s/reduce +)) 15)))
 
                     (testing
                       "count-by-key returns a hashmap of (K, int) pairs with the count of each key; only available on RDDs of type (K, V)"
@@ -461,7 +480,7 @@
                     (testing
                       "fold returns aggregate each partition, and then the results for all the partitions, using a given associative function and a neutral 'zero value'"
                       (is (= (-> (s/parallelize c [1 2 3 4 5])
-                                 (s/fold 0 (fn [x y] (+ x y)))) 15)))
+                                 (s/fold 0 +)) 15)))
 
                     (testing
                       "first returns the first element of an RDD"

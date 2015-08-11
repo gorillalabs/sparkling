@@ -6,8 +6,13 @@
 
 
 
+(defn class-tag [class]
+  (.apply ClassTag$/MODULE$ class))
+
 ;; lol scala
-(def ^:no-doc OBJECT-CLASS-TAG (.apply ClassTag$/MODULE$ java.lang.Object))
+(def ^:no-doc OBJECT-CLASS-TAG (class-tag java.lang.Object))
+
+
 
 (defmacro gen-function
   [clazz wrapper-name]

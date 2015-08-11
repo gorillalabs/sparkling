@@ -1,20 +1,27 @@
 (ns sparkling.destructuring
   "Contains wrapper-functions to destructure scala/spark data structures"
-  (:refer-clojure :exclude [key])
+  (:refer-clojure :exclude [key first second])
   (:import [scala Tuple2 Tuple3]
            [com.google.common.base Optional]))
 
+(defn tuple [key value]
+  (Tuple2. key value))
 
 (defn key [^Tuple2 tuple] (._1 tuple))
 (defn value [^Tuple2 tuple] (._2 tuple))
+(def first key)
+(def second value)
 
-(defn first-value-fn [f]
+
+(defn first-value-fn
   "Wraps a function f so that when the wrapped function is called on a tuple2, f is called with the second element from that tuple."
+  [f]
   (fn [^Tuple2 tuple]
     (f (._1 tuple))))
 
-(defn second-value-fn [f]
+(defn second-value-fn
   "Wraps a function f so that when the wrapped function is called on a tuple2, f is called with the second element from that tuple."
+  [f]
   (fn [^Tuple2 tuple]
     (f (._2 tuple))))
 
@@ -45,8 +52,9 @@
   (fn [^Tuple2 t]
     (f (seq (._1 t)) (seq (._2 t)))))
 
-(defn key-seq-seq-seq-fn [f]
+(defn key-seq-seq-seq-fn
   "wraps a function f [k seq1 seq2 seq3] to untuple a key/value tuple with three partial values all being seqs. Useful e.g. on map after a cogroup with three RDDs."
+  [f]
   (fn [^Tuple2 t]
     (let [k (._1 t)
           v ^Tuple3 (._2 t)]

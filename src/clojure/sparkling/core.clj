@@ -21,7 +21,8 @@
             [sparkling.scalaInterop :as si]
             [sparkling.conf :as conf]
             [sparkling.utils :as u]
-            [sparkling.kryo :as k])
+            [sparkling.kryo :as k]
+            [sparkling.destructuring :as s-de])
   (:import [scala Tuple2]
            [java.util Comparator ArrayList]
            [org.apache.spark.api.java JavaSparkContext StorageLevels
@@ -52,36 +53,7 @@
                      :memory-and-disk-ser-2 StorageLevels/MEMORY_AND_DISK_SER_2
                      :disk-only-2           StorageLevels/DISK_ONLY_2})
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; Spark Context handling
 
-(defn spark-context
-  "Creates a spark context that loads settings from given configuration object
-   or system properties"
-  ([conf]
-   (log/debug "JavaSparkContext" (conf/to-string conf))
-   (JavaSparkContext. conf))
-  ([master app-name]
-   (log/debug "JavaSparkContext" master app-name)
-   (let [conf (-> (conf/spark-conf)
-                  (conf/master master)
-                  (conf/app-name app-name))]
-     (spark-context conf))))
-
-(defn local-spark-context
-  [app-name]
-  (let [conf (-> (conf/spark-conf)
-                 (conf/master "local[*]")
-                 (conf/app-name app-name))]
-    (spark-context conf)))
-
-(defmacro with-context
-  [context-sym conf & body]
-  `(let [~context-sym (sparkling.core/spark-context ~conf)]
-     (try
-       ~@body
-       (finally (.stop ~context-sym)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -93,8 +65,7 @@
   (let [clazz (Class/forName (clojure.string/replace (str ns) #"-" "_"))]
     (JavaSparkContext/jarOfClass clazz)))
 
-(defn tuple [key value]
-  (Tuple2. key value))
+(def tuple s-de/tuple)
 
 (defn- ftruthy?
   [f]
@@ -114,17 +85,31 @@
   [spark-context filename]
   (.textFile spark-context filename))
 
+(defn whole-text-files
+  "Read a directory of text files from HDFS, a local file system (available on all nodes),
+  or any Hadoop-supported file system URI. Each file is read as a single record and returned 
+  in a key-value pair, where the key is the path of each file, the value is the content of each file."
+  ([spark-context filename min-partitions]
+   (.wholeTextFiles spark-context filename min-partitions))
+  ([spark-context filename]
+   (whole-text-files spark-context filename 8)))
+
 (defn into-rdd
   "Distributes a local collection to form/return an RDD"
-  ([spark-context lst] (.parallelize spark-context lst))
-  ([spark-context num-slices lst] (.parallelize spark-context lst num-slices)))
+  ([spark-context lst]
+   (u/set-auto-name
+     (.parallelize spark-context lst)))
+  ([spark-context num-slices lst]
+   (u/set-auto-name
+     (.parallelize spark-context lst num-slices)
+     num-slices)))
 
 (defn into-pair-rdd
   "Distributes a local collection to form/return an RDD"
-  ([spark-context lst] (.parallelizePairs spark-context lst))
-  ([spark-context num-slices lst] (.parallelizePairs spark-context lst num-slices)))
+  ([spark-context lst] (u/set-auto-name (.parallelizePairs spark-context lst)))
+  ([spark-context num-slices lst] (u/set-auto-name (.parallelizePairs spark-context lst num-slices) num-slices)))
 
-(def parallelize into-rdd )
+(def parallelize into-rdd)
 (def parallelize-pairs into-pair-rdd)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -137,50 +122,61 @@
 (defn map
   "Returns a new RDD formed by passing each element of the source through the function `f`."
   [f rdd]
-  (.map rdd (function f)))
+  (-> (.map rdd (function f))
+      (u/set-auto-name (u/unmangle-fn f))))
 
 (defn map-to-pair
   "Returns a new `JavaPairRDD` of (K, V) pairs by applying `f` to all elements of `rdd`."
   [f rdd]
-  (.mapToPair rdd (pair-function f)))
+  (-> (.mapToPair rdd (pair-function f))
+      (u/set-auto-name (u/unmangle-fn f))))
 
 (defn map-values [f rdd]
-  (.mapValues rdd (function f)))
+  (-> (.mapValues rdd (function f))
+      (u/set-auto-name (u/unmangle-fn f))))
 
 (defn reduce
   "Aggregates the elements of `rdd` using the function `f` (which takes two arguments
   and returns one). The function should be commutative and associative so that it can be
   computed correctly in parallel."
   [f rdd]
-  (.reduce rdd (function2 f)))
+  (u/set-auto-name (.reduce rdd (function2 f)) (u/unmangle-fn f)))
 
 (defn values
   "Returns the values of a JavaPairRDD"
   [rdd]
-  (.values rdd))
+  (u/set-auto-name (.values rdd)))
 
 (defn flat-map
   "Similar to `map`, but each input item can be mapped to 0 or more output items (so the
    function `f` should return a collection rather than a single item)"
   [f rdd]
-  (.flatMap rdd (flat-map-function f)))
+  (u/set-auto-name
+    (.flatMap rdd (flat-map-function f))
+    (u/unmangle-fn f)))
 
 (defn flat-map-to-pair
   "Returns a new `JavaPairRDD` by first applying `f` to all elements of `rdd`, and then flattening
   the results."
   [f rdd]
-  (.flatMapToPair rdd (pair-flat-map-function f)))
+  (u/set-auto-name
+    (.flatMapToPair rdd (pair-flat-map-function f))
+    (u/unmangle-fn f)))
 
 (defn flat-map-values
   [f rdd]
-  (.flatMapValues rdd (function f)))
+  (u/set-auto-name
+    (.flatMapValues rdd (function f))
+    (u/unmangle-fn f)))
 
 (defn map-partition
   "Similar to `map`, but runs separately on each partition (block) of the `rdd`, so function `f`
   must be of type Iterator<T> => Iterable<U>.
   https://issues.apache.org/jira/browse/SPARK-3369"
   [f rdd]
-  (.mapPartitions rdd (flat-map-function f)))
+  (u/set-auto-name
+    (.mapPartitions rdd (flat-map-function f))
+    (u/unmangle-fn f)))
 
 
 (defn map-partitions-to-pair
@@ -188,20 +184,31 @@
   must be of type Iterator<T> => Iterable<U>.
   https://issues.apache.org/jira/browse/SPARK-3369"
   [f preserve-partitioning? rdd]
-  (.mapPartitionsToPair rdd (pair-flat-map-function f) (u/truthy? preserve-partitioning?)))
+  (u/set-auto-name
+    (.mapPartitionsToPair rdd (pair-flat-map-function f) (u/truthy? preserve-partitioning?))
+    (u/unmangle-fn f)
+    preserve-partitioning?))
 
 (defn map-partition-with-index
   "Similar to `map-partition` but function `f` is of type (Int, Iterator<T>) => Iterator<U> where
   `i` represents the index of partition."
   [f rdd]
-  (.mapPartitionsWithIndex rdd (function2 f) true))
+  (u/set-auto-name
+    (.mapPartitionsWithIndex rdd (function2 f) true)
+    (u/unmangle-fn f)))
 
 
 
 (defn filter
   "Returns a new RDD containing only the elements of `rdd` that satisfy a predicate `f`."
   [f rdd]
-  (.filter rdd (function (ftruthy? f))))
+  (u/set-auto-name
+    (.filter rdd (function (ftruthy? f)))
+    (u/unmangle-fn f)))
+
+
+
+
 
 (defn foreach
   "Applies the function `f` to all elements of `rdd`."
@@ -227,33 +234,46 @@
 (defn key-by
   "Creates tuples of the elements in this RDD by applying `f`."
   [f ^JavaRDD rdd]
-  (map-to-pair (tuple-by f) rdd))
+  (u/set-auto-name
+    (map-to-pair (tuple-by f) rdd)
+    (u/unmangle-fn f)))
 
 (defn keys
   "Return an RDD with the keys of each tuple."
   [^JavaPairRDD rdd]
-  (.keys rdd))
+  (u/set-auto-name
+    (.keys rdd)))
 
 
 (defn reduce-by-key
   "When called on an `rdd` of (K, V) pairs, returns an RDD of (K, V) pairs
   where the values for each key are aggregated using the given reduce function `f`."
   [f rdd]
-  (.reduceByKey rdd (function2 f)))
+  (u/set-auto-name
+    (.reduceByKey rdd (function2 f))
+    (u/unmangle-fn f)))
 
 (defn group-by
   "Returns an RDD of items grouped by the return value of function `f`."
   ([f rdd]
-   (.groupBy rdd (function f)))
+   (u/set-auto-name
+     (.groupBy rdd (function f))
+     (u/unmangle-fn f)))
   ([f n rdd]
-   (.groupBy rdd (function f) n)))
+   (u/set-auto-name
+     (.groupBy rdd (function f) n)
+     (u/unmangle-fn f)
+     n)))
 
 (defn group-by-key
   "Groups the values for each key in `rdd` into a single sequence."
   ([rdd]
-   (.groupByKey rdd))
+   (u/set-auto-name
+     (.groupByKey rdd)))
   ([n rdd]
-   (.groupByKey rdd n)))
+   (u/set-auto-name
+     (.groupByKey rdd n)
+     n)))
 
 (defn combine-by-key
   "Combines the elements for each key using a custom set of aggregation functions.
@@ -265,23 +285,34 @@
   -- conj-fn, to merge a V into a C (e.g., adds it to the end of a list)
   -- merge-fn, to combine two C's into a single one."
   ([seq-fn conj-fn merge-fn rdd]
-   (.combineByKey rdd
-                  (function seq-fn)
-                  (function2 conj-fn)
-                  (function2 merge-fn)))
+   (u/set-auto-name
+     (.combineByKey rdd
+                    (function seq-fn)
+                    (function2 conj-fn)
+                    (function2 merge-fn))
+     (u/unmangle-fn seq-fn)
+     (u/unmangle-fn conj-fn)
+     (u/unmangle-fn merge-fn)))
   ([seq-fn conj-fn merge-fn n rdd]
-   (.combineByKey rdd
-                  (function seq-fn)
-                  (function2 conj-fn)
-                  (function2 merge-fn)
-                  n)))
+   (u/set-auto-name
+     (.combineByKey rdd
+                    (function seq-fn)
+                    (function2 conj-fn)
+                    (function2 merge-fn)
+                    n)
+     (u/unmangle-fn seq-fn)
+     (u/unmangle-fn conj-fn)
+     (u/unmangle-fn merge-fn)
+     n
+     )))
 
 (defn sort-by-key
   "When called on `rdd` of (K, V) pairs where K implements ordered, returns a dataset of
    (K, V) pairs sorted by keys in ascending or descending order, as specified by the boolean
    ascending argument."
   ([rdd]
-   (sort-by-key compare true rdd))
+   (u/set-auto-name
+     (sort-by-key compare true rdd)))
   ([x rdd]
     ;; RDD has a .sortByKey signature with just a Boolean arg, but it doesn't
     ;; seem to work when I try it, bool is ignored.
@@ -289,20 +320,27 @@
      (sort-by-key compare x rdd)
      (sort-by-key x true rdd)))
   ([compare-fn asc? rdd]
-   (.sortByKey rdd
-               (if (instance? Comparator compare-fn)
-                 compare-fn
-                 (comparator compare-fn))
-               (u/truthy? asc?))))
+   (u/set-auto-name
+     (.sortByKey rdd
+                 (if (instance? Comparator compare-fn)
+                   compare-fn
+                   (comparator compare-fn))
+                 (u/truthy? asc?))
+     (u/unmangle-fn compare-fn)
+     asc?
+     )))
 
 (defn sample
   "Returns a `fraction` sample of `rdd`, with or without replacement,
   using a given random number generator `seed`."
   [with-replacement? fraction seed rdd]
-  (.sample rdd with-replacement? fraction seed))
+  (u/set-auto-name
+    (.sample rdd with-replacement? fraction seed)
+    with-replacement? fraction seed))
 
-(defn partitionwise-sampled-rdd [sampler preserve-partitioning? seed rdd]
+(defn partitionwise-sampled-rdd
   "Creates a PartitionwiseSampledRRD from existing RDD and a sampler object"
+  [sampler preserve-partitioning? seed rdd]
   (-> (PartitionwiseSampledRDD.
         (.rdd rdd)
         sampler
@@ -310,67 +348,80 @@
         seed
         si/OBJECT-CLASS-TAG
         si/OBJECT-CLASS-TAG)
-      (JavaRDD/fromRDD si/OBJECT-CLASS-TAG)))
+      (JavaRDD/fromRDD si/OBJECT-CLASS-TAG)
+      (u/set-auto-name)
+      ))
 
 (defn coalesce
   "Decrease the number of partitions in `rdd` to `n`.
   Useful for running operations more efficiently after filtering down a large dataset."
   ([n rdd]
-   (.coalesce rdd n))
+   (u/set-auto-name
+     (.coalesce rdd n)
+     n))
   ([n shuffle? rdd]
-   (.coalesce rdd n shuffle?)))
+   (u/set-auto-name
+     (.coalesce rdd n shuffle?)
+     n shuffle?)))
 
 
 (defn coalesce-max
   "Decrease the number of partitions in `rdd` to `n`.
   Useful for running operations more efficiently after filtering down a large dataset."
   ([n rdd]
-   (.coalesce rdd (min n (count-partitions rdd))))
+   (u/set-auto-name
+     (.coalesce rdd (min n (count-partitions rdd))) n))
   ([n shuffle? rdd]
-   (.coalesce rdd (min n (count-partitions rdd)) shuffle?)))
+   (u/set-auto-name
+     (.coalesce rdd (min n (count-partitions rdd)) shuffle?) n shuffle?)))
 
 
 ;; functions on multiple rdds
 
 (defn cogroup
   ([^JavaPairRDD rdd ^JavaPairRDD other]
-   (.cogroup rdd other))
+   (u/set-auto-name
+     (.cogroup rdd other)))
   ([^JavaPairRDD rdd ^JavaPairRDD other1 ^JavaPairRDD other2]
-   (.cogroup rdd
-             other1
-             other2)))
+   (u/set-auto-name
+     (.cogroup rdd
+               other1
+               other2))))
 
 (defn union
   "Build the union of two or more RDDs"
   ([rdd1 rdd2]
-   (.union rdd1 rdd2))
+   (u/set-auto-name (.union rdd1 rdd2)))
   ([rdd1 rdd2 & rdds]
-   (.union (JavaSparkContext/fromSparkContext (.context rdd1)) rdd1 (ArrayList. (conj rdds rdd2)))))
+   (u/set-auto-name (.union (JavaSparkContext/fromSparkContext (.context rdd1)) rdd1 (ArrayList. (conj rdds rdd2))))))
 
 (defn partitioner-aware-union [pair-rdd1 pair-rdd2 & pair-rdds]
   ;; TODO: add check to make sure every rdd is a pair-rdd and has the same partitioner.
-  (JavaPairRDD/fromRDD
-    (PartitionerAwareUnionRDD.
-      (.context pair-rdd1)
-      (JavaConversions/asScalaBuffer (into [] (clojure.core/map #(.rdd %1) (conj pair-rdds pair-rdd2 pair-rdd1))))
+  (u/set-auto-name
+    (JavaPairRDD/fromRDD
+      (PartitionerAwareUnionRDD.
+        (.context pair-rdd1)
+        (JavaConversions/asScalaBuffer (clojure.core/mapv #(.rdd %1) (conj pair-rdds pair-rdd2 pair-rdd1)))
+        si/OBJECT-CLASS-TAG
+        )
       si/OBJECT-CLASS-TAG
-      )
-    si/OBJECT-CLASS-TAG
-    si/OBJECT-CLASS-TAG
-    ))
+      si/OBJECT-CLASS-TAG
+      )))
 
 (defn join
   "When called on `rdd` of type (K, V) and (K, W), returns a dataset of
   (K, (V, W)) pairs with all pairs of elements for each key."
   [rdd other]
-  (.join rdd other))
+  (u/set-auto-name
+    (.join rdd other)))
 
 (defn left-outer-join
   "Performs a left outer join of `rdd` and `other`. For each element (K, V)
    in the RDD, the resulting RDD will either contain all pairs (K, (V, W)) for W in other,
    or the pair (K, (V, nil)) if no elements in other have key K."
   [rdd other]
-  (.leftOuterJoin rdd other))
+  (u/set-auto-name
+    (.leftOuterJoin rdd other)))
 
 
 (defn key-by-fn "Wraps a function f to be called with the value v of a tuple from spark,
@@ -396,13 +447,15 @@ so that the wrapped function returns a tuple [f(v),v]"
     (rekey (key-by-fn keyfn))
     (join rdd2)
     (map-values (ds/second-value-fn identity))
-    (rekey (key-by-fn keybackfn))))
+    (rekey (key-by-fn keybackfn))
+    (u/set-auto-name)))
 
 
 (defn cartesian
   "Creates the cartesian product of two RDDs returning an RDD of pairs"
   [rdd1 rdd2]
-  (.cartesian rdd1 rdd2))
+  (u/set-auto-name
+    (.cartesian rdd1 rdd2)))
 
 
 
@@ -439,10 +492,27 @@ so that the wrapped function returns a tuple [f(v),v]"
   "Returns an RDD created by coalescing all elements of `rdd` within each partition into a list."
   (memfn glom))
 
+(defn lookup [pair-rdd key]
+  "Return the vector of values in the RDD for key `key`. Your key has to be serializable with the Java serializer (not Kryo like usual) to use this."
+  (vec (.lookup pair-rdd key)))
 
 (def collect
   "Returns all the elements of `rdd` as an array at the driver process."
   (memfn collect))
+
+(defn collect-map
+  "Retuns all elements of `pair-rdd` as a map at the driver process.
+  Attention: The resulting map will only have one entry per key.
+             Thus, if you have multiple tuples with the same key in the pair-rdd, the collection returned will not contain all elements!
+             The function itself will *not* issue a warning of any kind!"
+  [pair-rdd]
+  (persistent!
+    (clojure.core/reduce
+    (fn [coll ^Tuple2 t]
+      (assoc! coll (s-de/key t) (s-de/value t)))
+    (transient {})
+    (collect pair-rdd))))
+
 
 (defn distinct
   "Return a new RDD that contains the distinct elements of the source `rdd`."
@@ -483,13 +553,13 @@ so that the wrapped function returns a tuple [f(v),v]"
 (defmethod histogram true [buckets rdd]
   (let [counts (-> (JavaDoubleRDD/fromRDD (.rdd rdd))
                    (.histogram (double-array buckets)))]
-    (into [] counts)))
+    (vec counts)))
 
 (defmethod histogram false
   [bucket-count rdd]
   (let [^Tuple2 buckets-counts-tuple (-> (JavaDoubleRDD/fromRDD (.rdd rdd))
                                          (.histogram bucket-count))]
-    [(into [] (._1 buckets-counts-tuple)) (into [] (._2 buckets-counts-tuple))]))
+    [(vec (._1 buckets-counts-tuple)) (vec (._2 buckets-counts-tuple))]))
 
 
 
@@ -526,17 +596,21 @@ so that the wrapped function returns a tuple [f(v),v]"
 (defn repartition
   "Returns a new `rdd` with exactly `n` partitions."
   [n rdd]
-  (.repartition rdd n))
+  (u/set-auto-name
+    (.repartition rdd n)
+    n))
 
 
 (defn rekey
   "This re-keys a pair-rdd by applying the rekey-fn to generate new tuples.
   However, it does not check whether your new keys would keep the same partitioning, so watch out!!!!"
   [rekey-fn rdd]
-  (map-partitions-to-pair
-    (comp (partial clojure.core/map rekey-fn) iterator-seq)
-    true
-    rdd))
+  (u/set-auto-name
+    (map-partitions-to-pair
+      (comp (partial clojure.core/map rekey-fn) iterator-seq)
+      true
+      rdd)
+    (u/unmangle-fn rekey-fn)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -556,7 +630,8 @@ so that the wrapped function returns a tuple [f(v),v]"
   (.persist rdd storage-level))
 
 
-(defn checkpoint [^JavaRDD rdd]
+;; Add documentation, make sure you have checkpoint-directory set. How?
+(defn checkpoint [rdd]
   (.checkpoint rdd))
 
 
@@ -565,3 +640,38 @@ so that the wrapped function returns a tuple [f(v),v]"
    (.setName rdd name))
   ([rdd]
    (.name rdd)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Spark Context handling
+
+(defn spark-context
+  "Creates a spark context that loads settings from given configuration object
+   or system properties"
+  ([conf]
+   (log/debug "JavaSparkContext" (conf/to-string conf))
+   (JavaSparkContext. conf))
+  ([master app-name]
+   (log/debug "JavaSparkContext" master app-name)
+   (let [conf (-> (conf/spark-conf)
+                  (conf/master master)
+                  (conf/app-name app-name))]
+     (spark-context conf))))
+
+(defn local-spark-context
+  [app-name]
+  (let [conf (-> (conf/spark-conf)
+                 (conf/master "local[*]")
+                 (conf/app-name app-name))]
+    (spark-context conf)))
+
+(def stop
+  (memfn #^JavaSparkContext stop))
+
+
+(defmacro with-context
+  [context-sym conf & body]
+  `(let [~context-sym (sparkling.core/spark-context ~conf)]
+     (try
+       ~@body
+       (finally (stop ~context-sym)))))
