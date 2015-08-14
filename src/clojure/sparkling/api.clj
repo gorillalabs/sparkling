@@ -146,6 +146,11 @@
   [rdd1 rdd2]
   (sc/cartesian rdd1 rdd2))
 
+(defn subtract
+  "Removes all elements from rdd1 that are present in rdd2."
+  [rdd1 rdd2]
+   (sc/subtract rdd1 rdd2))
+
 (defn group-by
   "Returns an RDD of items grouped by the return value of function `f`."
   ([rdd f]
