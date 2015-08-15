@@ -151,6 +151,11 @@
   [rdd1 rdd2]
   (sc/subtract rdd1 rdd2))
 
+(defn subtract-by-key
+  "Return each (key, value) pair in rdd1 that has no pair with matching key in rdd2."
+  [rdd1 rdd2]
+  (sc/subtract-by-key rdd1 rdd2))
+
 (defn group-by
   "Returns an RDD of items grouped by the return value of function `f`."
   ([rdd f]
