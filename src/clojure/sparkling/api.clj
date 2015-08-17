@@ -146,6 +146,10 @@
   [rdd1 rdd2]
   (sc/cartesian rdd1 rdd2))
 
+(defn intersection
+  [rdd1 rdd2]
+  (sc/intersection rdd1 rdd2))
+
 (defn subtract
   "Removes all elements from rdd1 that are present in rdd2."
   [rdd1 rdd2]

@@ -457,6 +457,10 @@ so that the wrapped function returns a tuple [f(v),v]"
   (u/set-auto-name
     (.cartesian rdd1 rdd2)))
 
+(defn intersection
+  [rdd1 rdd2]
+  (u/set-auto-name
+   (.intersection rdd1 rdd2)))
 
 (defn subtract
   "Removes all elements from rdd1 that are present in rdd2."

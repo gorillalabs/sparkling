@@ -403,6 +403,15 @@
                                                       vec)
                                                   [#sparkling/tuple[1 5] #sparkling/tuple[1 6] #sparkling/tuple[1 7] #sparkling/tuple[2 5] #sparkling/tuple[2 6] #sparkling/tuple[2 7]]
                                                   ))))
+
+                    (testing
+                        "intersection returns the common elements of two vectors"
+                      (let [rdd1 (s/parallelize c [1 2 3 4 5])
+                            rdd2 (s/parallelize c [1 3 5])]
+                        (is (equals-ignore-order? (-> (s/intersection rdd1 rdd2)
+                                                      s/collect
+                                                      vec)
+                                                  [1 3 5]))))
                     (testing
                         "subtract returns elements in the first RDD that not present in the second"
                       (let [rdd1 (s/parallelize c [1 2 3 4 5])
