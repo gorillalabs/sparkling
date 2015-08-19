@@ -407,7 +407,7 @@
                     (testing
                         "intersection returns the common elements of two vectors"
                       (let [rdd1 (s/parallelize c [1 2 3 4 5])
-                            rdd2 (s/parallelize c [1 3 5])]
+                            rdd2 (s/parallelize c [1 3 5 7])]
                         (is (equals-ignore-order? (-> (s/intersection rdd1 rdd2)
                                                       s/collect
                                                       vec)
