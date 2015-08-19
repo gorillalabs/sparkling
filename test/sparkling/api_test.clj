@@ -403,6 +403,15 @@
                                                       vec)
                                                   [#sparkling/tuple[1 5] #sparkling/tuple[1 6] #sparkling/tuple[1 7] #sparkling/tuple[2 5] #sparkling/tuple[2 6] #sparkling/tuple[2 7]]
                                                   ))))
+
+                    (testing
+                        "intersection returns the common elements of two vectors"
+                      (let [rdd1 (s/parallelize c [1 2 3 4 5])
+                            rdd2 (s/parallelize c [1 3 5])]
+                        (is (equals-ignore-order? (-> (s/intersection rdd1 rdd2)
+                                                      s/collect
+                                                      vec)
+                                                  [1 3 5]))))
                     (testing
                         "subtract returns elements in the first RDD that not present in the second"
                       (let [rdd1 (s/parallelize c [1 2 3 4 5])
@@ -411,6 +420,18 @@
                                                       s/collect
                                                       vec)
                                                   [2 4]))))
+
+                    (testing
+                        "subtract-by-key returns elements by key in the first RDD that not present in the second"
+                      (let [rdd1 (s/parallelize-pairs c [#sparkling/tuple[1 4]
+                                                         #sparkling/tuple[2 5]
+                                                         #sparkling/tuple[3 6]])
+                            rdd2 (s/parallelize-pairs c [#sparkling/tuple[1 1]
+                                                         #sparkling/tuple[3 6]])]
+                        (is (equals-ignore-order? (-> (s/subtract-by-key rdd1 rdd2)
+                                                      s/collect
+                                                      vec)
+                                                  [#sparkling/tuple[2 5]]))))
 
 
                     ;TODO:                      (future-fact "repartition returns a new RDD with exactly n partitions")
