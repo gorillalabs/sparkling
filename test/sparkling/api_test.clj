@@ -135,7 +135,7 @@
                     (testing
                       "filter returns an RDD formed by selecting those elements of the source on which func returns true"
                       (is (equals-ignore-order? (-> (s/parallelize c [1 2 3 4 5 6])
-                                                    (s/filter (fn [x] (even? x)))
+                                                    (s/filter even?)
                                                     s/collect
                                                     vec)
                                                 [2 4 6])))
