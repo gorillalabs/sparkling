@@ -103,7 +103,9 @@
   (register kryo None$)
   (register kryo Nil$)
   (register kryo scala.reflect.ManifestFactory$$anon$10)
-  )
+  (register kryo scala.math.LowPriorityOrderingImplicits$$anon$7)
+  (register kryo scala.math.Ordering$$anon$4)
+  (register kryo org.spark-project.guava.collect.NaturalOrdering))
 
 (defn register-spark [^Kryo kryo]
   (register-array-type kryo CompactBuffer)

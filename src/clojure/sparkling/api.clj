@@ -305,6 +305,15 @@
   [rdd cnt]
   (sc/take cnt rdd))
 
+(defn take-ordered
+  "Returns the first N elements from this RDD using the natural ordering of it's elements.
+   When provided a comparator, returns the first N elements from this RDD in the order
+   defined by this comparator."
+  ([rdd cnt]
+    (.takeOrdered rdd cnt))
+  ([rdd cnt ^java.util.Comparator comparator]
+    (.takeOrdered rdd cnt comparator)))
+
 (def partitions sc/partitions)
 
 
