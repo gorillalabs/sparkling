@@ -386,7 +386,13 @@
    (u/set-auto-name
      (.cogroup rdd
                other1
-               other2))))
+               other2)))
+  ([^JavaPairRDD rdd ^JavaPairRDD other1 ^JavaPairRDD other2 ^JavaPairRDD other3]
+   (u/set-auto-name
+     (.cogroup rdd
+               other1
+               other2
+               other3))))
 
 (defn union
   "Build the union of two or more RDDs"
