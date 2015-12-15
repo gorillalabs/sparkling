@@ -58,11 +58,13 @@ Start up your REPL (in your favourite tool), you should see something like this 
 
 Require the sparkling namespaces you will need for this guide.
 
-    (require '[sparkling.conf :as conf])
-    ;;  nil
+{% highlight clojure %}
+(require '[sparkling.conf :as conf])
+;;  nil
 
-    (require '[sparkling.core :as spark])
-    ;;  nil
+(require '[sparkling.core :as spark])
+;;  nil
+{% endhighlight %}
 
 
 
@@ -74,14 +76,16 @@ The first step is to create a Spark configuration object, SparkConf, which conta
 Here we create a SparkConf object with the string `local` to run in local mode:
 
 
-    (def c (-> (conf/spark-conf)
-               (conf/master "local")
-               (conf/app-name "sparkling-example")))
-    ;;  #'sparkling.example.tfidf/c
+{% highlight clojure %}
+(def c (-> (conf/spark-conf)
+           (conf/master "local")
+           (conf/app-name "sparkling-example")))
+;;  #'sparkling.example.tfidf/c
 
 
-    (def sc (spark/spark-context c))
-    ;;  #'sparkling.example.tfidf/sc
+(def sc (spark/spark-context c))
+;;  #'sparkling.example.tfidf/sc
+{% endhighlight %}
 
 
 Using a `local` master provides you with a standalone system, where you do not need to install other software besides your Clojure environment (like JDK, lein, etc.) So it's great for in-REPL-development, and unit testing.
@@ -99,26 +103,34 @@ RDDs basically come in two flavors. Plain RDDs simply hold a collection of arbit
 
 Plain RDDs in Sparkling are created by calling the `parallelize` function on your Clojure data structure:
 
-    (def data (spark/parallelize sc ["a" "b" "c" "d" "e"]))
-    ;;  #'sparkling.example.tfidf/data
+{% highlight clojure %}
+(def data (spark/parallelize sc ["a" "b" "c" "d" "e"]))
+;;  #'sparkling.example.tfidf/data
+{% endhighlight %}
 
 Check out the contents of you newly created RDD:
 
-    (spark/first data)
-    ;;  "a"
+{% highlight clojure %}
+(spark/first data)
+;;  "a"
+{% endhighlight %}
 
 
 PairRDDs in Sparkling are created by calling the `parallelize-pairs` function on your Clojure data structure:
 
-    (def data (spark/parallelize-pairs sc [ (spark/tuple "a" 1) (spark/tuple "b" 2) (spark/tuple "c" 3) (spark/tuple "d" 4) (spark/tuple "e" 5)]))
-    ;;  #'sparkling.example.tfidf/data
+{% highlight clojure %}
+(def data (spark/parallelize-pairs sc [ (spark/tuple "a" 1) (spark/tuple "b" 2) (spark/tuple "c" 3) (spark/tuple "d" 4) (spark/tuple "e" 5)]))
+;;  #'sparkling.example.tfidf/data
+{% endhighlight %}
 
 Once initialized, the distributed dataset or RDD can be operated on in parallel.
 
 An important parameter for parallel collections is the number of slices to cut the dataset into. Spark runs one task for each slice of the cluster. Normally, Spark tries to set the number of slices automatically based on your cluster. However, you can also set it manually in sparkling by passing it as a third parameter to parallelize:
 
-    (def data (spark/parallelize sc [1 2 3 4 5] 4))
-    ;;  #'sparkling.example.tfidf/data
+{% highlight clojure %}
+(def data (spark/parallelize sc [1 2 3 4 5] 4))
+;;  #'sparkling.example.tfidf/data
+{% endhighlight %}
 
 ### <a name="external"/>External Datasets
 
@@ -127,8 +139,10 @@ Spark can create RDDs from any storage source supported by Hadoop, including the
 Text file RDDs can be created in sparkling using the `text-file` function under the `sparkling.core` namespace. This function takes a URI for the file (either a local path on the machine, or a `hdfs://...`, `s3n://...`, etc URI) and reads it as a collection of lines. Note, `text-file` supports S3 and HDFS globs.
 The following example refers to the data.txt file at the current directory. Make sure to have one.
 
-    (def data (spark/text-file sc "data.txt"))
-    ;;  #'sparkling.example.tfidf/data
+{% highlight clojure %}
+(def data (spark/text-file sc "data.txt"))
+;;  #'sparkling.example.tfidf/data
+{% endhighlight %}
 
 
 ## <a name="rdd-operations"/>RDD Operations
@@ -145,17 +159,21 @@ RDDs support two types of operations:
 To illustrate RDD basics in sparkling, consider the following simple application using this sample [`data.txt`](https://github.com/gorillalabs/sparkling/blob/develop/data.txt).
 
 
-    (->> (spark/text-file sc "data.txt")   ;; returns an unrealized lazy dataset
-         (spark/map count)  ;; returns RDD array of length of lines
-         (spark/reduce +)) ;; returns a value, should be 1406
-    ;; > 1406
+{% highlight clojure %}
+(->> (spark/text-file sc "data.txt")   ;; returns an unrealized lazy dataset
+     (spark/map count)  ;; returns RDD array of length of lines
+     (spark/reduce +)) ;; returns a value, should be 1406
+;; > 1406
+{% endhighlight %}
 
 
 The first line defines a base RDD from an external file. The dataset is not loaded into memory; it is merely a pointer to the file. The second line defines an RDD of the lengths of the lines as a result of the `map` transformation. Note, the lengths are not immediately computed due to laziness. Finally, we run `reduce` on the transformed RDD, which is an action, returning only a _value_ to the driver program.
 
 If we also wanted to reuse the resulting RDD of length of lines in later steps, we could insert:
 
-    (spark/cache)
+{% highlight clojure %}
+(spark/cache)
+{% endhighlight %}
 
 
 before the `reduce` action, which would cause the line-lengths RDD to be saved to memory after the first time it is realized. See [RDD Persistence](#rdd-persistence) for more on persisting and caching RDDs in sparkling.
@@ -169,9 +187,11 @@ the namespaces containing them need to be (AOT-)compiled. That's usually no prob
 
 When we evaluate this `map` transformation on the initial RDD, the result is another RDD. The result of this transformation can be seen using the `spark/collect` action to return all of the elements of the RDD. The following example will only work in an AOT-compiled environment. So, it will not work in your REPL:
 
-    (->> (spark/parallelize sc [1 2 3 4 5])
-         (spark/map (fn [x] (* x x)))
-         spark/collect)
+{% highlight clojure %}
+(->> (spark/parallelize sc [1 2 3 4 5])
+     (spark/map (fn [x] (* x x)))
+     spark/collect)
+{% endhighlight %}
 
 We can also use `spark/first` or `spark/take` to return just a subset of the data.
 
@@ -185,41 +205,97 @@ You do not need to deal with the internal data structures of Apache Spark (like 
 
 So, first require that namespace
 
-    (require '[sparkling.destructuring :as s-de])
+{% highlight clojure %}
+(require '[sparkling.destructuring :as s-de])
+{% endhighlight %}
 
 We deal with strings, so require clojure.string also:
 
-    (require '[clojure.string :as s])
+{% highlight clojure %}
+(require '[clojure.string :as s])
+{% endhighlight %}
 
 
 The following code uses the `reduce-by-key` operation on key-value pairs to count how many times each word occurs in a file:
 
 
-    (->> (spark/text-file sc "data.txt")
-         (spark/flat-map (fn [l] (s/split l #" ")))
-         (spark/map-to-pair (fn [w] (spark/tuple w 1)))
-         (spark/reduce-by-key +)
-         (spark/map (s-de/key-value-fn (fn [k v] (str k " appears " v " times."))))
-         )
-    ;; #<JavaPairRDD org.apache.spark.api.java.JavaPairRDD@4c3c63f1>
+{% highlight clojure %}
+(->> (spark/text-file sc "data.txt")
+     (spark/flat-map (fn [l] (s/split l #" ")))
+     (spark/map-to-pair (fn [w] (spark/tuple w 1)))
+     (spark/reduce-by-key +)
+     (spark/map (s-de/key-value-fn (fn [k v] (str k " appears " v " times."))))
+     )
+;; #<JavaPairRDD org.apache.spark.api.java.JavaPairRDD@4c3c63f1>
 
-    (spark/take  3 *1)
-    ;; ["created appears 1 times." "under appears 1 times." "this appears 4 times."]
+(spark/take  3 *1)
+;; ["created appears 1 times." "under appears 1 times." "this appears 4 times."]
+{% endhighlight %}
 
 After the `reduce-by-key` operation, we can sort the pairs alphabetically using `spark/sort-by-key`. To collect the word counts as an array of objects in the repl or to write them to a filesysten, we can use the `spark/collect` action:
 
-    (->> (spark/text-file sc "data.txt")
-         (spark/flat-map (fn [l] (s/split l #" ")))
-         (spark/map-to-pair (fn [w] (spark/tuple w 1)))
-         (spark/reduce-by-key +)
-         spark/sort-by-key
-         (spark/map (s-de/key-value-fn (fn [k v] [k v])))
-         spark/collect
-         clojure.pprint/pprint)
-    ;; [["" 4] ["But" 1] ["Four" 1] ["God" 1] ["It" 3] ["Liberty" 1] ["Now" 1] ["The" 2] ["We" 2] ["a" 7] ...
-    ;; nil
+{% highlight clojure %}
+(->> (spark/text-file sc "data.txt")
+     (spark/flat-map (fn [l] (s/split l #" ")))
+     (spark/map-to-pair (fn [w] (spark/tuple w 1)))
+     (spark/reduce-by-key +)
+     spark/sort-by-key
+     (spark/map (s-de/key-value-fn (fn [k v] [k v])))
+     spark/collect
+     clojure.pprint/pprint)
+;; [["" 4] ["But" 1] ["Four" 1] ["God" 1] ["It" 3] ["Liberty" 1] ["Now" 1] ["The" 2] ["We" 2] ["a" 7] ...
+;; nil
+{% endhighlight %}
 
+### <a name="destructuring-sugar"/> Destructuring sugar
 
+This section describes a syntactic convenience. It can safely be skipped.
+
+In the example above, `spark/sort-by-key` produces a PairRDD, whose elements are `scala/Tuple2` instances. We then need to unwrap these to get the raw values inside.
+This is what `s-de/key-value-fn` does; it is one of several such wrappers provided.
+In addition to destructuring tuples, there are two other "wrapper" classes which can be produced by RDD operations:
+
+* `scala.collection.convert.Wrappers$IterableWrapper` for collections, for example as in the result of `group-by-key`
+* `com.google.common.base.Optional` for potentially absent values, for example as in the result of `left-outer-join`
+
+For this reason, the `sparkling.destructuring/fn` macro implements a destructuring binding form specialized for these data types.
+
+In the last example above, `(s-de/key-value-fn (fn [k v] [k v]))` could be replaced by `(s-de/fn (k v) [k v])`, which is not much different. However `s-de/fn` supports arbitrary nesting of tuples, a binding symbol beginning with a `-` will be unwrapped as a seq, and a binding symbol beginning with a `?` will be unwrapped as an `Optional`, as illustrated in the following example:
+
+{% highlight clojure %}
+
+(def votes (s/parallelize-pairs sc [(s/tuple "Woody Allen" :upvote)
+                                    (s/tuple "Woody Allen" :upvote)
+                                    (s/tuple "Genghis Khan" :downvote)
+                                    (s/tuple "Genghis Khan" :downvote)
+                                    (s/tuple "Bugs Bunny" :upvote)]))
+(def votes-by-user (s/group-by-key votes))
+(def reputation-by-user (s/parallelize-pairs sc [(s/tuple "Woody Allen"  {:reputation 1})
+                                                 (s/tuple "Genghis Khan" {:reputation 3})]))
+(->> (s/left-outer-join votes-by-user reputation-by-user)
+     (s/first))
+;; #sparkling/tuple ["Woody Allen" #sparkling/tuple [#object[scala.collection.convert.Wrappers$IterableWrapper 0x12461ef5 "[:upvote, :upvote]"] #object[com.google.common.base.Present 0x28e67e03 "Optional.of({:reputation 1})"]]]
+
+{% endhighlight %}
+
+Notice that the `left-outer-join` results in a PairRDD where each member is a Tuple2 containing a name and a nested Tuple2 containing a collection of events, and an optional state. The `s-de/fn` can make the code to process this RDD cleaner:
+
+{% highlight clojure %}
+
+(->> (s/left-outer-join votes-by-user reputation-by-user)
+     (s/map-values
+      (s-de/fn (-events ?rep)            ;; <-- the specialized tuple-destructuring binding form
+        (reduce (fn [state event]
+                  (update-in state [:reputation] (condp = event :upvote inc :downvote dec)))
+                (or rep {:reputation 0}) ;; Bugs Bunny is not represented in `reputation-by-users`, so `rep` will be nil
+                events)))                ;; events is a clojure seq, not a scala collection wrapper
+     (s/collect))
+;; [#sparkling/tuple ["Woody Allen" {:reputation 3}] #sparkling/tuple ["Bugs Bunny" {:reputation 1}] #sparkling/tuple ["Genghis Khan" {:reputation 1}]]
+    
+{% endhighlight %}
+
+The binding form above `(-events ?rep)` means: "Expect a Tuple2, containing a collection and an optional".
+The symbols `events` and `rep` will be bound inside the fn, already "unwrapped". Arbitrarily nested tuples are supported. Other familiar destructuring forms will not work in a `s-de/fn` signature, it is specifically for `Tuple*`, `Optional`, and `IterableWrapper`.
 
 ### <a name="rdd-transformations"/>RDD Transformations
 

@@ -1,8 +1,11 @@
 (ns sparkling.destructuring
   "Contains wrapper-functions to destructure scala/spark data structures"
-  (:refer-clojure :exclude [key first second])
+  (:refer-clojure :exclude [key first second destructure fn])
   (:import [scala Tuple2 Tuple3]
            [com.google.common.base Optional]))
+
+(defn optional-of [v] (if (nil? v) (Optional/absent) (Optional/of v)))
+(defn optional-or-nil [^Optional o] (.orNull o))
 
 (defn tuple [key value]
   (Tuple2. key value))
@@ -14,15 +17,15 @@
 
 
 (defn first-value-fn
-  "Wraps a function f so that when the wrapped function is called on a tuple2, f is called with the second element from that tuple."
+  "Wraps a function f so that when the wrapped function is called on a tuple2, f is called with the first element from that tuple."
   [f]
-  (fn [^Tuple2 tuple]
+  (clojure.core/fn [^Tuple2 tuple]
     (f (._1 tuple))))
 
 (defn second-value-fn
   "Wraps a function f so that when the wrapped function is called on a tuple2, f is called with the second element from that tuple."
   [f]
-  (fn [^Tuple2 tuple]
+  (clojure.core/fn [^Tuple2 tuple]
     (f (._2 tuple))))
 
 
@@ -35,13 +38,13 @@
 (defn key-value-fn
   "wraps a function f [k v] to untuple a key/value tuple. Useful e.g. on map for PairRDD."
   [f]
-  (fn [^Tuple2 t]
+  (clojure.core/fn [^Tuple2 t]
     (f (._1 t) (._2 t))))
 
 (defn key-seq-seq-fn
   "wraps a function f [k seq1 seq2] to untuple a key/value tuple with two partial values both being seqs. Useful e.g. on map after a cogroup with two RDDs."
   [f]
-  (fn [^Tuple2 t]
+  (clojure.core/fn [^Tuple2 t]
     (let [k (._1 t)
           v ^Tuple2 (._2 t)]
       (f k (seq (._1 v)) (seq (._2 v))))))
@@ -49,13 +52,13 @@
 (defn seq-seq-fn
   "wraps a function f [seq1 seq2] to untuple a tuple-value with two partial values all being seqs. Useful e.g. on map-values after a cogroup with two RDDs."
   [f]
-  (fn [^Tuple2 t]
+  (clojure.core/fn [^Tuple2 t]
     (f (seq (._1 t)) (seq (._2 t)))))
 
 (defn key-seq-seq-seq-fn
   "wraps a function f [k seq1 seq2 seq3] to untuple a key/value tuple with three partial values all being seqs. Useful e.g. on map after a cogroup with three RDDs."
   [f]
-  (fn [^Tuple2 t]
+  (clojure.core/fn [^Tuple2 t]
     (let [k (._1 t)
           v ^Tuple3 (._2 t)]
       (f k (seq (._1 v)) (seq (._2 v)) (seq (._3 v))))))
@@ -63,14 +66,14 @@
 (defn seq-seq-seq-fn
   "wraps a function f [seq1 seq2 seq3] to untuple a triple-value with three partial values all being seqs. Useful e.g. on map-values after a cogroup with three RDDs."
   [f]
-  (fn [^Tuple3 v]
+  (clojure.core/fn [^Tuple3 v]
     (f (seq (._1 v)) (seq (._2 v)) (seq (._3 v)))))
 
 
 #_(defn key-val-val-fn
 
   [f]
-  (fn [^Tuple2 t]
+  (clojure.core/fn [^Tuple2 t]
     (let [k (._1 t)
           v ^Tuple2 (._2 t)]
       (f k (._1 v) (._2 v)))))
@@ -87,7 +90,7 @@
   (let [second-value-fn (if optional-second-value?
                           optional-second-value
                           second-value)]
-    (fn [^Tuple2 t]
+    (clojure.core/fn [^Tuple2 t]
       (let [k (._1 t)
             v ^Tuple2 (._2 t)
             v1 (._1 v)
@@ -101,10 +104,58 @@
   (let [second-value-fn (if optional-second-value?
                           optional-second-value
                           second-value)]
-    (fn [^Tuple2 v]
+    (clojure.core/fn [^Tuple2 v]
       (let [v1 (._1 v)
             v2 (second-value-fn v)]
         (f v1 v2)))))
 
+;; sparkling destructuring binding
+
+(def tuple-nths '[._1 ._2 ._3 ._4 ._5 ._6 ._7 ._8 ._9 ._10 ._11 ._12 ._13 ._14 ._15 ._16 ._17 ._18 ._19 ._20 ._21 ._22])
+(def tuple-classes '[scala.Tuple1 scala.Tuple2 scala.Tuple3 scala.Tuple4 scala.Tuple5 scala.Tuple6 scala.Tuple7 scala.Tuple8 scala.Tuple9 scala.Tuple10 scala.Tuple11 scala.Tuple12 scala.Tuple13 scala.Tuple14 scala.Tuple15 scala.Tuple16 scala.Tuple17 scala.Tuple18 scala.Tuple19 scala.Tuple20 scala.Tuple21 scala.Tuple22])
+
+(declare destructure)
+
+(defn- bind-symbol [parent i sym]
+  (condp = (clojure.core/first (name sym))
+    \- `(~(-> sym name (subs 1) symbol)
+         (seq (~(nth tuple-nths i)
+               ~parent) ))
+    \? `(~(-> sym name (subs 1) symbol)
+         (.orNull (~(nth tuple-nths i)
+                   ~parent) ))
+
+    `(~sym
+      (~(nth tuple-nths i)
+       ~parent)) ))
+
+(defn- bind-tuple [parent i form]
+  (let [sym (gensym "tuple")]
+    (concat
+     `(~sym (~(nth tuple-nths i) ~parent))
+     (destructure sym form))))
+
+(defn- destructure [parent binding-form]
+  (let [tuple-length (count binding-form)]
+    (->> binding-form
+         (map-indexed (clojure.core/fn [i form]
+                        (cond
+                          (symbol? form) (bind-symbol parent i form)
+                          (seq? form)    (bind-tuple  parent i form)
+                          true (throw (IllegalArgumentException. (str "Unsupported sparkling tuple-binding form: " form))))))
+         (apply concat)
+         vec)))
+
+(defmacro fn [bindings & exprs]
+  (let [t (gensym "tuple")
+        tuple-class-sym (nth tuple-classes
+                             (dec (count bindings)))]
+    `(fn* [~(vary-meta t assoc :tag tuple-class-sym)]
+          (let* ~(destructure t bindings)
+            ~@exprs))))
 
 
+;; TODO: add type-hint metadata to the let* bindings & the Optional
+
+;; TODO: this might be further optimized with protocols
+;; http://clj-me.cgrand.net/2010/05/08/destructuring-records-prototypes-and-named-arguments/
