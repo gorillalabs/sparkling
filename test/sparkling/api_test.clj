@@ -522,6 +522,16 @@
                                  s/count) 5)))
 
                     (testing
+                      "max returns the maximum element in an RDD in the ordering defined by the comparator"
+                      (is (= 7 (->> (s/parallelize c [1 2 3 4 5 6 7 8 9])
+                                    (s/max #(compare (mod %1 8) (mod %2 8)))))))
+
+                    (testing
+                      "min returns the minimum element in an RDD in the ordering defined by the comparator"
+                      (is (= 8 (->> (s/parallelize c [1 2 3 4 5 6 7 8 9])
+                                    (s/min #(compare (mod %1 8) (mod %2 8)))))))
+
+                    (testing
                       "collect returns all elements of the RDD as an array at the driver program"
                       (is (equals-ignore-order? (-> (s/parallelize c [[1] [2] [3] [4] [5]])
                                                     s/collect
