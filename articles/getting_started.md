@@ -336,6 +336,8 @@ Sparkling supports the following RDD actions:
 * `take`: returns an array with the first n elements of the RDD.
 * `glom`: returns an RDD created by coalescing all elements of the source RDD within each partition into a list.
 * `cache`: persists an RDD with the default storage level ('MEMORY_ONLY').
+* `min`: returns the minimum element of an RDD in the ordering defined by a comparator fn.
+* `max`: returns the maximum element of an RDD in the ordering defined by a comparator fn.
 
 
 
