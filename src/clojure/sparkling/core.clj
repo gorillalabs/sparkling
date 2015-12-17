@@ -7,7 +7,7 @@
   If you find an RDD operation missing from the api that you'd like to use, pull requests are
   happily accepted!"
 
-  (:refer-clojure :exclude [map reduce first count take distinct filter group-by values partition-by keys])
+  (:refer-clojure :exclude [map reduce first count take distinct filter group-by values partition-by keys max min])
   (:require [clojure.tools.logging :as log]
             [sparkling.destructuring :as ds]
             [sparkling.function :refer [flat-map-function
@@ -306,6 +306,10 @@
      n
      )))
 
+(defn- wrap-comparator [f]
+  "Turn a plain function into a Comparator instance, or pass a Comparator unchanged"
+  (if (instance? Comparator f) f (comparator f)))
+
 (defn sort-by-key
   "When called on `rdd` of (K, V) pairs where K implements ordered, returns a dataset of
    (K, V) pairs sorted by keys in ascending or descending order, as specified by the boolean
@@ -322,13 +326,25 @@
   ([compare-fn asc? rdd]
    (u/set-auto-name
      (.sortByKey rdd
-                 (if (instance? Comparator compare-fn)
-                   compare-fn
-                   (comparator compare-fn))
+                 (wrap-comparator compare-fn)
                  (u/truthy? asc?))
      (u/unmangle-fn compare-fn)
      asc?
      )))
+
+(defn max
+  "Return the maximum value in `rdd` in the ordering defined by `compare-fn`"
+  [compare-fn rdd]
+  (u/set-auto-name
+   (.max rdd (wrap-comparator compare-fn))
+   (u/unmangle-fn compare-fn)))
+
+(defn min
+  "Return the minimum value in `rdd` in the ordering defined by `compare-fn`"
+  [compare-fn rdd]
+  (u/set-auto-name
+   (.min rdd (wrap-comparator compare-fn))
+   (u/unmangle-fn compare-fn)))
 
 (defn sample
   "Returns a `fraction` sample of `rdd`, with or without replacement,

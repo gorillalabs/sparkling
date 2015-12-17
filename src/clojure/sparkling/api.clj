@@ -1,7 +1,7 @@
 ;; This is the deprecated entry point to sparkling, please use sparkling.core instead if you start a new project.
 
 (ns sparkling.api
-  (:refer-clojure :exclude [map reduce first count take distinct filter group-by values partition-by keys])
+  (:refer-clojure :exclude [map reduce first count take distinct filter group-by values partition-by keys min max])
   (:require [sparkling.core :as sc])
   (:import [org.apache.spark.api.java JavaRDD JavaPairRDD]
            [org.apache.spark Partitioner]
@@ -279,6 +279,12 @@
 
 (def count
   sc/count)
+
+(def max
+  sc/max)
+
+(def min
+  sc/min)
 
 (def glom
   "Returns an RDD created by coalescing all elements of `rdd` within each partition into a list."
