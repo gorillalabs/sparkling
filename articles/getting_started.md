@@ -242,6 +242,8 @@ Sparkling supports the following RDD transformations:
 * `group-by`: returns an RDD of items grouped by the return value of a function.
 * `group-by-key`: groups the values for each key in an RDD into a single sequence.
 * `flat-map-to-pair`: returns a new `JavaPairRDD` by first applying a function to all elements of the RDD, and then flattening the results.
+* `zip-with-index`: when called on and RDD of type T, returns a new  `JavaPairRDD` of (T, index) pairs where the index is a `long` element index,  starting from 0.
+* `zip-with-index`: when called on and RDD of type T, returns a new `JavaPairRDD` of (T, id) pairs where the id is a unique `long`.  Items in the kth partition will get ids k, n+k, 2*n+k, ..., where n is the number of partitions. So there may exist gaps, but this method won't trigger a spark job.
 
 
 

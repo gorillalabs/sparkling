@@ -78,7 +78,7 @@
   (let [conf (-> (conf/spark-conf)
                  (conf/set-sparkling-registrator)
                  (conf/set "spark.kryo.registrationRequired" "true")
-                 (conf/master "local[*]")
+                 (conf/master "local[4]")
                  (conf/app-name "api-test"))]
     (s/with-context c conf
                     (testing
@@ -433,6 +433,25 @@
                                                       vec)
                                                   [#sparkling/tuple[2 5]]))))
 
+                    (testing
+                      "zip-with-index returns an RDD of (T, index) pairs"
+                      (is (equals-ignore-order? (-> (s/parallelize c ["a" "b" "c" "d"])
+                                                    s/zip-with-index
+                                                    (s/map (sd/key-value-fn identity-vec))
+                                                    s/collect
+                                                    vec) [["a" 0] ["b" 1] ["c" 2] ["d" 3]])))
+
+                    (testing
+                      "zip-with-unique-id returns an RDD of (T, unique-id) pairs"
+                      (is (equals-ignore-order? (-> (s/parallelize c ["a" "b" "c" "d" "e" "f" "g"])
+                                                    (s/map-partition-with-index
+                                                     (fn [ind it]
+                                                       (.iterator (map identity-vec (iterator-seq it) (repeat ind)))))
+                                                    s/zip-with-unique-id
+                                                    (s/map (sd/key-value-fn identity-vec))
+                                                    s/collect
+                                                    vec) [[["a" 0] 0] [["b" 1] 1] [["c" 1] 2] [["d" 2] 3] [["e" 2] 4]
+                                                          [["f" 3] 5] [["g" 3] 6]])))
 
                     ;TODO:                      (future-fact "repartition returns a new RDD with exactly n partitions")
 
