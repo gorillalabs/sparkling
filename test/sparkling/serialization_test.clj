@@ -24,4 +24,12 @@
       "we can serialize and deserialize maps"
       (is (= 42
              (ks/round-trip kryo testthing))))
+    (testing
+      "we can serialize and deserialize vectors"
+      (is (= [1 2 3 4 5]
+             (ks/round-trip kryo [1 2 3 4 5]))))
+    (testing
+      "we can serialize and deserialize sub-vectors"
+      (is (= [2 3 4]
+             (ks/round-trip kryo (subvec [1 2 3 4 5] 1 4)))))
     ))
