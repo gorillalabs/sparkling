@@ -130,6 +130,7 @@
   ;(log/info "Registering base classes for kryo")
   (carbonite/default-registry kryo)
   (carbonite/register-serializers kryo (serializer/sorted-collections))
+  (carbonite/register-serializers kryo (serializer/ordered-collections))
   (carbonite/register-serializers kryo (serializer/joda-serializers))
 
   (register-native-array-serializers kryo)
