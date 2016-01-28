@@ -116,46 +116,40 @@
 
 (declare destructure)
 
-(defn- bind-symbol [parent i sym]
+(defn- bind-symbol [parent sym]
   (condp = (clojure.core/first (name sym))
     \- `(~(-> sym name (subs 1) symbol)
-         (seq (~(nth tuple-nths i)
-               ~parent) ))
+         (seq ~parent))
     \? `(~(-> sym name (subs 1) symbol)
-         (.orNull (~(nth tuple-nths i)
-                   ~parent) ))
+         (.orNull ~parent))
+    `(~sym ~parent)))
 
-    `(~sym
-      (~(nth tuple-nths i)
-       ~parent)) ))
+(defn- bind [sym parent form]
+  (concat `(~sym ~parent) (destructure sym form)))
 
-(defn- bind-tuple [parent i form]
-  (let [sym (gensym "tuple")]
-    (concat
-     `(~sym (~(nth tuple-nths i) ~parent))
-     (destructure sym form))))
+(defn- bind-form [parent form]
+  (condp #(% %2) form
+    symbol?  (bind-symbol parent form)
+    seq?     (bind (gensym "seq") parent form)
+    vector?  (bind (gensym "vec") parent form)
+    map?     (bind (gensym "map") parent form)
+    (throw (IllegalArgumentException. (str "Unsupported sparkling tuple-binding form: " form)))))
 
-(defn- destructure [parent binding-form]
-  (let [tuple-length (count binding-form)]
-    (->> binding-form
-         (map-indexed (clojure.core/fn [i form]
-                        (cond
-                          (symbol? form) (bind-symbol parent i form)
-                          (seq? form)    (bind-tuple  parent i form)
-                          true (throw (IllegalArgumentException. (str "Unsupported sparkling tuple-binding form: " form))))))
-         (apply concat)
-         vec)))
+(defn- destructure [parent form]
+  (condp #(% %2) form
+    vector? (clojure.core/destructure `[~form ~parent])
+    map?    (clojure.core/destructure `[~form ~parent])
+    seq?    (apply concat
+                   (for [[i subform] (map-indexed vector form)]
+                     (bind-form `(~(nth tuple-nths i) ~parent) subform)))
+    symbol? (bind-form parent form)))
 
 (defmacro fn [bindings & exprs]
-  (let [t (gensym "tuple")
-        tuple-class-sym (nth tuple-classes
-                             (dec (count bindings)))]
-    `(fn* [~(vary-meta t assoc :tag tuple-class-sym)]
-          (let* ~(destructure t bindings)
+  (let [arg-syms (repeatedly (count bindings) #(gensym "arg"))]
+    `(fn* [~@arg-syms]
+          (let* [~@(apply concat (map destructure arg-syms bindings))]
             ~@exprs))))
 
-
 ;; TODO: add type-hint metadata to the let* bindings & the Optional
-
 ;; TODO: this might be further optimized with protocols
 ;; http://clj-me.cgrand.net/2010/05/08/destructuring-records-prototypes-and-named-arguments/
