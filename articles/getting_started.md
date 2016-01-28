@@ -253,14 +253,22 @@ This section describes a syntactic convenience. It can safely be skipped.
 
 In the example above, `spark/sort-by-key` produces a PairRDD, whose elements are `scala/Tuple2` instances. We then need to unwrap these to get the raw values inside.
 This is what `s-de/key-value-fn` does; it is one of several such wrappers provided.
-In addition to destructuring tuples, there are two other "wrapper" classes which can be produced by RDD operations:
+In addition to tuples, there are two other "wrapper" classes which can be produced by RDD operations:
 
 * `scala.collection.convert.Wrappers$IterableWrapper` for collections, for example as in the result of `group-by-key`
 * `com.google.common.base.Optional` for potentially absent values, for example as in the result of `left-outer-join`
 
 For this reason, the `sparkling.destructuring/fn` macro implements a destructuring binding form specialized for these data types.
 
-In the last example above, `(s-de/key-value-fn (fn [k v] [k v]))` could be replaced by `(s-de/fn (k v) [k v])`, which is not much different. However `s-de/fn` supports arbitrary nesting of tuples, a binding symbol beginning with a `-` will be unwrapped as a seq, and a binding symbol beginning with a `?` will be unwrapped as an `Optional`, as illustrated in the following example:
+In the last example above, you could replace
+
+`(s-de/key-value-fn (fn [k v] [k v]))`
+
+with
+
+`(s-de/fn [(k v)] [k v])`
+
+...which is not much different. However `s-de/fn` supports arbitrary nesting of tuples, delegates to clojure.core's destructuring of maps and vectors, and has special treatment of symbols beginning with `-` (unwrap an iterable) or `?` (unwrap an Optional). Some examples will clarify:
 
 {% highlight clojure %}
 
@@ -284,18 +292,30 @@ Notice that the `left-outer-join` results in a PairRDD where each member is a Tu
 
 (->> (s/left-outer-join votes-by-user reputation-by-user)
      (s/map-values
-      (s-de/fn (-events ?rep)            ;; <-- the specialized tuple-destructuring binding form
+      (s-de/fn [(-events ?rep)]          ;; <-- the specialized tuple-destructuring binding form
         (reduce (fn [state event]
                   (update-in state [:reputation] (condp = event :upvote inc :downvote dec)))
-                (or rep {:reputation 0}) ;; Bugs Bunny is not represented in `reputation-by-users`, so `rep` will be nil
+                (or rep {:reputation 0}) ;; Bugs Bunny is not in `reputation-by-users`, so `rep` will be nil
                 events)))                ;; events is a clojure seq, not a scala collection wrapper
      (s/collect))
 ;; [#sparkling/tuple ["Woody Allen" {:reputation 3}] #sparkling/tuple ["Bugs Bunny" {:reputation 1}] #sparkling/tuple ["Genghis Khan" {:reputation 1}]]
     
 {% endhighlight %}
 
-The binding form above `(-events ?rep)` means: "Expect a Tuple2, containing a collection and an optional".
-The symbols `events` and `rep` will be bound inside the fn, already "unwrapped". Arbitrarily nested tuples are supported. Other familiar destructuring forms will not work in a `s-de/fn` signature, it is specifically for `Tuple*`, `Optional`, and `IterableWrapper`.
+The binding form above `[(-events ?rep)]` means: "Expect a single Tuple2 argument, containing an iterable and an optional".
+The symbols `events` and `rep` will be bound inside the fn, their values already "unwrapped". Arbitrarily nested tuples are supported. You can mix this with Clojure's built-in destructuring forms (maps and vectors).
+
+{% highlight clojure %}
+
+(s-de/fn [(k {:keys [foo bar]})]
+  ;; you can destructure maps/records inside tuples
+  )
+
+{% endhighlight %}
+
+
+
+[The tests](https://github.com/gorillalabs/sparkling/blob/develop/test/sparkling/destructuring_test.clj) provide many examples.
 
 ### <a name="rdd-transformations"/>RDD Transformations
 
