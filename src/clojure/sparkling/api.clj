@@ -1,7 +1,7 @@
 ;; This is the deprecated entry point to sparkling, please use sparkling.core instead if you start a new project.
 
 (ns sparkling.api
-  (:refer-clojure :exclude [map reduce first count take distinct filter group-by values partition-by keys])
+  (:refer-clojure :exclude [map reduce first count take distinct filter group-by values partition-by keys min max])
   (:require [sparkling.core :as sc])
   (:import [org.apache.spark.api.java JavaRDD JavaPairRDD]
            [org.apache.spark Partitioner]
@@ -245,6 +245,12 @@
   ([rdd n shuffle?]
     (sc/coalesce n shuffle? rdd)))
 
+(def zip-with-index
+  sc/zip-with-index)
+
+(def zip-with-unique-id
+  sc/zip-with-index)
+
 (defn repartition
   "Returns a new `rdd` with exactly `n` partitions."
   [rdd n]
@@ -280,6 +286,12 @@
 (def count
   sc/count)
 
+(def max
+  sc/max)
+
+(def min
+  sc/min)
+
 (def glom
   "Returns an RDD created by coalescing all elements of `rdd` within each partition into a list."
   sc/glom)
@@ -287,6 +299,10 @@
 (def cache
   "Persists `rdd` with the default storage level (`MEMORY_ONLY`)."
   sc/cache)
+
+(def uncache
+  "Marks `rdd` as non-persistent (removes all blocks for it from memory and disk). If `blocking?` is true, block until the operation is complete."
+  sc/uncache)
 
 (def lookup
   "Return the vector of values in the RDD for key `key`. Your key has to be serializable with the Java serializer (not Kryo like usual) to use this."

@@ -7,7 +7,7 @@
   If you find an RDD operation missing from the api that you'd like to use, pull requests are
   happily accepted!"
 
-  (:refer-clojure :exclude [map reduce first count take distinct filter group-by values partition-by keys])
+  (:refer-clojure :exclude [map reduce first count take distinct filter group-by values partition-by keys max min])
   (:require [clojure.tools.logging :as log]
             [sparkling.destructuring :as ds]
             [sparkling.function :refer [flat-map-function
@@ -51,7 +51,8 @@
                      :memory-only-ser-2     StorageLevels/MEMORY_ONLY_SER_2
                      :memory-and-disk-2     StorageLevels/MEMORY_AND_DISK_2
                      :memory-and-disk-ser-2 StorageLevels/MEMORY_AND_DISK_SER_2
-                     :disk-only-2           StorageLevels/DISK_ONLY_2})
+                     :disk-only-2           StorageLevels/DISK_ONLY_2
+                     :none                  StorageLevels/NONE})
 
 
 
@@ -132,6 +133,8 @@
       (u/set-auto-name (u/unmangle-fn f))))
 
 (defn map-values [f rdd]
+  "Returns a new `JavaPairRDD` of (K,V) pairs by applying `f` to all values in the 
+  pair-rdd `rdd`"  
   (-> (.mapValues rdd (function f))
       (u/set-auto-name (u/unmangle-fn f))))
 
@@ -164,6 +167,8 @@
     (u/unmangle-fn f)))
 
 (defn flat-map-values
+  "Returns a `JavaPairRDD` by applying `f` to all values of `rdd`, and then 
+  flattening the results"
   [f rdd]
   (u/set-auto-name
     (.flatMapValues rdd (function f))
@@ -306,6 +311,10 @@
      n
      )))
 
+(defn- wrap-comparator [f]
+  "Turn a plain function into a Comparator instance, or pass a Comparator unchanged"
+  (if (instance? Comparator f) f (comparator f)))
+
 (defn sort-by-key
   "When called on `rdd` of (K, V) pairs where K implements ordered, returns a dataset of
    (K, V) pairs sorted by keys in ascending or descending order, as specified by the boolean
@@ -322,13 +331,25 @@
   ([compare-fn asc? rdd]
    (u/set-auto-name
      (.sortByKey rdd
-                 (if (instance? Comparator compare-fn)
-                   compare-fn
-                   (comparator compare-fn))
+                 (wrap-comparator compare-fn)
                  (u/truthy? asc?))
      (u/unmangle-fn compare-fn)
      asc?
      )))
+
+(defn max
+  "Return the maximum value in `rdd` in the ordering defined by `compare-fn`"
+  [compare-fn rdd]
+  (u/set-auto-name
+   (.max rdd (wrap-comparator compare-fn))
+   (u/unmangle-fn compare-fn)))
+
+(defn min
+  "Return the minimum value in `rdd` in the ordering defined by `compare-fn`"
+  [compare-fn rdd]
+  (u/set-auto-name
+   (.min rdd (wrap-comparator compare-fn))
+   (u/unmangle-fn compare-fn)))
 
 (defn sample
   "Returns a `fraction` sample of `rdd`, with or without replacement,
@@ -374,6 +395,18 @@
   ([n shuffle? rdd]
    (u/set-auto-name
      (.coalesce rdd (min n (count-partitions rdd)) shuffle?) n shuffle?)))
+
+
+(defn zip-with-index
+  "Zips this RDD with its element indices, creating an RDD of tuples of (item, index)"
+  [rdd]
+  (u/set-auto-name (.zipWithIndex rdd)))
+
+
+(defn zip-with-unique-id
+  "Zips this RDD with generated unique Long ids, creating an RDD of tuples of (item, uniqueId)"
+  [rdd]
+  (u/set-auto-name (.zipWithUniqueId rdd)))
 
 
 ;; functions on multiple rdds
@@ -644,6 +677,11 @@ so that the wrapped function returns a tuple [f(v),v]"
 (def cache
   "Persists `rdd` with the default storage level (`MEMORY_ONLY`)."
   (memfn cache))
+
+(defn uncache
+  "Marks `rdd` as non-persistent (removes all blocks for it from memory and disk).  If `blocking?` is true, block until the operation is complete."
+  ([blocking? rdd] (.unpersist rdd blocking?))
+  ([rdd] (uncache false rdd)))
 
 (defn storage-level!
   "Sets the storage level of `rdd` to persist its values across operations
