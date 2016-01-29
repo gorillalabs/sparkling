@@ -245,6 +245,12 @@
   ([rdd n shuffle?]
     (sc/coalesce n shuffle? rdd)))
 
+(def zip-with-index
+  sc/zip-with-index)
+
+(def zip-with-unique-id
+  sc/zip-with-index)
+
 (defn repartition
   "Returns a new `rdd` with exactly `n` partitions."
   [rdd n]

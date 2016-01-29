@@ -397,6 +397,18 @@
      (.coalesce rdd (min n (count-partitions rdd)) shuffle?) n shuffle?)))
 
 
+(defn zip-with-index
+  "Zips this RDD with its element indices, creating an RDD of tuples of (item, index)"
+  [rdd]
+  (u/set-auto-name (.zipWithIndex rdd)))
+
+
+(defn zip-with-unique-id
+  "Zips this RDD with generated unique Long ids, creating an RDD of tuples of (item, uniqueId)"
+  [rdd]
+  (u/set-auto-name (.zipWithUniqueId rdd)))
+
+
 ;; functions on multiple rdds
 
 (defn cogroup
