@@ -294,6 +294,10 @@
   "Persists `rdd` with the default storage level (`MEMORY_ONLY`)."
   sc/cache)
 
+(def uncache
+  "Marks `rdd` as non-persistent (removes all blocks for it from memory and disk). If `blocking?` is true, block until the operation is complete."
+  sc/uncache)
+
 (def lookup
   "Return the vector of values in the RDD for key `key`. Your key has to be serializable with the Java serializer (not Kryo like usual) to use this."
   sc/lookup)

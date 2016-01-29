@@ -577,6 +577,15 @@
                                    s/collect) [1 2 3 4 5]))))
 
                     (testing
+                        "uncache releases this RDD from storage"
+                      (let [rdd (-> (s/parallelize c [1 2 3 4 5])
+                                    (s/cache))]
+                        (s/collect rdd)
+                        (s/uncache true rdd)
+                        (is (= (:none s/STORAGE-LEVELS)
+                               (.getStorageLevel rdd)))))
+
+                    (testing
                       "histogram uses bucketCount number of evenly-spaced buckets"
                       (is (= (-> (s/parallelize c [1.0 2.2 2.6 3.3 3.5 3.7 4.4 4.8 5.5 6.0])
                                  (s/histogram 5))
