@@ -133,6 +133,8 @@
       (u/set-auto-name (u/unmangle-fn f))))
 
 (defn map-values [f rdd]
+  "Returns a new `JavaPairRDD` of (K,V) pairs by applying `f` to all values in the 
+  pair-rdd `rdd`"  
   (-> (.mapValues rdd (function f))
       (u/set-auto-name (u/unmangle-fn f))))
 
@@ -165,6 +167,8 @@
     (u/unmangle-fn f)))
 
 (defn flat-map-values
+  "Returns a `JavaPairRDD` by applying `f` to all values of `rdd`, and then 
+  flattening the results"
   [f rdd]
   (u/set-auto-name
     (.flatMapValues rdd (function f))
