@@ -51,7 +51,8 @@
                      :memory-only-ser-2     StorageLevels/MEMORY_ONLY_SER_2
                      :memory-and-disk-2     StorageLevels/MEMORY_AND_DISK_2
                      :memory-and-disk-ser-2 StorageLevels/MEMORY_AND_DISK_SER_2
-                     :disk-only-2           StorageLevels/DISK_ONLY_2})
+                     :disk-only-2           StorageLevels/DISK_ONLY_2
+                     :none                  StorageLevels/NONE})
 
 
 
@@ -654,6 +655,11 @@ so that the wrapped function returns a tuple [f(v),v]"
 (def cache
   "Persists `rdd` with the default storage level (`MEMORY_ONLY`)."
   (memfn cache))
+
+(defn uncache
+  "Marks `rdd` as non-persistent (removes all blocks for it from memory and disk).  If `blocking?` is true, block until the operation is complete."
+  ([blocking? rdd] (.unpersist rdd blocking?))
+  ([rdd] (uncache false rdd)))
 
 (defn storage-level!
   "Sets the storage level of `rdd` to persist its values across operations
