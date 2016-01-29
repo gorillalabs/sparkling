@@ -18,9 +18,9 @@
 
                            ]
 
-            :aliases {"all" ["with-profile" "dev,spark-1.1.0,hadoop-2.6.0:dev,spark-1.2.1,hadoop-2.6.0:dev,spark-1.3.1,hadoop-2.6.0,dev,spark-1.4.0,hadoop-2.6.0"]
+            :aliases {"all" ["with-profile" "dev,spark-1.1.0,hadoop-2.6.0:dev,spark-1.2.1,hadoop-2.6.0:dev,spark-1.3.1,hadoop-2.6.0:dev,spark-1.4.0,hadoop-2.6.0:dev,spark-1.5.0,hadoop-2.6.0"]
                       }
-            :profiles {:default      [:base :system :user :provided :spark-1.4.0 :dev]
+            :profiles {:default      [:base :system :user :provided :spark-1.5.0 :dev]
                        :dev          {:dependencies   [[criterium "0.4.3"]]
                                       :plugins        [[lein-dotenv "RELEASE"]
                                                        [jonase/eastwood "0.1.4"]
@@ -45,6 +45,10 @@
                        :spark-1.4.0  ^{:pom-scope :provided} {:dependencies
                                       [[org.apache.spark/spark-core_2.10 "1.4.0"]
                                        ]}
+
+                       :spark-1.5.0  ^{:pom-scope :provided} {:dependencies
+                                                              [[org.apache.spark/spark-core_2.10 "1.5.0"]
+                                                               ]}
 
                        :hadoop-2.6.0 ^{:pom-scope :provided} {:dependencies
                                                               [[org.apache.hadoop/hadoop-client "2.6.0"
