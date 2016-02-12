@@ -52,7 +52,7 @@
 
                        :spark-1.6.0  ^{:pom-scope :provided} {:dependencies
                                                               [[org.apache.spark/spark-core_2.11 "1.6.0"]
-                                                               ;[org.apache.spark/spark-mllib_2.11 "1.6.0" ]
+                                                               [org.apache.spark/spark-mllib_2.11 "1.6.0" ]
                                                                ] }
 
                        :hadoop-2.6.0 ^{:pom-scope :provided} {:dependencies
