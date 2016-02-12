@@ -8,10 +8,11 @@
             [sparkling.ml.validation :as v])
   (:import [org.apache.spark.api.java JavaSparkContext]
            [org.apache.spark.sql DataFrame SQLContext]
-    [org.apache.spark.ml.tuning ParamGridBuilder CrossValidator CrossValidatorModel
-     TrainValidationSplit TrainValidationSplitModel]
+           [org.apache.spark.ml.tuning ParamGridBuilder CrossValidator CrossValidatorModel
+            TrainValidationSplit TrainValidationSplitModel]
            [org.apache.spark.ml.classification NaiveBayes LogisticRegression
             DecisionTreeClassifier RandomForestClassifier GBTClassifier ]
+           [org.apache.spark.ml.evaluation BinaryClassificationEvaluator MulticlassClassificationEvaluator]
            [java.io File]))
 
 (def cconf (-> (conf/spark-conf)

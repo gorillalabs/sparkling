@@ -13,7 +13,7 @@
   "Return a ParamMap array, built using ParamGridBuilder .
   Values is a seq where every element is a 2-element vector.
   The first is the parameter name and the second is the list of values "
-  ([] (param-grid []))
+  ([] (.build (ParamGridBuilder.)))
   ([values]
    (.build (reduce (fn[pgb [k v]] (.addGrid pgb k v) ) (ParamGridBuilder.) values))))
 
