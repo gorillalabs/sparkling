@@ -68,7 +68,7 @@
     (when num-folds (.setNumFolds cv num-folds))
     cv))
 
-(defn train-validation-split
+(defn train-val-split-validator
   "Takes a map argument where mandatory keys are :estimator
   (e.g. a classifier like LogisticRegression)
   and :evaluator. (e.g. a BinaryClassificationEvaluator) .
