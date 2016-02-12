@@ -9,6 +9,7 @@
            [scala Tuple2 Tuple3 None$]
            [com.esotericsoftware.kryo Kryo Serializer KryoSerializable]
            [scala.collection.mutable WrappedArray$ofRef ArrayBuffer]
+           [scala.collection.convert Wrappers]
            [java.util ArrayList Currency EnumSet List]
            [clojure.lang RT$DefaultComparator MethodImplCache]
            [org.apache.spark.util.collection CompactBuffer]
@@ -103,6 +104,7 @@
   (register kryo None$)
   (register kryo Nil$)
   (register kryo scala.reflect.ManifestFactory$$anon$10)
+  (register kryo scala.collection.convert.Wrappers$)
   )
 
 (defn register-spark [^Kryo kryo]
