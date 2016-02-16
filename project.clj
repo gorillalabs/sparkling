@@ -91,7 +91,10 @@
                                                        sparkling.accumulator-test
                                                        sparkling.test-registrator
                                                        sparkling.serialization-test
-                                                       ]}
+						       sparkling.ml.classification
+						       sparkling.ml.core
+						       sparkling.ml.transform
+						       sparkling.ml.validation]}
                        }
             :source-paths ["src/clojure"]
             :java-source-paths ["src/java"]
