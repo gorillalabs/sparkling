@@ -580,6 +580,12 @@
                              [1 2 3])))
 
                     (testing
+                      "take-ordered returns the first N elements of an RDD using the natural ordering"
+                      (is (= (-> (s/parallelize c [0 2 1 3 4 5 4])
+                                 (s/take-ordered 3))
+                             [0 1 2])))
+
+                    (testing
                       "glom returns an RDD created by coalescing all elements within each partition into a list"
                       (is (equals-ignore-order? (-> (s/parallelize c [1 2 3 4 5 6 7 8 9 10] 2)
                                                     s/glom
