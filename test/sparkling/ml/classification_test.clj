@@ -40,7 +40,7 @@
           "http://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/svmguide1"
           tmpfile (.getPath (File/createTempFile "svmguide" "svm"))
           _ (spit tmpfile (slurp svm-dataset-path))
-          df (mlc/load-libsvm-dataset sqc tmpfile)
+          df (mlc/load-libsvm-dataset tmpfile sqc )
           ;create a logistic regression classifier that uses default values
           est (cl/logistic-regression)
 

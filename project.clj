@@ -52,8 +52,8 @@
 
                        :spark-1.6.0  ^{:pom-scope :provided} {:dependencies
                                                               [[org.apache.spark/spark-core_2.11 "1.6.0"]
-								[com.github.fommil.netlib/all "1.1.2" :extension "pom"]
-								[com.googlecode.matrix-toolkits-java/mtj "1.0.2"]
+                                                               ;[com.github.fommil.netlib/all "1.1.2" :extension "pom"]
+                                                               ;[com.googlecode.matrix-toolkits-java/mtj "1.0.2"]
                                                                [org.apache.spark/spark-mllib_2.11 "1.6.0" ]
                                                                ] }
 
@@ -93,10 +93,10 @@
                                                        sparkling.accumulator-test
                                                        sparkling.test-registrator
                                                        sparkling.serialization-test
-						       sparkling.ml.classification
-						       sparkling.ml.core
-						       sparkling.ml.transform
-						       sparkling.ml.validation]}
+                                                       sparkling.ml.classification
+                                                       sparkling.ml.core
+                                                       sparkling.ml.transform
+                                                       sparkling.ml.validation]}
                        }
             :source-paths ["src/clojure"]
             :java-source-paths ["src/java"]

@@ -21,7 +21,7 @@
             "http://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/diabetes"
             tmpfile (.getPath (File/createTempFile "diabetes" "svm"))
             _ (spit tmpfile (slurp svm-dataset-path))
-            df (mlc/load-libsvm-dataset sqc tmpfile)]
+            df (mlc/load-libsvm-dataset tmpfile sqc )]
 
         (t/testing
          "creates a SQLContext"
