@@ -15,7 +15,6 @@
                            [org.apache.avro/avro-mapred "1.7.7" :scope "provided" :classifier "hadoop2" :exclusions [org.slf4j/slf4j-api io.netty/netty commons-lang org.mortbay.jetty/servlet-api]]
 
                            ;[com.esotericsoftware.kryo/kryo "2.24.0" :scope "provided"]
-
                            ]
 
             :aliases {"all" ["with-profile" "default"]
