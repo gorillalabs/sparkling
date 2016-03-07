@@ -108,7 +108,7 @@
                     :src-dir-uri               "https://raw.githubusercontent.com/gorillalabs/sparkling/v1.2.2/"
                     :src-linenum-anchor-prefix "L"}
             :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.7"]
-            :jvm-opts ^:replace ["-server" "-Xmx1g"]
+            :jvm-opts ^:replace ["-server" "-Xmx1g" "-Xms1g"]
             :global-vars {*warn-on-reflection* false}
             :lein-release {:deploy-via :clojars}
             )
