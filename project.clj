@@ -75,7 +75,7 @@
              :debug {:debug true
                      :injections [(prn (into {} (System/getProperties)))]}
              :test         {:resource-paths ["dev-resources" "data"]
-                            :jvm-opts ^:replace ["-server" "-Xmx2g"]
+                            :jvm-opts ^:replace ["-server" "-Xmx2g" "-XX:MaxPermSize=512m"]
                             :aot            [sparkling.core
                                              sparkling.api
                                              sparkling.function
