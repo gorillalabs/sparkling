@@ -75,7 +75,6 @@
              :debug {:debug true
                      :injections [(prn (into {} (System/getProperties)))]}
              :test         {:resource-paths ["dev-resources" "data"]
-                            :jvm-opts ^:replace ["-server" "-Xmx2g"]
                             :aot            [sparkling.core
                                              sparkling.api
                                              sparkling.function
