@@ -35,8 +35,7 @@
                                              sparkling.function
                                              sparkling.scalaInterop
                                              ]}
-             :jenkins      {:plugins [[lein-test-out "0.3.1"]]
-                            }
+             :jenkins      {:plugins [[lein-test-out "0.3.1"]] }
 
              :spark-1.1.0  ^{:pom-scope :provided} {:dependencies
                                                     [[org.apache.spark/spark-core_2.10 "1.1.0"]
