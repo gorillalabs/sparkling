@@ -1,5 +1,9 @@
 (ns sparkling.ml.core
   "This is the entry point to the machine learning functionality in Spark"
+  (:require
+   [sparkling.conf :as conf]
+   [sparkling.core :as s]
+   [sparkling.ml.validation :as v])
   (:import [org.apache.spark.api.java JavaSparkContext]
     [org.apache.spark.ml Pipeline PipelineModel PipelineStage]
     [org.apache.spark.sql DataFrame SQLContext ]))
@@ -73,22 +77,6 @@
       (handler (assoc imap :estimator-param-maps (gsfn est)))
       (handler imap))))
 
-(defn addregularization
-  "sets the regularization parameters to search over"
-  [regparam est]
-  (v/param-grid [[(.regParam est) (double-array regparam)]]))
-
-(defn add-estimator-pipeline
-  "returns a pipeline consisting of a scaler and an estimator"
-  [options]
-  (let [;scale the features to stay in the 0-1 range
-        ss (xf/standard-scaler {:input-col "features"
-                                :output-col "nfeatures"})
-
-        ;tell the classifier to look for the modified features
-        lr1 (doto (cl/logistic-regression) (.setFeaturesCol "nfeatures"))]
-        ;create a pipeline that scales the features first before training
-        (mlc/make-pipeline [ss lr1])))
 ;;;;;;;;;;;;;;;;;;;;
 (defn run-pipeline
   "utility for testing "
@@ -97,5 +85,5 @@
                             (conf/app-name "core-test")) pipe))
   ([sconf pipe]
    (s/with-context sc sconf
-     (let [sqc (mlc/sql-context sc)]
+     (let [sqc (sql-context sc)]
        (pipe {:sqc sqc})))))
