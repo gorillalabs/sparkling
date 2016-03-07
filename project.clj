@@ -97,7 +97,8 @@
                                              sparkling.ml.classification
                                              sparkling.ml.core
                                              sparkling.ml.transform
-                                             sparkling.ml.validation]}
+                                             sparkling.ml.validation
+                                             sparkling.ml.core-test]}
              }
             :source-paths ["src/clojure"]
             :java-source-paths ["src/java"]
