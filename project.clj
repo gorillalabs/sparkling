@@ -51,10 +51,10 @@
                                                                ]}
 
                        :spark-1.6.0  ^{:pom-scope :provided} {:dependencies
-                                                              [[org.apache.spark/spark-core_2.11 "1.6.0"]
+                                                              [[org.apache.spark/spark-core_2.10 "1.6.0"]
                                                                ;[com.github.fommil.netlib/all "1.1.2" :extension "pom"]
                                                                ;[com.googlecode.matrix-toolkits-java/mtj "1.0.2"]
-                                                               [org.apache.spark/spark-mllib_2.11 "1.6.0" ]
+                                                               [org.apache.spark/spark-mllib_2.10 "1.6.0" ]
                                                                ] }
 
                        :hadoop-2.6.0 ^{:pom-scope :provided} {:dependencies
