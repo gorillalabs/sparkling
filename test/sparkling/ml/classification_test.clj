@@ -32,7 +32,6 @@
        "valid params passed "
        (t/is (= (.getSmoothing (cl/naive-bayes {:smoothing 0.1})) 0.1 ))))))
 
-(comment
 (t/deftest classifier-metric
   (s/with-context c cconf
     (let [sqc (mlc/sql-context c)
@@ -94,5 +93,3 @@
              ;validate using cross-validation as usual
              cv (v/cross-validator (assoc eval-map :estimator mlpipe))]
          (t/is (> (first (v/avg-cv-metrics cv df)) 0.95)))))))
-
-  )
