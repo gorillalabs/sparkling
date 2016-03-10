@@ -1,4 +1,4 @@
-(defproject gorillalabs/sparkling "1.2.4.1-SNAPSHOT"
+(defproject gorillalabs/sparkling "1.2.4-SNAPSHOT"
             :description "A Clojure Library for Apache Spark"
             :url "https://gorillalabs.github.io/sparkling/"
             :license {:name "Eclipse Public License"
@@ -19,7 +19,7 @@
 
             :aliases {"all" ["with-profile" "default"]
                       }
-  :profiles {:default      [:base :system :user :provided :spark-1.6.0 :dev :debug]
+  :profiles {:default      [:base :system :user :provided :spark-1.6.0 :dev]
              :dev          {:dependencies   [[criterium "0.4.3"]]
                             :plugins        [[lein-dotenv "RELEASE"]
                                              [jonase/eastwood "0.1.4"]
@@ -70,8 +70,6 @@
              :spark-1.3.1  ^{:pom-scope :provided} {:dependencies
                                                     [[org.apache.spark/spark-core_2.10 "1.3.1"]]}
 
-             :debug {:debug true
-                     :injections [(prn (into {} (System/getProperties)))]}
              :test         {:resource-paths ["dev-resources" "data"]
                             :aot            [sparkling.core
                                              sparkling.api
@@ -92,6 +90,7 @@
                                              sparkling.accumulator-test
                                              sparkling.test-registrator
                                              sparkling.serialization-test
+                                             ;sparkling.serialization
                                              sparkling.ml.classification
                                              sparkling.ml.core
                                              sparkling.ml.transform
@@ -106,7 +105,7 @@
                     :src-dir-uri               "https://raw.githubusercontent.com/gorillalabs/sparkling/v1.2.2/"
                     :src-linenum-anchor-prefix "L"}
             :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.7"]
-;            :jvm-opts ^:replace ["-server" "-Xmx1g" "-Xms1g"]
+            :jvm-opts ^:replace ["-server" "-Xmx1g"]
             :global-vars {*warn-on-reflection* false}
             :lein-release {:deploy-via :clojars}
             )
