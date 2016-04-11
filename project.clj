@@ -19,7 +19,7 @@
 
             :aliases {"all" ["with-profile" "default"]
                       }
-  :profiles {:default      [:base :system :user :provided :spark-1.6.0 :dev]
+  :profiles {:default      [:base :system :user :provided :spark-1.6.1 :dev]
              :dev          {:dependencies   [[criterium "0.4.3"]]
                             :plugins        [[lein-dotenv "RELEASE"]
                                              [jonase/eastwood "0.1.4"]
@@ -48,11 +48,11 @@
                                                     [[org.apache.spark/spark-core_2.10 "1.5.0"]
                                                      ]}
 
-             :spark-1.6.0  ^{:pom-scope :provided} {:dependencies
-                                                    [[org.apache.spark/spark-core_2.10 "1.6.0"]
+             :spark-1.6.1  ^{:pom-scope :provided} {:dependencies
+                                                    [[org.apache.spark/spark-core_2.10 "1.6.1"]
                                                      [com.github.fommil.netlib/all "1.1.2" :extension "pom"]
                                                      [com.googlecode.matrix-toolkits-java/mtj "1.0.2"]
-                                                     [org.apache.spark/spark-mllib_2.10 "1.6.0" ]
+                                                     [org.apache.spark/spark-mllib_2.10 "1.6.1" ]
                                                      ] }
 
              :hadoop-2.6.0 ^{:pom-scope :provided} {:dependencies
