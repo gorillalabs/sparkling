@@ -1,7 +1,7 @@
 (ns sparkling.serializers
     (:require [clj-time.core :a t]
               )
-    (:import [clojure.lang PersistentTreeSet]
+    (:import [clojure.lang PersistentTreeSet APersistentVector$SubVector]
              [org.joda.time DateTime DateTimeZone]
              [com.esotericsoftware.kryo Serializer Kryo]
              [com.esotericsoftware.kryo.io Output Input]))
@@ -38,6 +38,21 @@
 
 (defn sorted-collections []
       [[PersistentTreeSet PersistentTreeMap-serializer]])
+
+
+(def SubVector-serializer
+  (proxy [Serializer] []
+         (write [^Kryo registry, ^Output output, ^APersistentVector$SubVector coll]
+           (.writeInt output (count coll) true)
+           (doseq [x coll]
+                  (.writeClassAndObject registry output x)))
+         (read [^Kryo registry, ^Input input, ^Class s-type]
+           (let [len (.readInt input true)]
+             (into [] (repeatedly len #(.readClassAndObject registry input)))))))
+
+
+(defn ordered-collections []
+  [[APersistentVector$SubVector SubVector-serializer]])
 
 
 (def DateTime-serializer

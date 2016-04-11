@@ -9,6 +9,7 @@
            [scala Tuple2 Tuple3 None$]
            [com.esotericsoftware.kryo Kryo Serializer KryoSerializable]
            [scala.collection.mutable WrappedArray$ofRef ArrayBuffer]
+           [scala.collection.convert Wrappers]
            [java.util ArrayList Currency EnumSet List]
            [clojure.lang RT$DefaultComparator MethodImplCache]
            [org.apache.spark.util.collection CompactBuffer]
@@ -103,6 +104,7 @@
   (register kryo None$)
   (register kryo Nil$)
   (register kryo scala.reflect.ManifestFactory$$anon$10)
+  (register kryo scala.collection.convert.Wrappers$)
   )
 
 (defn register-spark [^Kryo kryo]
@@ -130,6 +132,7 @@
   ;(log/info "Registering base classes for kryo")
   (carbonite/default-registry kryo)
   (carbonite/register-serializers kryo (serializer/sorted-collections))
+  (carbonite/register-serializers kryo (serializer/ordered-collections))
   (carbonite/register-serializers kryo (serializer/joda-serializers))
 
   (register-native-array-serializers kryo)
