@@ -41,7 +41,7 @@ Start up your REPL (in your favourite tool), you should see something like this 
 
     $ lein do clean, repl
 
-    Compiling sparkling.example.tfidf
+    Compiling tf-idf.core
     nREPL server started ...
     REPL-y 0.3.1
     Clojure 1.6.0
@@ -80,11 +80,11 @@ Here we create a SparkConf object with the string `local` to run in local mode:
 (def c (-> (conf/spark-conf)
            (conf/master "local")
            (conf/app-name "sparkling-example")))
-;;  #'sparkling.example.tfidf/c
+;;  #'tf-idf.core/c
 
 
 (def sc (spark/spark-context c))
-;;  #'sparkling.example.tfidf/sc
+;;  #'tf-idf.core/sc
 {% endhighlight %}
 
 
@@ -105,7 +105,7 @@ Plain RDDs in Sparkling are created by calling the `parallelize` function on you
 
 {% highlight clojure %}
 (def data (spark/parallelize sc ["a" "b" "c" "d" "e"]))
-;;  #'sparkling.example.tfidf/data
+;;  #'tf-idf.core/data
 {% endhighlight %}
 
 Check out the contents of you newly created RDD:
@@ -120,7 +120,7 @@ PairRDDs in Sparkling are created by calling the `parallelize-pairs` function on
 
 {% highlight clojure %}
 (def data (spark/parallelize-pairs sc [ (spark/tuple "a" 1) (spark/tuple "b" 2) (spark/tuple "c" 3) (spark/tuple "d" 4) (spark/tuple "e" 5)]))
-;;  #'sparkling.example.tfidf/data
+;;  #'tf-idf.core/data
 {% endhighlight %}
 
 Once initialized, the distributed dataset or RDD can be operated on in parallel.
@@ -128,8 +128,8 @@ Once initialized, the distributed dataset or RDD can be operated on in parallel.
 An important parameter for parallel collections is the number of slices to cut the dataset into. Spark runs one task for each slice of the cluster. Normally, Spark tries to set the number of slices automatically based on your cluster. However, you can also set it manually in sparkling by passing it as a third parameter to parallelize:
 
 {% highlight clojure %}
-(def data (spark/parallelize sc [1 2 3 4 5] 4))
-;;  #'sparkling.example.tfidf/data
+(def data (spark/parallelize sc 4 [1 2 3 4 5]))
+;;  #'tf-idf.core/data
 {% endhighlight %}
 
 ### <a name="external"/>External Datasets
@@ -137,11 +137,11 @@ An important parameter for parallel collections is the number of slices to cut t
 Spark can create RDDs from any storage source supported by Hadoop, including the local file system, HDFS, Cassandra, HBase, Amazon S3, etc. Spark supports text files, SequenceFiles, and any other Hadoop InputFormat.
 
 Text file RDDs can be created in sparkling using the `text-file` function under the `sparkling.core` namespace. This function takes a URI for the file (either a local path on the machine, or a `hdfs://...`, `s3n://...`, etc URI) and reads it as a collection of lines. Note, `text-file` supports S3 and HDFS globs.
-The following example refers to the data.txt file at the current directory. Make sure to have one.
+The following example refers to the README.md file at the current directory. Make sure to have one.
 
 {% highlight clojure %}
-(def data (spark/text-file sc "data.txt"))
-;;  #'sparkling.example.tfidf/data
+(def data (spark/text-file sc "README.md"))
+;;  #'tf-idf.core/data
 {% endhighlight %}
 
 
@@ -156,7 +156,7 @@ RDDs support two types of operations:
 
 ### <a name="basics"/>Basics
 
-To illustrate RDD basics in sparkling, consider the following simple application using this sample [`data.txt`](https://github.com/gorillalabs/sparkling/blob/develop/data.txt).
+To illustrate RDD basics in sparkling, consider the following simple application using this sample [`data.txt`](https://raw.githubusercontent.com/yieldbot/flambo/develop/data.txt).
 
 
 {% highlight clojure %}
@@ -200,7 +200,7 @@ We can also use `spark/first` or `spark/take` to return just a subset of the dat
 
 ### <a name="keyvalue"/> Working with Key-Value Pairs
 
-Some transformation in Spark operate on Key-Value-Tuples, e.g. joins, reduce-by-key, etc. In sparkling, these operations are available on PairRDDs.
+Some transformations in Spark operate on Key-Value-Tuples, e.g. joins, reduce-by-key, etc. In sparkling, these operations are available on PairRDDs.
 You do not need to deal with the internal data structures of Apache Spark (like scala.Tuple2), if you use the functions from the `sparkling.destructuring` namespace.
 
 So, first require that namespace
@@ -229,7 +229,7 @@ The following code uses the `reduce-by-key` operation on key-value pairs to coun
 ;; #<JavaPairRDD org.apache.spark.api.java.JavaPairRDD@4c3c63f1>
 
 (spark/take  3 *1)
-;; ["created appears 1 times." "under appears 1 times." "this appears 4 times."]
+;; ["created appears 1 times." "under appears 1 times." "God appears 1 times."]
 {% endhighlight %}
 
 After the `reduce-by-key` operation, we can sort the pairs alphabetically using `spark/sort-by-key`. To collect the word counts as an array of objects in the repl or to write them to a filesysten, we can use the `spark/collect` action:
