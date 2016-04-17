@@ -84,6 +84,20 @@
                                   [#sparkling/tuple[1 {:id 1 :a 1 :b 2}]
                                    #sparkling/tuple[2 {:id 2 :a 2 :b 2}]
                                    #sparkling/tuple[3 {:id 5 :a 3 :b 1}]])))
+
+      (testing "coalesce"
+        (is (equals-ignore-order? (->> (s/parallelize c [1 2 3 4 5])
+                                       (s/coalesce 1)
+                                       s/collect
+                                       vec)
+                                  [1 2 3 4 5])))
+
+      (testing "coalesce-max"
+        (is (equals-ignore-order? (->> (s/parallelize c [1 2 3 4 5])
+                                       (s/coalesce-max 2)
+                                       s/collect
+                                       vec)
+                                  [1 2 3 4 5])))
       )))
 
 
