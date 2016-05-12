@@ -391,10 +391,10 @@
   Useful for running operations more efficiently after filtering down a large dataset."
   ([n rdd]
    (u/set-auto-name
-     (.coalesce rdd (min n (count-partitions rdd))) n))
+     (.coalesce rdd (clojure.core/min n (count-partitions rdd))) n))
   ([n shuffle? rdd]
    (u/set-auto-name
-     (.coalesce rdd (min n (count-partitions rdd)) shuffle?) n shuffle?)))
+     (.coalesce rdd (clojure.core/min n (count-partitions rdd)) shuffle?) n shuffle?)))
 
 
 (defn zip-with-index
