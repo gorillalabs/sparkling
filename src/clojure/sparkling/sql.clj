@@ -7,17 +7,17 @@ sparkling 的 text-file 和 save-as-text-file 一致。 "
            [org.apache.spark.sql functions]))
 
 (defn sql-context
-  "用给定的 spark context 构造一个新的 SQLContext 。"
+  "create new SQLContext by spark context"
   [sc]
   (SQLContext. sc))
 
 (defn sql
-  "将 sql 传入环境中执行，返回 data frame"
+  "give sql script then return data frame"
   [code context]
   (.sql context code))
 
 (defn register-temp-table
-  "根据给定的表名，将 dataframe 注册为临时表。为方便串化，返回传入的 data frame"
+  "regist data frame as a tmp table named table-name and return data frame"
   [table-name data-frame]
   (.registerTempTable data-frame table-name)
   data-frame)
