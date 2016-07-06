@@ -4,7 +4,8 @@
 sparkling 的 text-file 和 save-as-text-file 一致。 "
   (:require [sparkling.function :as func])
   (:import [org.apache.spark.sql SQLContext]
-           [org.apache.spark.sql functions]))
+           [org.apache.spark.sql functions]
+           [com.google.common.collect ImmutableMap]))
 
 (defn sql-context
   "create new SQLContext by spark context"
@@ -71,10 +72,25 @@ sparkling 的 text-file 和 save-as-text-file 一致。 "
   [columns data-frame]
   (.groupBy data-frame (into-array (cols columns data-frame))))
 
+(defn max
+  "grouped data max"
+  [cols grouped-data]
+  (.max grouped-data (into-array cols)))
+
 (defn min
-  "封装 grouped data 类型的 min 操作"
+  "grouped min"
   [cols grouped-data]
   (.min grouped-data (into-array cols)))
+
+(defn agg
+  "dataset agg"
+  [cols dataset]
+  (.agg dataset (ImmutableMap/copyOf (apply hash-map cols))))
+
+(defn with-column-renamed
+  "DataFrame with column renamed."
+  [exist-name new-name data-frame]
+  (.withColumnRenamed data-frame exist-name new-name))
 
 (defn order-by
   "封装 DataFrame 的 orderBy 操作"
