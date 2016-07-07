@@ -1,7 +1,6 @@
 (ns sparkling.sql
-  "封装了部分 spark sql api ，使之更符合 clojure 的风格。
-参数风格参考 sparkling，数据集尽量放在最后一个参数。read json 和 wrte json 与
-sparkling 的 text-file 和 save-as-text-file 一致。 "
+  "spark sql api for clojure. As sparkling.core, pass the sql context as last parameter.
+Read json or write json like sparkling.core/text-file or save-as-text-file."
   (:require [sparkling.function :as func])
   (:import [org.apache.spark.sql SQLContext]
            [org.apache.spark.sql functions]
@@ -108,12 +107,12 @@ sparkling 的 text-file 和 save-as-text-file 一致。 "
   (.orderBy data-frame (into-array cols)))
 
 (defn order-by-cols
-  "根据给定的字段文本列表构造order by操作并调用"
+  "order by columns named by the columns parameter"
   [columns data-frame]
   (.orderBy data-frame (into-array (cols columns data-frame))))
 
 (defn register-udf1
-  "向 SQLContext 中注册 udf ，这个函数适配 java api udf1 。函数返回传入的 SQLContext。"
+  "register a user defined function match java api udf1 return SQLContext."
   [name func data-type sqlc]
   (-> sqlc
       .udf
@@ -121,7 +120,7 @@ sparkling 的 text-file 和 save-as-text-file 一致。 "
   sqlc)
 
 (defn register-udf2
-  "向 SQLContext 中注册 udf ，这个函数适配 java api udf2 。函数返回传入的 SQLContext。"
+  "register a user defined function match java api udf2 return SQLContext."
   [name func data-type sqlc]
   (-> sqlc
       .udf
@@ -129,21 +128,21 @@ sparkling 的 text-file 和 save-as-text-file 一致。 "
   sqlc)
 
 (defn json-rdd
-  "将 data frame 转为 json 格式的 java rdd"
+  "convert data frame as json java rdd"
   [data-frame]
   (-> data-frame
       .toJSON
       .toJavaRDD))
 
 (defn read-json
-  "将给定的 json 资源（文件路径或 rdd ）加载为 data-frame"
+  "read json (file in path or a java rdd) as data-frame"
   [sqlc data-source]
   (-> sqlc
       .read
       (.json data-source)))
 
 (defn write-json
-  "将给定的 data-frame 以 json 格式保存到指定路径。"
+  "save data-frame as json file to path"
   [data-source data-frame]
   (-> data-frame
       .write
