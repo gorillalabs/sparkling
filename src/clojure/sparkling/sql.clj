@@ -72,6 +72,11 @@ sparkling 的 text-file 和 save-as-text-file 一致。 "
   [columns data-frame]
   (.groupBy data-frame (into-array (cols columns data-frame))))
 
+(defn count
+  "grouped data count"
+  [cols grouped-data]
+  (.max grouped-data (into-array cols)))
+
 (defn max
   "grouped data max"
   [cols grouped-data]
@@ -79,6 +84,11 @@ sparkling 的 text-file 和 save-as-text-file 一致。 "
 
 (defn min
   "grouped min"
+  [cols grouped-data]
+  (.min grouped-data (into-array cols)))
+
+(defn sum
+  "grouped sum"
   [cols grouped-data]
   (.min grouped-data (into-array cols)))
 

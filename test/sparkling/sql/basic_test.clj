@@ -61,7 +61,7 @@
                       sql/json-rdd spark/first)))))))
 
 (deftest select-sql
-  "test with sql and register tmp table"
+  "test with sql include select, group by, count, join, and register tmp table"
   (let [conf (-> (conf/spark-conf)
                  (conf/set "spark.kryo.registrator"
                            "sparkling.testutils.records.registrator.Registrator")
@@ -76,8 +76,14 @@
                         (sql/register-temp-table "elements"))
                    (->> sqlc
                         (sql/sql "select name, explode(references) as reference from elements")
+                        (sql/group-by-cols ["name"])
+                        (sql/agg ["reference" "count"])
+                        (sql/with-column-renamed "count(reference)" "references")
                         (sql/register-temp-table "references"))
                    (->> sqlc
-                        (sql/sql "select name, count(reference) as references from references group by name")
-                        (sql/order-by [(functions/desc "references")])
+                        (sql/sql "select max(references) as count from references")
+                        (sql/register-temp-table "element"))
+                   (->> sqlc
+                        (sql/sql "select references.name, element.count as references
+from references join element on references.references = element.count")
                         sql/json-rdd spark/first))))))))
