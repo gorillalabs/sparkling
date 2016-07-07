@@ -23,7 +23,7 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
   data-frame)
 
 (defn select
-  "封装 DataFrame 的 select 方法。"
+  "DataFrame select, accept vector [column...]"
   [cols data-frame]
   (.select data-frame
            (into-array cols)))
@@ -51,23 +51,23 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
   (.where data-frame expression))
 
 (defn join
-  "封装 DataFrame 的 join 方法。"
+  "DataFrame join use expression text"
   [expression other data-frame]
   (.join data-frame expression))
 
 (defn join-on
-  "根据给定的字段文本构造两个 data frame 的 inner join 。"
+  "data frame inner join use one column name"
   [column-name other data-frame]
   (.join data-frame other
          (.equalTo (.col data-frame column-name) (.col other column-name))))
 
 (defn group-by
-  "封装 DataFrame 的 groupBy 操作"
+  "DataFrame group by"
   [cols data-frame]
   (.groupBy data-frame (into-array cols)))
 
 (defn group-by-cols
-  "根据给定的字段文本列表构造 group by 操作并调用"
+  "DataFrame group by column names"
   [columns data-frame]
   (.groupBy data-frame (into-array (cols columns data-frame))))
 
