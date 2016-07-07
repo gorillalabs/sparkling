@@ -41,20 +41,43 @@
                         .count)))))))
 
 (deftest select-group-agg
-    (let [conf (-> (conf/spark-conf)
-                   (conf/set "spark.kryo.registrator"
-                             "sparkling.testutils.records.registrator.Registrator")
-                   (conf/master "local[*]")
-                   (conf/app-name "spark sql select expr test"))]
-      (spark/with-context sc conf
-        (testing
-            (is (= "{\"name\":\"Prop.10.93\",\"referenced\":22}"
-                   (->> sc
-                        sql/sql-context
+  "test with select-expr, group by, agg, with column renamed, order by and json rdd"
+  (let [conf (-> (conf/spark-conf)
+                 (conf/set "spark.kryo.registrator"
+                           "sparkling.testutils.records.registrator.Registrator")
+                 (conf/master "local[*]")
+                 (conf/app-name "spark sql select expr test"))]
+    (spark/with-context sc conf
+      (testing
+          (is (= "{\"reference\":\"Prop.6.1\",\"referenced\":87}"
+                 (->> sc
+                      sql/sql-context
+                      (#(sql/read-json % (.getPath (io/resource "euclid/elements.txt"))))
+                      (sql/select-expr ["explode(references) as reference"])
+                      (sql/group-by-cols ["reference"])
+                      (sql/agg ["reference" "count"])
+                      (sql/with-column-renamed "count(reference)" "referenced")
+                      (sql/order-by [(functions/desc "referenced")])
+                      sql/json-rdd spark/first)))))))
+
+(deftest select-sql
+  "test with sql and register tmp table"
+  (let [conf (-> (conf/spark-conf)
+                 (conf/set "spark.kryo.registrator"
+                           "sparkling.testutils.records.registrator.Registrator")
+                 (conf/master "local[*]")
+                 (conf/app-name "spark sql select expr test"))]
+    (spark/with-context sc conf
+      (testing
+          (is (= "{\"name\":\"Prop.10.93\",\"references\":22}"
+                 (let [sqlc (sql/sql-context sc)]
+                   (->> sqlc
                         (#(sql/read-json % (.getPath (io/resource "euclid/elements.txt"))))
-                        (sql/select-expr ["name" "explode(references) as reference"])
-                        (sql/group-by-cols ["name"])
-                        (sql/agg ["reference" "count"])
-                        (sql/with-column-renamed "count(reference)" "referenced")
-                        (sql/order-by [(functions/desc "referenced")])
-                        sql/json-rdd spark/first)))))))
+                        (sql/register-temp-table "elements"))
+                   (->> sqlc
+                        (sql/sql "select name, explode(references) as reference from elements")
+                        (sql/register-temp-table "references"))
+                   (->> sqlc
+                        (sql/sql "select name, count(reference) as references from references group by name")
+                        (sql/order-by [(functions/desc "references")])
+                        sql/json-rdd spark/first))))))))

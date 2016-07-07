@@ -30,24 +30,24 @@ sparkling 的 text-file 和 save-as-text-file 一致。 "
            (into-array cols)))
 
 (defn cols
-  "根据给出的字符串，构造出指定 data frame 的字段列表"
-  [items data-frame]
-    (vec (map #(.col data-frame %) items)))
+  "create a vector for columns by given names"
+  [names data-frame]
+    (vec (map #(.col data-frame %) names)))
 
 (defn selects
-  "根据给定的字段文本列表和 data frame 构造 select 并调用"
+  "call select by given names"
   [columns data-frame]
   (.select data-frame
            (into-array (cols columns data-frame))))
 
 (defn select-expr
-  "根据给定的表达式列表和 data frame 构造 select 并调用"
+  "call select expr by given column expressions"
   [expr data-frame]
   (.selectExpr data-frame
                (into-array expr)))
 
 (defn where
-  "封装 DataFrame 的 where 方法"
+  "call where by "
   [expression data-frame]
   (.where data-frame expression))
 
