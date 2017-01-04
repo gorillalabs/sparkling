@@ -7,7 +7,7 @@
     [org.apache.spark.mllib.regression LabeledPoint]
     [org.apache.spark.ml Pipeline PipelineModel PipelineStage]
     [org.apache.spark.ml.evaluation BinaryClassificationEvaluator MulticlassClassificationEvaluator]
-    [org.apache.spark.sql DataFrame SQLContext Dataset RowFactory Row Encoders Encoder]))
+    [org.apache.spark.sql SQLContext Dataset RowFactory Row Encoders Encoder]))
 
 (defn param-grid
   "Return a ParamMap array, built using ParamGridBuilder .

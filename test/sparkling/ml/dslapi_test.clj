@@ -8,7 +8,7 @@
             [sparkling.ml.validation :as v])
 
   (:import [org.apache.spark.api.java JavaSparkContext]
-           [org.apache.spark.sql DataFrame SQLContext]
+           [org.apache.spark.sql SQLContext]
            [org.apache.spark.ml.classification NaiveBayes LogisticRegression
             DecisionTreeClassifier RandomForestClassifier GBTClassifier ]
            [java.io File]))
@@ -134,5 +134,3 @@
     (->> classifiers
          (map classifier-test-pipeline)
          (map m/run-pipeline))))
-
-

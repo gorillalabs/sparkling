@@ -6,7 +6,7 @@
    [sparkling.ml.validation :as v])
   (:import [org.apache.spark.api.java JavaSparkContext]
     [org.apache.spark.ml Pipeline PipelineModel PipelineStage]
-    [org.apache.spark.sql DataFrame SQLContext ]))
+    [org.apache.spark.sql SQLContext ]))
 
 (defn sql-context
   "Returns an SQL context by wrapping a JavaSparkContext object "

@@ -1,7 +1,6 @@
 (ns sparkling.ml.classification
   (:import  [org.apache.spark.ml.classification NaiveBayes LogisticRegression
-             DecisionTreeClassifier RandomForestClassifier GBTClassifier ]
-            [org.apache.spark.sql DataFrame]))
+             DecisionTreeClassifier RandomForestClassifier GBTClassifier ]))
 
 ;;defines wrappers for classifiers
 
