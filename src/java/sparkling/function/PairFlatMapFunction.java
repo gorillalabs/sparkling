@@ -1,4 +1,9 @@
 package sparkling.function;
+import java.util.Iterator;
+import java.lang.Object;
+import java.util.Collection;
+
+
 
 import clojure.lang.IFn;
 import scala.Tuple2;
@@ -8,8 +13,8 @@ public class PairFlatMapFunction extends sparkling.serialization.AbstractSeriali
         super(func);
     }
 
-    @SuppressWarnings("unchecked")
-  public Iterable<Tuple2<Object, Object>> call(Object v1) throws Exception {
-    return (Iterable<Tuple2<Object, Object>>) f.invoke(v1);
+  @SuppressWarnings("unchecked")
+  public Iterator<Tuple2<Object, Object>> call(Object v1) throws Exception {
+      return (Iterator<Tuple2<Object, Object>>) ((Collection) f.invoke(v1)).iterator();
   }
 }

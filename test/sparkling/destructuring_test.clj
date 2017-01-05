@@ -3,7 +3,7 @@
   (:require [sparkling.destructuring :as sd]
             [sparkling.testutils :refer :all])
   (:import [scala Tuple2 Tuple3 Tuple10]
-           [com.google.common.base Optional]))
+           [org.apache.spark.api.java Optional]))
 
 (deftest destructuring
   (testing "destructures a Tuple2"
