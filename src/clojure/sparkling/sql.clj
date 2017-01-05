@@ -161,3 +161,13 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
   (.. sql-context
       read
       (load path)))
+
+(defn show
+  "print contents of data frame"
+  [data-frame]
+  (.show data-frame))
+
+(defn print-schema
+  "print schema of data frame"
+  [data-frame]
+  (.printSchema data-frame))
