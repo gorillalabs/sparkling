@@ -147,3 +147,17 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
   (-> data-frame
       .write
       (.json data-source)))
+
+(defn save-as-parquet
+  "Write out data frame in parquet format"
+  [data-frame path]
+  (.. data-frame
+      write
+      (parquet path)))
+
+(defn read-parquet
+  "read folder that contains parquet data"
+  [sql-context path]
+  (.. sql-context
+      read
+      (load path)))
