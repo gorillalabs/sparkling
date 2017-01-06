@@ -2,7 +2,7 @@ package sparkling.function;
 
 import clojure.lang.IFn;
 
-public class Function3 extends sparkling.serialization.AbstractSerializableWrappedIFn implements org.apache.spark.api.java.function.Function3 {
+public class Function3 extends sparkling.serialization.AbstractSerializableWrappedIFn implements org.apache.spark.api.java.function.Function3, org.apache.spark.sql.api.java.UDF3 {
     public Function3(IFn func) {
         super(func);
     }
