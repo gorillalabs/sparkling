@@ -162,6 +162,10 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
       read
       (load path)))
 
+(defn rdd->data-frame [sql-context struct-type rowRdd]
+  "convert rdd of rows to data frame"
+  (.createDataFrame sql-context rowRdd struct-type))
+
 (defn show
   "print contents of data frame"
   [data-frame]
