@@ -1,6 +1,7 @@
 (ns sparkling.sql
   "spark sql api for clojure. As sparkling.core, pass the sql context as last parameter.
 Read json or write json like sparkling.core/text-file or save-as-text-file."
+  (:refer-clojure :exclude [group-by min max count])
   (:require [sparkling.function :as func])
   (:import [org.apache.spark.sql SQLContext]
            [org.apache.spark.sql functions]
