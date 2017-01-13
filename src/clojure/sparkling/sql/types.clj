@@ -3,7 +3,8 @@
   1. turn rdd into rows using create row
   2. create struct type passing in representation of the schema
   3. pass rdd of rows and struct type to sparkling.sql/data-frame"
-  (:import [org.apache.spark.sql.types DataTypes]))
+  (:import [org.apache.spark.sql.types DataTypes]
+           [org.apache.spark.sql RowFactory]))
 
 ;The list of types supported by spark
 
