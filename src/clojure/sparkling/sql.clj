@@ -151,7 +151,7 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
 
 (defn write-parquet
   "write out data frame in parquet format"
-  [data-frame path]
+  [path data-frame]
   (-> data-frame
       .write
       (.parquet path)))
@@ -160,8 +160,8 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
   "read folder that contains parquet data"
   [sql-con path]
   (-> sql-con
-      read
-      (load path)))
+      .read
+      (.load path)))
 
 (defn rdd->data-frame [sql-context struct-type rowRdd]
   "convert rdd of rows to data frame"
