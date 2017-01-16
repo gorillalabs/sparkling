@@ -63,5 +63,5 @@
 (defn struct-type
   "Creates a struct type, expect each item in fields to be a map with the keys :name :type and :optional?
   where name is a string, type is a DataType and optional is a boolean"
-  [& fields]
+  [fields]
   (DataTypes/createStructType (into-array (map struct-field fields))))
