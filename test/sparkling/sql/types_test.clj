@@ -5,8 +5,12 @@
             [sparkling.sql :as sql]
             [sparkling.sql.types :as types]
             [clojure.test :refer :all])
-  (:import (java.text SimpleDateFormat)
-           (org.apache.spark.sql.catalyst.expressions GenericRowWithSchema)))
+  (:import [java.text SimpleDateFormat]
+           [org.apache.spark.sql.catalyst.expressions GenericRowWithSchema]
+           [scala.collection JavaConverters]
+           [org.apache.spark.sql DataFrame ]
+           [org.apache.spark.sql.types StructType StructField ]
+           [java.sql Date Timestamp]))
 
 (def schema
   [{:name      "name"
@@ -29,12 +33,12 @@
     :nullable? false}])
 
 (def sample-data
-  [{:name            "bob"
-    :age             28
-    :likes-clojure?  true
+  [{:name           "bob"
+    :age            28
+    :likes-clojure? true
     :attractiveness 23.4
-    :dob             (java.sql.Date. (.getTime #inst "1990-11-18"))
-    :last-online     (java.sql.Timestamp. (.getTime #inst "2015-10-12T20:18:12.231Z"))}])
+    :dob            (Date. (.getTime #inst "1990-11-18"))
+    :last-online    (Timestamp. (.getTime #inst "2015-10-12T20:18:12.231Z"))}])
 
 
 (deftest convert-rdd->data-frame
@@ -82,4 +86,69 @@
                                    (.getTimestamp row 5)))
                             )))))
 
+(defn scalaseq->seq
+  [scala-seq]
+  (->> scala-seq
+       (JavaConverters/seqAsJavaListConverter)
+       (.asJava)
+       (seq)))
 
+(deftest schema->struct-type
+  (let [[name-field
+         age-field
+         likes-clojure-field
+         attractiveness-field
+         dob-field
+         last-online-field] (->> schema
+                                 (types/struct-type)
+                                 (scalaseq->seq))]
+    (testing
+      "name"
+      (is (= (types/string-type)
+             (.dataType name-field)))
+      (is (= "name"
+             (.name name-field)))
+      (is (= false
+             (.nullable name-field))))
+    (testing
+      "age"
+      (is (= (types/long-type)
+             (.dataType age-field)))
+      (is (= "age"
+             (.name age-field)))
+      (is (= false
+             (.nullable age-field))))
+    (testing
+      "likes-clojure?"
+      (is (= (types/boolean-type)
+             (.dataType likes-clojure-field)))
+      (is (= "likes-clojure?"
+             (.name likes-clojure-field)))
+      (is (= false
+             (.nullable likes-clojure-field))))
+    (testing
+      "attractiveness"
+      (is (= (types/double-type)
+             (.dataType attractiveness-field)))
+      (is (= "attractiveness"
+             (.name attractiveness-field)))
+      (is (= true
+             (.nullable attractiveness-field))))
+    (testing
+      "dob"
+      (is (= (types/date-type)
+             (.dataType dob-field)))
+      (is (= "dob"
+             (.name dob-field)))
+      (is (= false
+             (.nullable dob-field))))
+    (testing
+      "last-online"
+      (is (= (types/timestamp-type)
+             (.dataType last-online-field)))
+      (is (= "last-online"
+             (.name last-online-field)))
+      (is (= false
+             (.nullable last-online-field))))
+
+    ))
