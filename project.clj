@@ -71,8 +71,12 @@
                                                     [[org.apache.spark/spark-core_2.10 "1.3.1"]]}
 
              :test         {:resource-paths ["dev-resources" "data"]
-                            :aot            [sparkling.core
+                            :aot            [
+                                             sparkling.core
                                              sparkling.api
+                                             sparkling.sql
+                                             sparkling.sql.types
+                                             sparkling.sql.types-test
                                              sparkling.function
                                              sparkling.scalaInterop
                                              sparkling.destructuring
