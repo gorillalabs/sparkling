@@ -5,6 +5,7 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
   (:require [sparkling.function :as func])
   (:import [org.apache.spark.sql SQLContext]
            [org.apache.spark.sql functions]
+           [org.apache.spark.sql DataFrameWriter]
            [com.google.common.collect ImmutableMap]))
 
 (defn sql-context
@@ -143,18 +144,28 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
       (.json data-source)))
 
 (defn write-json
-  "save data-frame as json file to path"
-  [data-source data-frame]
-  (-> data-frame
-      .write
-      (.json data-source)))
+  "save data-frame as json file, can optionally provide seq of column names to indicate physical partitioning scheme"
+  ([path data-frame partition-cols]
+   (-> data-frame
+       (.write)
+       (.partitionBy (into-array String partition-cols))
+       (.json path)))
+  ([path data-frame]
+   (-> data-frame
+       .write
+       (.json path))))
 
 (defn write-parquet
-  "write out data frame in parquet format"
-  [path data-frame]
-  (-> data-frame
-      .write
-      (.parquet path)))
+  "save data-frame as parquet file, can optionally provide seq of column names to indicate physical partitioning scheme"
+  ([path data-frame partition-cols]
+   (-> data-frame
+       (.write)
+       (.partitionBy (into-array String partition-cols))
+       (.parquet path)))
+  ([path data-frame]
+   (-> data-frame
+       .write
+       (.parquet path))))
 
 (defn read-parquet
   "read folder that contains parquet data"
