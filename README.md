@@ -46,6 +46,9 @@ Sparkling is available from Clojars. To use with Leiningen, add
 
 # Release Notes
 
+### 2.0.0 - switch to Spark 2.0
+ * added support for Spark SQL
+
 ### 1.2.3 - more developer friendly
  * added @/deref support for broadcasts Making it easier to work with broadcasts by using Clojure mechanisms. This is especially true for unit tests, as you could test without actual broadcasts, but with anything deref-able.
  * added RDD autonaming from fn metadata, eases navigation in SparkUI

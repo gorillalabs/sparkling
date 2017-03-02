@@ -1,4 +1,4 @@
-(defproject gorillalabs/sparkling "1.2.6-SNAPSHOT"
+(defproject gorillalabs/sparkling "2.0.0-SNAPSHOT"
             :description "A Clojure Library for Apache Spark"
             :url "https://gorillalabs.github.io/sparkling/"
             :license {:name "Eclipse Public License"
@@ -111,7 +111,7 @@
                     :src-dir-uri               "https://raw.githubusercontent.com/gorillalabs/sparkling/v1.2.2/"
                     :src-linenum-anchor-prefix "L"}
             :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.7"]
-            :jvm-opts ^:replace ["-server" "-Xmx1g"]
+            :jvm-opts ^:replace ["-server" "-Xmx2g"]
             :global-vars {*warn-on-reflection* false}
             :lein-release {:deploy-via :clojars}
             )
