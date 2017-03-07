@@ -8,7 +8,6 @@
   (:import [java.text SimpleDateFormat]
            [org.apache.spark.sql.catalyst.expressions GenericRowWithSchema]
            [scala.collection JavaConverters]
-           [org.apache.spark.sql DataFrame ]
            [org.apache.spark.sql.types StructType StructField ]
            [java.sql Date Timestamp]))
 
