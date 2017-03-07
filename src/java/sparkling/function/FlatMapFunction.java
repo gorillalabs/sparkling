@@ -1,4 +1,7 @@
 package sparkling.function;
+import java.util.Iterator;
+import java.lang.Object;
+import java.util.Collection;
 
 import clojure.lang.IFn;
 
@@ -8,9 +11,9 @@ public class FlatMapFunction extends sparkling.serialization.AbstractSerializabl
         super(func);
     }
 
-    @SuppressWarnings("unchecked")
-  public Iterable<Object> call(Object v1) throws Exception {
-    return (Iterable<Object>) f.invoke(v1);
+  @SuppressWarnings("unchecked")
+  public java.util.Iterator<java.lang.Object> call(Object v1) throws Exception {
+      return (java.util.Iterator<java.lang.Object>) ((Collection) f.invoke(v1)).iterator();
   }
-  
+
 }

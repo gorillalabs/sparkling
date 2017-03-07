@@ -7,7 +7,7 @@
             [sparkling.ml.classification :as cl]
             [sparkling.ml.validation :as v])
   (:import [org.apache.spark.api.java JavaSparkContext]
-           [org.apache.spark.sql DataFrame SQLContext]
+           [org.apache.spark.sql SQLContext]
            [org.apache.spark.ml.tuning ParamGridBuilder CrossValidator CrossValidatorModel
             TrainValidationSplit TrainValidationSplitModel]
            [org.apache.spark.ml.classification NaiveBayes LogisticRegression
@@ -48,5 +48,3 @@
        "valid params created "
        (t/is (= (.getMetricName (v/binary-classification-evaluator {:metric-name "areaUnderPR"})) "areaUnderPR" ))
        (t/is (= (.getMetricName (v/multiclass-classification-evaluator {:metric-name "f1"})) "f1" ))))))
-
-

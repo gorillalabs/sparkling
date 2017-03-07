@@ -2,7 +2,7 @@
   "Contains wrapper-functions to destructure scala/spark data structures"
   (:refer-clojure :exclude [key first second destructure fn])
   (:import [scala Tuple2 Tuple3]
-           [com.google.common.base Optional]))
+           [org.apache.spark.api.java Optional]))
 
 (defn optional-of [v] (if (nil? v) (Optional/absent) (Optional/of v)))
 (defn optional-or-nil [^Optional o] (.orNull o))
@@ -39,6 +39,7 @@
   "wraps a function f [k v] to untuple a key/value tuple. Useful e.g. on map for PairRDD."
   [f]
   (clojure.core/fn [^Tuple2 t]
+    ;; try adding a .iterator call here, check with tests
     (f (._1 t) (._2 t))))
 
 (defn key-seq-seq-fn
