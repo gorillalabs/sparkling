@@ -157,14 +157,14 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
 
 (defn write-parquet
   "save data-frame as parquet file, can optionally provide seq of column names to indicate physical partitioning scheme"
-  ([path data-frame partition-cols]
-   (-> data-frame
-       (.write)
-       (.partitionBy (into-array String partition-cols))
-       (.parquet path)))
   ([path data-frame]
    (-> data-frame
        .write
+       (.parquet path)))
+  ([path partition-cols data-frame]
+   (-> data-frame
+       (.write)
+       (.partitionBy (into-array String partition-cols))
        (.parquet path))))
 
 (defn read-parquet

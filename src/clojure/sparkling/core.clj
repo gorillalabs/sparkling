@@ -72,6 +72,23 @@
   [f]
   (fn [x] (u/truthy? (f x))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Cluster and context info
+;;
+;; Functions which provides Cluster and context info
+;;
+
+(defn default-min-partitions
+  "Default min number of partitions for Hadoop RDDs when not given by user"
+  [spark-context]
+  (.defaultMinPartitions spark-context))
+
+
+(defn default-parallelism
+  "Default level of parallelism to use when not given by user (e.g. parallelize and makeRDD)."
+  [spark-context]
+  (.defaultParallelism spark-context))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -83,8 +100,10 @@
 (defn text-file
   "Reads a text file from HDFS, a local file system (available on all nodes),
   or any Hadoop-supported file system URI, and returns it as an `JavaRDD` of Strings."
-  [spark-context filename]
+  ([spark-context filename]
   (.textFile spark-context filename))
+  ([spark-context filename min-partitions]
+   (.textFile spark-context filename min-partitions)))
 
 (defn whole-text-files
   "Read a directory of text files from HDFS, a local file system (available on all nodes),
@@ -93,7 +112,7 @@
   ([spark-context filename min-partitions]
    (.wholeTextFiles spark-context filename min-partitions))
   ([spark-context filename]
-   (whole-text-files spark-context filename 8)))
+   (.wholeTextFiles spark-context filename)))
 
 (defn into-rdd
   "Distributes a local collection to form/return an RDD"
