@@ -61,6 +61,13 @@
                                                      [org.apache.spark/spark-mllib_2.10 "2.0.2" ]
                                                      ] }
 
+             :spark-2.1.0  ^{:pom-scope :provided} {:dependencies
+                                                    [[org.apache.spark/spark-core_2.10 "2.1.0"]
+                                                     [com.github.fommil.netlib/all "1.1.2" :extension "pom"]
+                                                     [com.googlecode.matrix-toolkits-java/mtj "1.0.4"]
+                                                     [org.apache.spark/spark-mllib_2.10 "2.1.0" ]
+                                                     ] }
+
              :hadoop-2.6.0 ^{:pom-scope :provided} {:dependencies
                                                     [[org.apache.hadoop/hadoop-client "2.6.0"
                                                       :exclusions [commons-codec org.apache.curator/curator-recipes org.slf4j/slf4j-api com.google.guava/guava io.netty/netty org.apache.curator/curator-framework org.apache.zookeeper/zookeeper]]
