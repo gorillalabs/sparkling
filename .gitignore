@@ -22,3 +22,40 @@ _site/*
 _source/*
 _cache
 Gemfile.lock
+
+#********** osx template********** 
+
+.DS_Store
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+ 
+
+#********** emacs template********** 
+
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+.elc
+auto-save-list
+tramp
+.\#*
+
+# Org-mode
+.org-id-locations
+*_archive
+ 
+
+#********** clojure template********** 
+
+pom.xml
+*jar
+/lib/
+/classes/
+.lein-deps-sum
+ 
