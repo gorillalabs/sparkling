@@ -17,6 +17,8 @@
                                         ;[com.esotericsoftware.kryo/kryo "2.24.0" :scope "provided"]
                  ]
 
+                 :deploy-repositories {"clojars-https" {:url "https://clojars.org/repo"}}
+
   :aliases {"all" ["with-profile" "default"]}
 
   :profiles {:default      [:base :system :user :provided :spark-2.0.2 :dev]
