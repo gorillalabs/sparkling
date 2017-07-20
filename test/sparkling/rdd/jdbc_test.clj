@@ -27,6 +27,7 @@
                           (getObject [index]
                             (first @data)
                             ))))
+                    (setFetchSize [x])
                     (setLong [parameterIndex, x])
                     (isClosed [] false)
                     (close [])))
