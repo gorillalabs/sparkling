@@ -24,6 +24,7 @@
                         (spark/take 1)
                         first)))))))
 
+
 (deftest select-expr-test
     (let [conf (-> (conf/spark-conf)
                    (conf/set "spark.kryo.registrator"
@@ -87,3 +88,23 @@
                         (sql/sql "select references.name, element.count as references
 from references join element on references.references = element.count")
                         sql/json-rdd spark/first))))))))
+
+(deftest selects-from-parquet
+  (let [conf (-> (conf/spark-conf)
+                 (conf/set "spark.kryo.registrator"
+                           "sparkling.testutils.records.registrator.Registrator")
+                 (conf/master "local[*]")
+                 (conf/app-name "spark sql select columns by name test"))]
+    (spark/with-context sc conf
+                        (testing
+                          (is (= "{\"name\":\"C.N.1\",\"description\":\"Things which are equal to the same thing are also equal to one another.\"}"
+                                 (->> sc
+                                      sql/sql-context
+                                      (#(sql/read-parquet % (.getPath (io/resource "parquet/"))))
+                                      (sql/selects ["name" "description"])
+                                      (sql/where "name='C.N.1'")
+                                      sql/json-rdd
+                                      (spark/take 1)
+                                      first)))))))
+
+

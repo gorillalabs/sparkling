@@ -1,9 +1,11 @@
 (ns sparkling.sql
   "spark sql api for clojure. As sparkling.core, pass the sql context as last parameter.
 Read json or write json like sparkling.core/text-file or save-as-text-file."
+  (:refer-clojure :exclude [group-by min max count])
   (:require [sparkling.function :as func])
   (:import [org.apache.spark.sql SQLContext]
            [org.apache.spark.sql functions]
+           [org.apache.spark.sql DataFrameWriter]
            [com.google.common.collect ImmutableMap]))
 
 (defn sql-context
@@ -142,8 +144,46 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
       (.json data-source)))
 
 (defn write-json
-  "save data-frame as json file to path"
-  [data-source data-frame]
-  (-> data-frame
-      .write
-      (.json data-source)))
+  "save data-frame as json file, can optionally provide seq of column names to indicate physical partitioning scheme"
+  ([path data-frame partition-cols]
+   (-> data-frame
+       (.write)
+       (.partitionBy (into-array String partition-cols))
+       (.json path)))
+  ([path data-frame]
+   (-> data-frame
+       .write
+       (.json path))))
+
+(defn write-parquet
+  "save data-frame as parquet file, can optionally provide seq of column names to indicate physical partitioning scheme"
+  ([path data-frame]
+   (-> data-frame
+       .write
+       (.parquet path)))
+  ([path partition-cols data-frame]
+   (-> data-frame
+       (.write)
+       (.partitionBy (into-array String partition-cols))
+       (.parquet path))))
+
+(defn read-parquet
+  "read folder that contains parquet data"
+  [sql-con path]
+  (-> sql-con
+      .read
+      (.load path)))
+
+(defn rdd->data-frame [sql-context struct-type rowRdd]
+  "convert rdd of rows to data frame"
+  (.createDataFrame sql-context rowRdd struct-type))
+
+(defn show
+  "print contents of data frame"
+  [data-frame]
+  (.show data-frame))
+
+(defn print-schema
+  "print schema of data frame"
+  [data-frame]
+  (.printSchema data-frame))

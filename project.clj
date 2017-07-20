@@ -1,24 +1,24 @@
-(defproject gorillalabs/sparkling "2.0.0"
-            :description "A Clojure Library for Apache Spark"
-            :url "https://gorillalabs.github.io/sparkling/"
-            :license {:name "Eclipse Public License"
-                      :url  "http://www.eclipse.org/legal/epl-v10.html"}
-            :scm {:name "git"
-                  :url  "https://github.com/gorillalabs/sparkling"}
-            :dependencies [[org.clojure/tools.logging "0.3.1"]
-                           [org.clojure/clojure "1.7.0" :scope "provided"]
-                           [clj-time "0.9.0"]
-                           [com.twitter/carbonite "1.4.0" :exclusions [com.twitter/chill-java]]
+(defproject gorillalabs/sparkling "2.0.0-SNAPSHOT"
+  :description "A Clojure Library for Apache Spark"
+  :url "https://gorillalabs.github.io/sparkling/"
+  :license {:name "Eclipse Public License"
+            :url  "http://www.eclipse.org/legal/epl-v10.html"}
+  :scm {:name "git"
+        :url  "https://github.com/gorillalabs/sparkling"}
+  :dependencies [[org.clojure/tools.logging "0.3.1"]
+                 [org.clojure/clojure "1.7.0" :scope "provided"]
+                 [clj-time "0.9.0"]
+                 [com.twitter/carbonite "1.4.0" :exclusions [com.twitter/chill-java]]
 
-                           [com.damballa/parkour "0.6.2" :exclusions [com.thoughtworks.paranamer/paranamer]]
-                           [com.damballa/abracad "0.4.12" :exclusions [com.fasterxml.jackson.core/jackson-core]]
-                           [org.apache.avro/avro-mapred "1.7.7" :scope "provided" :classifier "hadoop2" :exclusions [org.slf4j/slf4j-api io.netty/netty commons-lang org.mortbay.jetty/servlet-api]]
+                 [com.damballa/parkour "0.6.2" :exclusions [com.thoughtworks.paranamer/paranamer]]
+                 [com.damballa/abracad "0.4.12" :exclusions [com.fasterxml.jackson.core/jackson-core]]
+                 [org.apache.avro/avro-mapred "1.7.7" :scope "provided" :classifier "hadoop2" :exclusions [org.slf4j/slf4j-api io.netty/netty commons-lang org.mortbay.jetty/servlet-api]]
 
-                           ;[com.esotericsoftware.kryo/kryo "2.24.0" :scope "provided"]
-                           ]
+                                        ;[com.esotericsoftware.kryo/kryo "2.24.0" :scope "provided"]
+                 ]
 
-            :aliases {"all" ["with-profile" "default"]
-                      }
+  :aliases {"all" ["with-profile" "default"]}
+
   :profiles {:default      [:base :system :user :provided :spark-2.0.2 :dev]
              :dev          {:dependencies   [[criterium "0.4.3"]]
                             :plugins        [[lein-dotenv "RELEASE"]
@@ -54,12 +54,6 @@
                                                      [com.googlecode.matrix-toolkits-java/mtj "1.0.2"]
                                                      [org.apache.spark/spark-mllib_2.10 "1.6.1" ]
                                                      ] }
-             :spark-2.0.2  ^{:pom-scope :provided} {:dependencies
-                                                    [[org.apache.spark/spark-core_2.10 "2.0.2"]
-                                                     [com.github.fommil.netlib/all "1.1.2" :extension "pom"]
-                                                     [com.googlecode.matrix-toolkits-java/mtj "1.0.4"]
-                                                     [org.apache.spark/spark-mllib_2.10 "2.0.2" ]
-                                                     ] }
 
              :hadoop-2.6.0 ^{:pom-scope :provided} {:dependencies
                                                     [[org.apache.hadoop/hadoop-client "2.6.0"
@@ -76,9 +70,28 @@
              :spark-1.3.1  ^{:pom-scope :provided} {:dependencies
                                                     [[org.apache.spark/spark-core_2.10 "1.3.1"]]}
 
+             :spark-2.0.2  ^{:pom-scope :provided} {:dependencies
+                                                    [[org.apache.spark/spark-core_2.10 "2.0.2"]
+                                                     [com.github.fommil.netlib/all "1.1.2" :extension "pom"]
+                                                     [com.googlecode.matrix-toolkits-java/mtj "1.0.4"]
+                                                     [org.apache.spark/spark-mllib_2.10 "2.0.2" ]
+                                                     ] }
+
+             :spark-2.1.0  ^{:pom-scope :provided} {:dependencies
+                                                    [[org.apache.spark/spark-core_2.10 "2.1.0"]
+                                                     [com.github.fommil.netlib/all "1.1.2" :extension "pom"]
+                                                     [com.googlecode.matrix-toolkits-java/mtj "1.0.4"]
+                                                     [org.apache.spark/spark-mllib_2.10 "2.1.0" ]
+                                                     ] }
+
+
              :test         {:resource-paths ["dev-resources" "data"]
-                            :aot            [sparkling.core
+                            :aot            [
+                                             sparkling.core
                                              sparkling.api
+                                             sparkling.sql
+                                             sparkling.sql.types
+                                             sparkling.sql.types-test
                                              sparkling.function
                                              sparkling.scalaInterop
                                              sparkling.destructuring
@@ -96,25 +109,25 @@
                                              sparkling.accumulator-test
                                              sparkling.test-registrator
                                              sparkling.serialization-test
-                                             ;sparkling.serialization
+                                        ;sparkling.serialization
                                              sparkling.ml.classification
                                              sparkling.ml.core
                                              sparkling.ml.transform
                                              sparkling.ml.validation
                                              sparkling.ml.core-test]}
              }
-            :source-paths ["src/clojure"]
-            :java-source-paths ["src/java"]
-            :codox {:defaults                  {:doc/format :markdown}
-                    :include                   [sparkling.core sparkling.conf sparkling.kryo sparkling.broadcast sparkling.debug sparkling.destructuring]
-                    :output-dir                "doc"
-                    :src-dir-uri               "https://raw.githubusercontent.com/gorillalabs/sparkling/v1.2.2/"
-                    :src-linenum-anchor-prefix "L"}
-            :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.7"]
-            :jvm-opts ^:replace ["-server" "-Xmx2g"]
-            :global-vars {*warn-on-reflection* false}
-            :lein-release {:deploy-via :clojars}
-            )
+  :source-paths ["src/clojure"]
+  :java-source-paths ["src/java"]
+  :codox {:defaults                  {:doc/format :markdown}
+          :include                   [sparkling.core sparkling.conf sparkling.kryo sparkling.broadcast sparkling.debug sparkling.destructuring]
+          :output-dir                "doc"
+          :src-dir-uri               "https://raw.githubusercontent.com/gorillalabs/sparkling/v1.2.2/"
+          :src-linenum-anchor-prefix "L"}
+  :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.7"]
+  :jvm-opts ^:replace ["-server" "-Xmx2g"]
+  :global-vars {*warn-on-reflection* false}
+  :lein-release {:deploy-via :clojars}
+  )
 
 ;; test with
 ;;     lein do clean, with-profile +spark-1.1.0 test
