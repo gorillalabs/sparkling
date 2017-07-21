@@ -17,8 +17,6 @@
                                         ;[com.esotericsoftware.kryo/kryo "2.24.0" :scope "provided"]
                  ]
 
-                 :deploy-repositories {"clojars-https" {:url "https://clojars.org/repo"}}
-
   :aliases {"all" ["with-profile" "default"]}
 
   :profiles {:default      [:base :system :user :provided :spark-2.0.2 :dev]
@@ -129,7 +127,6 @@
   :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.7"]
   :jvm-opts ^:replace ["-server" "-Xmx2g"]
   :global-vars {*warn-on-reflection* false}
-  :lein-release {:deploy-via :clojars}
   )
 
 ;; test with
