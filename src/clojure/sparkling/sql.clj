@@ -76,7 +76,7 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
 (defn count
   "grouped data count"
   [cols grouped-data]
-  (.max grouped-data (into-array cols)))
+  (.count grouped-data (into-array cols)))
 
 (defn max
   "grouped data max"
