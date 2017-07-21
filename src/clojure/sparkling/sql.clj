@@ -91,7 +91,7 @@ Read json or write json like sparkling.core/text-file or save-as-text-file."
 (defn sum
   "grouped sum"
   [cols grouped-data]
-  (.min grouped-data (into-array cols)))
+  (.sum grouped-data (into-array cols)))
 
 (defn agg
   "dataset agg"
