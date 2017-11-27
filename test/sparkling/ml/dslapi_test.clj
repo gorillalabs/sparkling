@@ -15,20 +15,7 @@
 
 ;;new story to use the middleware pattern
 
-(def dataset-path (atom ""))
-
-(defn download-dataset
-  []
-  (let [svm-dataset-path
-          "http://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/svmguide1"
-          tmpfile (.getPath (File/createTempFile "svmguide" "svm"))
-          _ (spit tmpfile (slurp svm-dataset-path))]
-    (reset! dataset-path tmpfile)))
-
-(defn dataset-fixture
-  [f]
-  (download-dataset)
-  (f))
+(def dataset-path "data/ml/svmguide1")
 
 (defn add-estimator-pipeline
   "returns a pipeline consisting of a scaler and an estimator"
@@ -47,14 +34,12 @@
   [regparam est]
   (v/param-grid [[(.regParam est) (double-array regparam)]]))
 
-(t/use-fixtures :once dataset-fixture)
-
 (t/deftest
   defaults
 
   ;;sensible defaults
   (let [cvhand (-> m/cv-handler
-                   (m/add-dataset (partial m/load-libsvm-dataset (deref dataset-path)))
+                   (m/add-dataset (partial m/load-libsvm-dataset dataset-path))
                    (m/add-estimator cl/logistic-regression)
                    (m/add-evaluator v/binary-classification-evaluator))
         res (first (m/run-pipeline cvhand))]
@@ -63,7 +48,7 @@
 (t/deftest with-estimator-options
   ;;add options for the estimator & evaluator
   (let [cvhand (-> m/cv-handler
-                   (m/add-dataset (partial m/load-libsvm-dataset (deref dataset-path)))
+                   (m/add-dataset (partial m/load-libsvm-dataset dataset-path))
                    (m/add-estimator cl/logistic-regression {:elastic-net-param 0.01})
                    (m/add-evaluator v/binary-classification-evaluator {:metric-name "areaUnderPR"} ))
         res (first (m/run-pipeline cvhand))]
@@ -72,7 +57,7 @@
 (t/deftest with-handler-options
   ;;add options for the handler
   (let [cvhand (-> (partial m/cv-handler {:num-folds 5})
-                   (m/add-dataset (partial m/load-libsvm-dataset (deref dataset-path)))
+                   (m/add-dataset (partial m/load-libsvm-dataset dataset-path))
                    (m/add-estimator cl/logistic-regression {:elastic-net-param 0.01})
                    (m/add-evaluator v/binary-classification-evaluator {:metric-name "areaUnderPR"} ))
         res (first (m/run-pipeline cvhand))]
@@ -84,7 +69,7 @@
 
   ;defaults for train-test split validator
   (let [tvhand (-> m/tv-handler
-                   (m/add-dataset (partial m/load-libsvm-dataset (deref dataset-path)))
+                   (m/add-dataset (partial m/load-libsvm-dataset dataset-path))
                    (m/add-estimator cl/logistic-regression)
                    (m/add-evaluator v/binary-classification-evaluator))
         res (first (m/run-pipeline tvhand))]
@@ -92,7 +77,7 @@
 
   ;;set the train-test split ratio
   (let [tvhand (-> (partial m/tv-handler {:train-ratio 0.6} )
-                   (m/add-dataset (partial m/load-libsvm-dataset (deref dataset-path)))
+                   (m/add-dataset (partial m/load-libsvm-dataset dataset-path))
                    (m/add-estimator cl/logistic-regression)
                    (m/add-evaluator v/binary-classification-evaluator))
         res (first (m/run-pipeline tvhand))]
@@ -105,7 +90,7 @@
                    (m/add-grid-search (partial addregularization [0.1 0.05 0.01]))
                    (m/add-evaluator v/binary-classification-evaluator)
                    (m/add-estimator cl/logistic-regression)
-                   (m/add-dataset (partial m/load-libsvm-dataset (deref dataset-path))))]
+                   (m/add-dataset (partial m/load-libsvm-dataset dataset-path)))]
     (t/is (= 3 (count (m/run-pipeline cvgrid))))))
 
 (t/deftest pipelines
@@ -115,7 +100,7 @@
         (-> m/cv-handler
             (m/add-evaluator v/binary-classification-evaluator)
             (m/add-estimator add-estimator-pipeline)
-            (m/add-dataset (partial m/load-libsvm-dataset (deref dataset-path))))]
+            (m/add-dataset (partial m/load-libsvm-dataset dataset-path)))]
     (t/is (< 0.95 (first (m/run-pipeline cvestpipeline))))))
 
 
