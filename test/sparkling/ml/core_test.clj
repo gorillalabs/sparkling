@@ -17,11 +17,8 @@
                  (conf/app-name "core-test"))]
     (s/with-context c conf
       (let [sqc (mlc/sql-context c)
-            svm-dataset-path
-            "http://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/diabetes"
-            tmpfile (.getPath (File/createTempFile "diabetes" "svm"))
-            _ (spit tmpfile (slurp svm-dataset-path))
-            df (mlc/load-libsvm-dataset tmpfile sqc )]
+            svm-dataset-path "data/ml/diabetes"
+            df (mlc/load-libsvm-dataset svm-dataset-path sqc )]
 
         (t/testing
          "creates a SQLContext"
