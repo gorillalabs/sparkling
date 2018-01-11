@@ -12,7 +12,7 @@ Sparkling is a Clojure API for [Apache Spark](http://spark.apache.org/).
   (spark/with-context sc (-> (conf/spark-conf)              ; this creates a spark context from the given context
                              (conf/app-name "sparkling-test")
                              (conf/master "local"))
-                      (let [lines-rdd (spark/into-rdd sc ["This is a firest line"   ;; here we provide data from a clojure collection.
+                      (let [lines-rdd (spark/into-rdd sc ["This is the first line"   ;; here we provide data from a clojure collection.
                                                           "Testing spark"           ;; You could also read from a text file, or avro file.
                                                           "and sparkling"           ;; You could even approach a JDBC datasource
                                                           "Happy hacking!"])]
