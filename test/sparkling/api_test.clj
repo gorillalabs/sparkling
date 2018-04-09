@@ -914,5 +914,5 @@
          org.apache.hadoop.io.compress.BZip2Codec)
 
 
-        (is (= ["Rec1" "Rec2"]
-               (s/collect (s/text-file c path))))))))
+        (is (equals-ignore-order? ["Rec1" "Rec2"]
+                                  (s/collect (s/text-file c path))))))))
