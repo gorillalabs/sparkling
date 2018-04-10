@@ -7,13 +7,14 @@
             [sparkling.api :as s]
             [sparkling.conf :as conf]
             [sparkling.scalaInterop :as si]
-    ;; this is to have the reader macro sparkling/tuple defined
+            ;; this is to have the reader macro sparkling/tuple defined
             [sparkling.destructuring :as sd]
             [sparkling.serialization :as ser]
             [sparkling.kryoserializer :as ks]
             [sparkling.testutils.records.domain :as domain]
             [sparkling.testutils :refer :all]
-            [sparkling.destructuring :as s-de]))
+            [sparkling.destructuring :as s-de]
+            [clojure.java.io :as io]))
 
 
 
@@ -892,3 +893,26 @@
 
 
 
+(deftest
+  text-file-codec
+
+  (let [conf (-> (conf/spark-conf)
+                 (conf/set-sparkling-registrator)
+                 (conf/set "spark.kryo.registrationRequired" "false")
+                 (conf/master "local[*]")
+                 (conf/app-name "api-test"))
+        path (.getPath (io/file (System/getProperty "java.io.tmpdir")
+                                "test-sparkling" (str (System/currentTimeMillis))))]
+
+    (s/with-context c conf
+      (testing
+          "save as text files support codecs"
+
+        (s/save-as-text-file
+         (s/parallelize c ["Rec1" "Rec2"])
+         path
+         org.apache.hadoop.io.compress.BZip2Codec)
+
+
+        (is (equals-ignore-order? ["Rec1" "Rec2"]
+                                  (s/collect (s/text-file c path))))))))

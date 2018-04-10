@@ -267,10 +267,13 @@
 (defn save-as-text-file
   "Writes the elements of `rdd` as a text file (or set of text files)
   in a given directory `path` in the local filesystem, HDFS or any other Hadoop-supported
-  file system. Spark will call toString on each element to convert it to a line of
+  file system. Supports an optional codec class like org.apache.hadoop.io.compress.GzipCodec.
+  Spark will call toString on each element to convert it to a line of
   text in the file."
-  [rdd path]
-  (sc/save-as-text-file path rdd))
+  ([rdd path]
+   (sc/save-as-text-file path rdd))
+  ([rdd path codec-class]
+   (sc/save-as-text-file path rdd codec-class)))
 
 
 (defn persist
@@ -385,4 +388,3 @@
   "This re-keys a pair-rdd by applying the rekey-fn to generate new tuples. However, it does not check whether your new keys would keep the same partitioning, so watch out!!!!"
   [rdd rekey-fn]
   (sc/rekey rekey-fn rdd))
-

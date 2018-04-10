@@ -613,10 +613,13 @@ so that the wrapped function returns a tuple [f(v),v]"
 (defn save-as-text-file
   "Writes the elements of `rdd` as a text file (or set of text files)
   in a given directory `path` in the local filesystem, HDFS or any other Hadoop-supported
-  file system. Spark will call toString on each element to convert it to a line of
+  file system. Supports an optional codec class like org.apache.hadoop.io.compress.GzipCodec.
+  Spark will call toString on each element to convert it to a line of
   text in the file."
-  [path rdd]
-  (.saveAsTextFile rdd path))
+  ([path rdd]
+    (.saveAsTextFile rdd path))
+  ([path rdd codec-class]
+    (.saveAsTextFile rdd path codec-class)))
 
 
 ;; Histogram related functions
