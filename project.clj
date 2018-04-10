@@ -1,4 +1,4 @@
-(defproject gorillalabs/sparkling "2.1.3-SNAPSHOT"
+(defproject gorillalabs/sparkling "2.1.3"
   :description "A Clojure Library for Apache Spark"
   :url "https://gorillalabs.github.io/sparkling/"
   :license {:name "Eclipse Public License"
