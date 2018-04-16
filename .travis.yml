@@ -1,6 +1,8 @@
 language: clojure
 jdk:
-  - oraclejdk8
-  - openjdk7
-
-script: "lein all do clean, test"
+- oraclejdk8
+- openjdk7
+script: lein all do clean, test
+notifications:
+  slack:
+    secure: YJfYV1Appq7iPH8uCkZ/pFlUe53X9u0NLrpCqlz4exRO/ZyYfIFe103KRrMS3+JGxO9xE1YTLT1UjF+/8ugXqIiLQywfwhpzVBwBjaJ+hu/FFEER4RKjG3c6JGbsQpz0oMYIsKfbNMyepO6Nvxv/s9vqLfD26zirO2W01t9L0uk=
