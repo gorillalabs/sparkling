@@ -61,7 +61,7 @@
   (DataTypes/createStructField name type nullable?))
 
 (defn struct-type
-  "Creates a struct type, expect each item in fields to be a map with the keys :name :type and :optional?
+  "Creates a struct type, expect each item in fields to be a map with the keys :name :type and :nullable?
   where name is a string, type is a DataType and optional is a boolean"
   [fields]
   (DataTypes/createStructType (into-array (map struct-field fields))))
