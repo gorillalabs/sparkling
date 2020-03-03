@@ -1,7 +1,6 @@
 language: clojure
 jdk:
-- oraclejdk8
-- openjdk7
+- openjdk11
 script: lein all do clean, test
 notifications:
   slack:
