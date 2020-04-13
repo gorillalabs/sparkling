@@ -10,7 +10,21 @@
             ))
 
 
+(deftest spark-session-test
+  (s/with-context
+    c
+    (-> (conf/spark-conf)
+        (conf/set-sparkling-registrator)
+        (conf/set "spark.kryo.registrationRequired" "true")
+        (conf/master "local[*]")
+        (conf/app-name "api-test"))
+    (let [spark-session (s/spark-session c)
+          df            (.toDF (.range spark-session 10) (into-array String ["number"]))]
+      (testing "checking SparkSession instance"
+        (is (instance? org.apache.spark.sql.SparkSession spark-session)))
 
+      (testing "checking DF instance"
+        (instance? org.apache.spark.sql.Dataset df)))))
 
 (deftest lookup
   (s/with-context
