@@ -10,6 +10,7 @@ import com.twitter.chill.Tuple2Serializer;
 /**
  * @deprecated Use sparkling.serialization instead! See sparkling.serialization-test.
  */
+@Deprecated
 public class BaseRegistrator implements KryoRegistrator {
 
     protected void register(Kryo kryo) {

@@ -29,7 +29,7 @@
                                       JavaRDD JavaPairRDD JavaDoubleRDD]
            [org.apache.spark HashPartitioner Partitioner]
            [org.apache.spark.rdd PartitionwiseSampledRDD PartitionerAwareUnionRDD]
-           [scala.collection JavaConversions]
+           [scala.collection JavaConverters]
            [scala.reflect ClassTag$]))
 
 
@@ -186,11 +186,11 @@
     (u/unmangle-fn f)))
 
 (defn flat-map-values
-  "Returns a `JavaPairRDD` by applying `f` to all values of `rdd`, and then 
+  "Returns a `JavaPairRDD` by applying `f` to all values of `rdd`, and then
   flattening the results"
   [f rdd]
   (u/set-auto-name
-    (.flatMapValues rdd (function f))
+    (.flatMapValues rdd (flat-map-function f))
     (u/unmangle-fn f)))
 
 (defn map-partition
@@ -451,7 +451,8 @@
   ([rdd1 rdd2]
    (u/set-auto-name (.union rdd1 rdd2)))
   ([rdd1 rdd2 & rdds]
-   (u/set-auto-name (.union (JavaSparkContext/fromSparkContext (.context rdd1)) rdd1 (ArrayList. (conj rdds rdd2))))))
+   (u/set-auto-name (.union (JavaSparkContext/fromSparkContext (.context rdd1))
+                            (into-array JavaRDD (concat [rdd1 rdd2] rdds))))))
 
 (defn partitioner-aware-union [pair-rdd1 pair-rdd2 & pair-rdds]
   ;; TODO: add check to make sure every rdd is a pair-rdd and has the same partitioner.
@@ -459,7 +460,8 @@
     (JavaPairRDD/fromRDD
       (PartitionerAwareUnionRDD.
         (.context pair-rdd1)
-        (JavaConversions/asScalaBuffer (clojure.core/mapv #(.rdd %1) (conj pair-rdds pair-rdd2 pair-rdd1)))
+        (.toSeq
+         (JavaConverters/asScalaBuffer (clojure.core/mapv #(.rdd %1) (conj pair-rdds pair-rdd2 pair-rdd1))))
         si/OBJECT-CLASS-TAG
         )
       si/OBJECT-CLASS-TAG

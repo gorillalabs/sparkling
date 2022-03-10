@@ -13,13 +13,11 @@
                  [com.damballa/parkour "0.6.2" :exclusions [com.thoughtworks.paranamer/paranamer]]
                  [com.damballa/abracad "0.4.12" :exclusions [com.fasterxml.jackson.core/jackson-core]]
                  [org.apache.avro/avro-mapred "1.7.7" :scope "provided" :classifier "hadoop2" :exclusions [org.slf4j/slf4j-api io.netty/netty commons-lang org.mortbay.jetty/servlet-api]]
-
-                                        ;[com.esotericsoftware.kryo/kryo "2.24.0" :scope "provided"]
                  ]
 
   :aliases {"all" ["with-profile" "default"]}
 
-  :profiles {:default      [:base :system :user :provided :spark-2.0.2 :dev]
+  :profiles {:default      [:base :system :user :provided :spark-3.2.1 :dev]
              :dev          {:dependencies   [[criterium "0.4.3"]]
                             :plugins        [[lein-dotenv "RELEASE"]
                                              [jonase/eastwood "0.1.4"]
@@ -84,6 +82,15 @@
                                                      [org.apache.spark/spark-mllib_2.10 "2.0.2" ]
                                                      ] }
 
+             :spark-3.2.1  ^{:pom-scope :provided} {:dependencies
+                                                    [
+                                                     [org.apache.spark/spark-core_2.12 "3.2.1"]
+                                                     [org.apache.spark/spark-sql_2.12 "3.2.1"]
+                                                     [com.github.fommil.netlib/all "1.1.2" :extension "pom"]
+                                                     [com.googlecode.matrix-toolkits-java/mtj "1.0.4"]
+                                                     [org.apache.spark/spark-mllib_2.12 "3.2.1" ]
+                                                     [org.apache.hadoop/hadoop-client "3.2.1"]]}
+
 
 
              :test         {:resource-paths ["dev-resources" "data"]
@@ -110,7 +117,6 @@
                                              sparkling.accumulator-test
                                              sparkling.test-registrator
                                              sparkling.serialization-test
-                                        ;sparkling.serialization
                                              sparkling.ml.classification
                                              sparkling.ml.core
                                              sparkling.ml.transform
@@ -124,8 +130,16 @@
           :output-dir                "doc"
           :src-dir-uri               "https://raw.githubusercontent.com/gorillalabs/sparkling/v1.2.2/"
           :src-linenum-anchor-prefix "L"}
-  :javac-options ["-Xlint:unchecked" "-source" "1.6" "-target" "1.7"]
-  :jvm-opts ^:replace ["-server" "-Xmx2g"]
+  :javac-options ["-Xlint:unchecked" "-target" "1.8" "-source" "1.8"]
+  :jvm-opts ^:replace ["-server" "-Xmx2g"
+                       "--add-opens" "java.base/java.net=ALL-UNNAMED"
+                       "--add-opens" "java.base/java.lang=ALL-UNNAMED"
+                       "--add-opens" "java.base/java.util=ALL-UNNAMED"
+                       "--add-opens" "java.base/java.util.concurrent=ALL-UNNAMED"
+                       "--add-opens" "java.base/java.nio=ALL-UNNAMED"
+                       "--add-opens" "java.base/sun.nio.ch=ALL-UNNAMED"
+                       "--add-opens" "java.base/java.lang.invoke=ALL-UNNAMED"
+                       "--add-opens" "java.base/sun.util.calendar=ALL-UNNAMED"]
   :global-vars {*warn-on-reflection* false}
   )
 
