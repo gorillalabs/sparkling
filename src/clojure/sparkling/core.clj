@@ -28,6 +28,7 @@
            [org.apache.spark.api.java JavaSparkContext StorageLevels
                                       JavaRDD JavaPairRDD JavaDoubleRDD]
            [org.apache.spark HashPartitioner Partitioner]
+           [org.apache.spark.sql SparkSession]
            [org.apache.spark.rdd PartitionwiseSampledRDD PartitionerAwareUnionRDD]
            [scala.collection JavaConverters]
            [scala.reflect ClassTag$]))
@@ -742,6 +743,10 @@ so that the wrapped function returns a tuple [f(v),v]"
                   (conf/master master)
                   (conf/app-name app-name))]
      (spark-context conf))))
+
+(defn spark-session
+  [^JavaSparkContext context]
+  (SparkSession. (.sc context)))
 
 (defn local-spark-context
   [app-name]
